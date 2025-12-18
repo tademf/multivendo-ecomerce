@@ -4,43 +4,43 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Payment extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
+    // ONLY include fields that exist in your database
     protected $fillable = [
         'user_id',
         'product_id',
         'product_name',
         'product_image',
         'name',
-        'email',
-        'phone',
-        'shipment_address',
         'payment_image',
-        'payment_image_original_name',
         'amount',
         'quantity',
-        'payment_method',
-        'bank_name',
-        'transaction_id',
-        'order_reference',
+        'shipment_address',
         'status',
-        'verification_status',
-        'rejection_reason',
-        'verified_at',
-        'verified_by',
-        'shipping_status',
-        'tracking_number',
-        'notes',
+        'order_reference',
+        // REMOVE these (they don't exist in your database):
+        // 'email',
+        // 'phone',
+        // 'payment_image_original_name',
+        // 'payment_method',
+        // 'bank_name',
+        // 'transaction_id',
+        // 'verification_status',
+        // 'rejection_reason',
+        // 'verified_at',
+        // 'verified_by',
+        // 'shipping_status',
+        // 'tracking_number',
+        // 'notes',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'quantity' => 'integer',
-        'verified_at' => 'datetime',
     ];
 
     /**
@@ -60,14 +60,6 @@ class Payment extends Model
     }
 
     /**
-     * Get the admin who verified
-     */
-    public function verifier()
-    {
-        return $this->belongsTo(User::class, 'verified_by');
-    }
-
-    /**
      * Generate order reference
      */
     public static function generateOrderReference()
@@ -76,15 +68,7 @@ class Payment extends Model
     }
 
     /**
-     * Generate transaction ID
-     */
-    public static function generateTransactionId()
-    {
-        return 'TXN-' . date('YmdHis') . '-' . strtoupper(substr(uniqid(), -8));
-    }
-
-    /**
-     * Get payment image URL - FIXED
+     * Get payment image URL
      */
     public function getPaymentImageUrlAttribute()
     {
@@ -92,8 +76,7 @@ class Payment extends Model
             return null;
         }
         
-        // FIX: Check if string starts with http/https
-        if (str_starts_with($this->payment_image, 'http://') || str_starts_with($this->payment_image, 'https://')) {
+        if (str_starts_with($this->payment_image, 'http')) {
             return $this->payment_image;
         }
         
@@ -101,7 +84,7 @@ class Payment extends Model
     }
 
     /**
-     * Get product image URL - FIXED
+     * Get product image URL
      */
     public function getProductImageUrlAttribute()
     {
@@ -109,8 +92,7 @@ class Payment extends Model
             return $this->product?->main_image_url ?? asset('images/default-product.png');
         }
         
-        // FIX: Check if string starts with http/https
-        if (str_starts_with($this->product_image, 'http://') || str_starts_with($this->product_image, 'https://')) {
+        if (str_starts_with($this->product_image, 'http')) {
             return $this->product_image;
         }
         
@@ -126,14 +108,6 @@ class Payment extends Model
     }
 
     /**
-     * Check if payment is verified
-     */
-    public function isVerified()
-    {
-        return $this->verification_status === 'verified';
-    }
-
-    /**
      * Check if payment is completed
      */
     public function isCompleted()
@@ -142,11 +116,11 @@ class Payment extends Model
     }
 
     /**
-     * Get formatted amount
+     * Get formatted amount in BIRR
      */
     public function getFormattedAmountAttribute()
     {
-        return '₹' . number_format($this->amount, 2);
+        return number_format($this->amount, 2) . ' Birr'; // Changed ₹ to Birr
     }
 
     /**

@@ -7,7 +7,7 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
-                'resources/js/app.js'
+                'resources/js/app.js',
             ],
             refresh: true,
         }),
@@ -20,7 +20,20 @@ export default defineConfig({
             },
         }),
     ],
+    resolve: {
+        alias: {
+            '@': '/resources/js',
+            '~bootstrap': 'node_modules/bootstrap',
+        },
+    },
     css: {
-        postcss: './postcss.config.js',
+        preprocessorOptions: {
+            scss: {
+                quietDeps: true,
+            },
+        },
+    },
+    optimizeDeps: {
+        include: ['bootstrap', '@popperjs/core']
     },
 });

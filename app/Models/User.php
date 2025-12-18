@@ -21,10 +21,10 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
-        'national_id',
         'profile_picture',
-        'verified_at',
-        // REMOVE: 'category_id', 'tag_id', 'product_id' - NOT in table!
+        'account_number',
+         'is_verified'
+        
     ];
 
     /**
@@ -38,6 +38,17 @@ class User extends Authenticatable
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'profile_picture_url',
+        'is_identity_verified',
+        'has_pending_verification'
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -47,21 +58,112 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'verified_at' => 'datetime',
         ];
     }
 
     /**
-     * Get the products for the user (seller).
+     * ROLE HELPERS
      */
+    
+    public function isVendor(): bool
+    {
+        return $this->role === 'vendor';
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->role === 'customer';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function scopeVendors($query)
+    {
+        return $query->where('role', 'vendor');
+    }
+
+    public function scopeCustomers($query)
+    {
+        return $query->where('role', 'customer');
+    }
+
+    public function scopeAdmins($query)
+    {
+        return $query->where('role', 'admin');
+    }
+
+    /**
+     * VERIFICATION SYSTEM
+     */
+    
+    public function verificationRequest()
+    {
+        return $this->hasOne(VerificationRequest::class);
+    }
+
+    public function isVerifiedVendor(): bool
+    {
+        return $this->verificationRequest && $this->verificationRequest->isApproved();
+    }
+
+    public function hasPendingVerification(): bool
+    {
+        return $this->verificationRequest && $this->verificationRequest->isPending();
+    }
+
+    /**
+     * Get is_identity_verified attribute for frontend
+     */
+    public function getIsIdentityVerifiedAttribute(): bool
+    {
+        return $this->isVerifiedVendor();
+    }
+
+    /**
+     * Get has_pending_verification attribute for frontend
+     */
+    public function getHasPendingVerificationAttribute(): bool
+    {
+        return $this->hasPendingVerification();
+    }
+
+    /**
+     * Check if user can sell products
+     */
+    public function canSell(): bool
+    {
+        return $this->isVendor() && $this->isVerifiedVendor();
+    }
+
+    /**
+     * PROFILE PICTURE
+     */
+    
+    public function getProfilePictureUrlAttribute()
+    {
+        if (!$this->profile_picture) {
+            return asset('images/default-avatar.png');
+        }
+        
+        if (str_starts_with($this->profile_picture, 'http')) {
+            return $this->profile_picture;
+        }
+        
+        return asset('storage/' . $this->profile_picture);
+    }
+
+    /**
+     * PRODUCTS & WISHLIST
+     */
+    
     public function products()
     {
         return $this->hasMany(Product::class, 'user_id');
     }
 
-    /**
-     * Get the user's wishlist items.
-     */
     public function wishlist()
     {
         return $this->belongsToMany(
@@ -72,51 +174,85 @@ class User extends Authenticatable
         )->withTimestamps();
     }
 
-    /**
-     * Check if product is in user's wishlist.
-     */
     public function hasInWishlist($productId): bool
     {
         return $this->wishlist()->where('product_id', $productId)->exists();
     }
 
     /**
-     * Get the verification requests for the user.
+     * STOCK HISTORY
      */
-    public function verificationRequests()
-    {
-        return $this->hasMany(VerificationRequest::class, 'user_id');
-    }
-
-    /**
-     * Get the stock histories created by the user.
-     */
+    
     public function stockHistories()
     {
         return $this->hasMany(StockHistory::class, 'user_id');
     }
 
     /**
-     * Check if user is verified.
+     * EMAIL VERIFICATION (from Laravel)
      */
-    public function isVerified(): bool
+    
+    public function isEmailVerified(): bool
     {
-        return !is_null($this->verified_at);
+        return !is_null($this->email_verified_at);
     }
 
     /**
-     * Scope to get only verified users.
+     * BAN/STATUS SYSTEM (optional - add if needed)
      */
-    public function scopeVerified($query)
+    
+    public function isBanned(): bool
     {
-        return $query->whereNotNull('verified_at');
+        // If you add a 'banned_at' column
+        // return !is_null($this->banned_at);
+        return false;
+    }
+
+    public function isActive(): bool
+    {
+        return !$this->isBanned();
     }
 
     /**
-     * Scope to get only unverified users.
+     * NOTIFICATIONS PREFERENCES (optional)
      */
-    public function scopeUnverified($query)
+    
+    public function shouldReceiveEmailNotifications(): bool
     {
-        return $query->whereNull('verified_at');
+        // If you add notification preferences
+        // return $this->email_notifications === true;
+        return true;
+    }
+
+    /**
+     * USER STATISTICS (optional)
+     */
+    
+    public function getProductsCountAttribute(): int
+    {
+        return $this->products()->count();
+    }
+
+    public function getWishlistCountAttribute(): int
+    {
+        return $this->wishlist()->count();
+    }
+
+    /**
+     * Get user's initials for avatar placeholder
+     */
+    public function getInitialsAttribute(): string
+    {
+        $names = explode(' ', $this->full_name);
+        $initials = '';
+        
+        foreach ($names as $name) {
+            if (!empty($name)) {
+                $initials .= strtoupper($name[0]);
+                if (strlen($initials) >= 2) break;
+            }
+        }
+        
+        return $initials ?: strtoupper(substr($this->email, 0, 2));
     }
 }

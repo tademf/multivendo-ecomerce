@@ -1,187 +1,376 @@
 <template>
-    <div class="wishlist-container">
-      <!-- Header with Back Button -->
-      <div class="wishlist-header">
-        <div class="flex items-center justify-between mb-4">
-          <Link 
-            :href="route('home')" 
-            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all transform hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <i class="fas fa-arrow-left mr-2"></i>
-            Back to Home
-          </Link>
-        </div>
-
-        <h1 class="page-title">
-          <i class="fas fa-heart text-red-500 mr-3"></i>
-          My Wishlist
-        </h1>
-        <div class="wishlist-stats">
-          <span class="stat-item">
-            <i class="fas fa-box"></i>
-            {{ wishlistItems.length }} items
-          </span>
-          <span v-if="totalValue > 0" class="stat-item">
-            <i class="fas fa-dollar-sign"></i>
-            Total: ${{ totalValue.toFixed(2) }}
-          </span>
+  <AppLayout>
+    <div class="container py-5">
+      <!-- Page Header -->
+      <div class="row mb-5">
+        <div class="col-12">
+          <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+              <!-- <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                  <li class="breadcrumb-item"><Link href="/" class="text-decoration-none">Home</Link></li>
+                  <li class="breadcrumb-item active" aria-current="page">Wishlist</li>
+                </ol>
+              </nav> -->
+              <h1 class="display-5 fw-bold text-dark mb-2">
+                <i class="fas fa-heart text-danger me-3"></i>
+                My Wishlist
+              </h1>
+              <p class="text-muted mb-0">
+                Save your favorite items and buy them later
+                <span v-if="wishlistItems.length > 0" class="ms-3">
+                  <span class="badge bg-primary rounded-pill">{{ wishlistItems.length }} items</span>
+                  <span v-if="totalValue > 0" class="ms-2">
+                    <i class="fas fa-dollar-sign me-1"></i>
+                    Total Value: <span class="fw-bold">${{ totalValue.toFixed(2) }}</span>
+                  </span>
+                </span>
+              </p>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="d-none d-md-flex gap-2">
+              <button @click="clearWishlist" class="btn btn-outline-danger" :disabled="wishlistItems.length === 0">
+                <i class="fas fa-trash-alt me-2"></i>
+                Clear All
+              </button>
+              <button @click="addAllToCart" class="btn btn-primary" :disabled="wishlistItems.length === 0">
+                <i class="fas fa-cart-plus me-2"></i>
+                Add All to Cart
+              </button>
+            </div>
+          </div>
+          
+          <!-- Flash Messages -->
+          <div v-if="$page.props.flash.success" class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-check-circle me-2"></i>
+              <span>{{ $page.props.flash.success }}</span>
+              <button type="button" class="btn-close ms-auto" @click="$page.props.flash.success = null"></button>
+            </div>
+          </div>
+          
+          <div v-if="$page.props.flash.error" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-exclamation-circle me-2"></i>
+              <span>{{ $page.props.flash.error }}</span>
+              <button type="button" class="btn-close ms-auto" @click="$page.props.flash.error = null"></button>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Empty State -->
-      <div v-if="wishlistItems.length === 0" class="empty-wishlist">
-        <div class="empty-icon">
-          <i class="fas fa-heart text-gray-300"></i>
+      <div v-if="wishlistItems.length === 0" class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6 text-center py-5">
+          <div class="empty-state p-5 bg-light rounded-4 shadow-sm">
+            <div class="mb-4">
+              <i class="fas fa-heart fa-5x text-muted opacity-25"></i>
+            </div>
+            <h3 class="text-dark mb-3">Your wishlist is empty</h3>
+            <p class="text-muted mb-4">Start saving your favorite products to view them later. It's a great way to keep track of items you love!</p>
+            <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+              <Link href="/" class="btn btn-primary btn-lg px-4">
+                <i class="fas fa-shopping-bag me-2"></i>
+                Continue Shopping
+              </Link>
+              <Link href="/products" class="btn btn-outline-primary btn-lg px-4">
+                <i class="fas fa-search me-2"></i>
+                Browse Products
+              </Link>
+            </div>
+          </div>
         </div>
-        <h3 class="empty-title">Your wishlist is empty</h3>
-        <p class="empty-description">
-          Save your favorite items here to view them later
-        </p>
-        <Link :href="route('home')" class="btn-primary">
-          <i class="fas fa-shopping-bag mr-2"></i>
-          Start Shopping
-        </Link>
       </div>
 
       <!-- Wishlist Items -->
-      <div v-else class="wishlist-content">
-        <!-- Actions Bar -->
-        <div class="wishlist-actions">
-          <div class="actions-left">
-            <button @click="clearWishlist" class="btn-danger">
-              <i class="fas fa-trash mr-2"></i>
-              Clear All
-            </button>
-          </div>
-          <div class="actions-right">
-            <Link :href="route('cart')" class="btn-secondary">
-              <i class="fas fa-shopping-cart mr-2"></i>
-              View Cart
-            </Link>
-            <button @click="addAllToCart" class="btn-primary">
-              <i class="fas fa-cart-plus mr-2"></i>
+      <div v-else>
+        <!-- Mobile Actions -->
+        <div class="d-block d-md-none mb-4">
+          <div class="d-grid gap-2">
+            <button @click="addAllToCart" class="btn btn-primary" :disabled="wishlistItems.length === 0">
+              <i class="fas fa-cart-plus me-2"></i>
               Add All to Cart
             </button>
+            <button @click="clearWishlist" class="btn btn-outline-danger">
+              <i class="fas fa-trash-alt me-2"></i>
+              Clear Wishlist
+            </button>
           </div>
         </div>
 
-        <!-- Wishlist Grid -->
-        <div class="wishlist-grid">
-          <div v-for="item in wishlistItems" :key="item.product_id" class="wishlist-item">
-            <!-- Product Image -->
-            <div class="item-image-container">
-              <img 
-                :src="item.image || '/images/placeholder-product.jpg'" 
-                :alt="item.name"
-                class="item-image"
-                @error="handleImageError"
-              />
-              <button 
-                @click="removeFromWishlist(item.product_id)"
-                class="remove-btn"
-                title="Remove from wishlist"
-              >
-                <i class="fas fa-times"></i>
-              </button>
-              <div v-if="item.stock <= 0" class="stock-badge out-of-stock">
-                Out of Stock
-              </div>
-              <div v-else-if="item.stock < 10" class="stock-badge low-stock">
-                Low Stock
+        <!-- Wishlist Items Table -->
+        <div class="table-responsive mb-5">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th scope="col" style="width: 60px;"></th>
+                <th scope="col">Product</th>
+                <th scope="col" class="text-center">Price</th>
+                <th scope="col" class="text-center">Stock Status</th>
+                <th scope="col" class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in wishlistItems" :key="item.product_id" class="product-row">
+                <td>
+                  <div class="position-relative">
+                    <button 
+                      @click="removeFromWishlist(item.product_id)"
+                      class="btn btn-sm btn-outline-danger rounded-circle"
+                      style="width: 36px; height: 36px;"
+                      title="Remove from wishlist"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                    <span class="position-absolute top-0 start-100 translate-middle badge bg-dark rounded-pill">
+                      {{ index + 1 }}
+                    </span>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="product-image-container me-3">
+                      <img 
+                        :src="getProductImage(item)" 
+                        :alt="item.name"
+                        class="rounded product-thumbnail"
+                        @error="handleImageError"
+                      />
+                      <div v-if="item.stock <= 0" class="stock-badge stock-out">
+                        <i class="fas fa-times"></i>
+                      </div>
+                      <div v-else-if="item.stock < 10" class="stock-badge stock-low">
+                        <i class="fas fa-exclamation"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <h6 class="fw-bold mb-1">{{ item.name }}</h6>
+                      <p class="text-muted small mb-1">
+                        <i class="fas fa-tag me-1"></i>
+                        {{ item.category || 'Uncategorized' }}
+                      </p>
+                      <p v-if="item.description" class="text-muted small mb-0 text-truncate" style="max-width: 300px;">
+                        {{ truncateDescription(item.description) }}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <div class="d-flex flex-column">
+                    <span class="h5 fw-bold text-success mb-0">${{ formatPrice(item.price) }}</span>
+                    <small v-if="item.original_price" class="text-muted text-decoration-line-through">
+                      ${{ formatPrice(item.original_price) }}
+                    </small>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <div v-if="item.stock <= 0">
+                    <span class="badge bg-danger rounded-pill">
+                      <i class="fas fa-times me-1"></i> Out of Stock
+                    </span>
+                  </div>
+                  <div v-else-if="item.stock < 10">
+                    <span class="badge bg-warning rounded-pill">
+                      <i class="fas fa-exclamation me-1"></i> Low Stock
+                    </span>
+                    <small class="d-block text-muted mt-1">{{ item.stock }} left</small>
+                  </div>
+                  <div v-else>
+                    <span class="badge bg-success rounded-pill">
+                      <i class="fas fa-check me-1"></i> In Stock
+                    </span>
+                    <small class="d-block text-muted mt-1">{{ item.stock }} available</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+                    <button 
+                      @click="addToCart(item)"
+                      class="btn btn-sm btn-primary"
+                      :disabled="item.stock <= 0"
+                      :class="{ 'btn-success': isInCart(item.product_id) }"
+                      :title="isInCart(item.product_id) ? 'Already in cart' : 'Add to cart'"
+                    >
+                      <i :class="isInCart(item.product_id) ? 'fas fa-check' : 'fas fa-cart-plus'" class="me-1"></i>
+                      {{ isInCart(item.product_id) ? 'In Cart' : 'Add to Cart' }}
+                    </button>
+                    <Link 
+                      v-if="item.stock > 0"
+                      :href="generateBuyNowLink(item)"
+                      class="btn btn-sm btn-success"
+                      @click="prepareBuyNow(item)"
+                    >
+                      <i class="fas fa-bolt me-1"></i>
+                      Buy Now
+                    </Link>
+                    <Link 
+                      :href="route('products.show', item.product_id)" 
+                      class="btn btn-sm btn-outline-secondary"
+                    >
+                      <i class="fas fa-eye me-1"></i>
+                      View
+                    </Link>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Summary Card -->
+        <div class="row">
+          <div class="col-lg-8">
+            <!-- Product Recommendations -->
+            <!-- <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-transparent border-0 pb-0">
+                <h4 class="card-title fw-bold mb-3">
+                  <i class="fas fa-star text-warning me-2"></i>
+                  Recommended for You
+                </h4>
+              </div> -->
+              <div class="card-body">
+                <div class="row g-3">
+                  <div v-for="suggestion in suggestedProducts" :key="suggestion.id" class="col-6 col-md-3">
+                    <div class="card border h-100 hover-lift">
+                      <div class="position-relative">
+                        <img 
+                          :src="getProductImage(suggestion)" 
+                          class="card-img-top product-suggestion-img"
+                          alt="Product"
+                          @error="handleImageError"
+                        >
+                        <button 
+                          @click="addSuggestionToWishlist(suggestion)"
+                          class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-2 rounded-circle"
+                          style="width: 32px; height: 32px;"
+                          title="Add to wishlist"
+                        >
+                          <i class="fas fa-heart"></i>
+                        </button>
+                      </div>
+                      <div class="card-body">
+                        <h6 class="card-title fw-bold text-truncate" :title="suggestion.name">{{ suggestion.name }}</h6>
+                        <p class="card-text text-success fw-bold mb-2">${{ formatPrice(suggestion.price) }}</p>
+                        <Link 
+                          :href="route('products.show', suggestion.id)" 
+                          class="btn btn-sm btn-outline-primary w-100"
+                        >
+                          View Details
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <!-- Product Details -->
-            <div class="item-details">
-              <div class="item-header">
-                <h3 class="item-name">{{ item.name }}</h3>
-                <span class="item-reference">#{{ item.reference || item.product_id }}</span>
+          </div>
+          
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+              <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                  <i class="fas fa-list-alt me-2"></i>
+                  Wishlist Summary
+                </h5>
               </div>
-              
-              <p v-if="item.description" class="item-description">
-                {{ truncateDescription(item.description) }}
-              </p>
-              
-              <div class="item-meta">
-                <span class="item-category">
-                  <i class="fas fa-tag"></i>
-                  {{ item.category || 'Uncategorized' }}
-                </span>
-                <span class="item-added">
-                  <i class="fas fa-calendar-plus"></i>
-                  Added {{ formatDate(item.created_at) }}
-                </span>
-              </div>
-
-              <div class="item-footer">
-                <div class="item-price">
-                  <span class="price-amount">${{ formatPrice(item.price) }}</span>
-                  <span v-if="item.stock > 0" class="stock-info">
-                    <i class="fas fa-box"></i>
-                    {{ item.stock }} available
-                  </span>
+              <div class="card-body">
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Total Items:</span>
+                    <span class="fw-bold">{{ wishlistItems.length }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">In Stock Items:</span>
+                    <span class="fw-bold">{{ inStockItems }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Total Value:</span>
+                    <span class="fw-bold text-success">${{ totalValue.toFixed(2) }}</span>
+                  </div>
+                  <hr>
                 </div>
-
-                <div class="item-actions">
+                
+                <div class="d-grid gap-2">
                   <button 
-                    @click="addToCart(item)"
-                    class="btn-cart"
-                    :disabled="item.stock <= 0"
-                    :class="{ 'disabled': item.stock <= 0 }"
+                    @click="addAllToCart" 
+                    class="btn btn-primary"
+                    :disabled="inStockItems === 0"
+                    :class="{ 'btn-success': allItemsInCart }"
                   >
-                    <i class="fas fa-shopping-cart"></i>
-                    {{ item.stock > 0 ? 'Add to Cart' : 'Out of Stock' }}
+                    <i :class="allItemsInCart ? 'fas fa-check-circle' : 'fas fa-cart-plus'" class="me-2"></i>
+                    {{ allItemsInCart ? 'All Items in Cart' : `Add ${inStockItems} to Cart` }}
                   </button>
-                  
-                  <Link 
-                    :href="route('products.show', item.product_id)" 
-                    class="btn-view"
+                  <button 
+                    @click="clearWishlist" 
+                    class="btn btn-outline-danger"
+                    :disabled="wishlistItems.length === 0"
                   >
-                    <i class="fas fa-eye"></i>
-                    View
+                    <i class="fas fa-trash-alt me-2"></i>
+                    Clear Wishlist
+                  </button>
+                  <Link href="/" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Continue Shopping
                   </Link>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Suggestions -->
-        <div v-if="wishlistItems.length > 0" class="suggestions-section">
-          <h3 class="section-title">
-            <i class="fas fa-star text-yellow-500 mr-2"></i>
-            You might also like
-          </h3>
-          <div class="suggestions-grid">
-            <div v-for="suggestion in suggestedProducts" :key="suggestion.id" 
-                 class="suggestion-item">
-              <img :src="suggestion.image" :alt="suggestion.name" class="suggestion-image">
-              <div class="suggestion-details">
-                <h4>{{ suggestion.name }}</h4>
-                <p class="suggestion-price">${{ formatPrice(suggestion.price) }}</p>
-                <button @click="addSuggestionToWishlist(suggestion)" class="btn-wishlist">
-                  <i class="fas fa-heart"></i>
-                </button>
+                
+                <div class="mt-4 text-center">
+                  <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Items will be automatically removed when out of stock
+                  </small>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Success Notification -->
-      <div v-if="showNotification" class="notification" :class="notificationType">
-        <i :class="notificationIcon"></i>
-        <span>{{ notificationMessage }}</span>
-        <button @click="showNotification = false" class="close-notification">
-          <i class="fas fa-times"></i>
-        </button>
+      <!-- Loading Modal -->
+      <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content border-0 shadow">
+            <div class="modal-body text-center py-5">
+              <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <h5 class="mb-3">Processing...</h5>
+              <p class="text-muted mb-0">Please wait while we update your wishlist</p>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+
+      <!-- Confirmation Modal -->
+      <div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="confirmationModalLabel">
+                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                Confirmation Required
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <p id="confirmationMessage"></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" id="confirmAction">Confirm</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    <!-- </div> -->
+  </AppLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { Link, router } from '@inertiajs/vue3'
+import AppLayout from '@/Layouts/AppLayout.vue'
 
 const props = defineProps({
   wishlistItems: {
@@ -191,723 +380,334 @@ const props = defineProps({
   suggestions: {
     type: Array,
     default: () => []
+  },
+  cartItems: {
+    type: Array,
+    default: () => []
   }
 })
 
-// Reactive state
-const showNotification = ref(false)
-const notificationMessage = ref('')
-const notificationType = ref('success')
-const notificationIcon = ref('fas fa-check-circle')
-const suggestedProducts = ref(props.suggestions || [])
+// Refs
+const isLoading = ref(false)
+const confirmationModal = ref(null)
+const loadingModal = ref(null)
 
-// Computed properties
+// Computed
 const totalValue = computed(() => {
   return props.wishlistItems.reduce((total, item) => {
     return total + (parseFloat(item.price) || 0)
   }, 0)
 })
 
+const inStockItems = computed(() => {
+  return props.wishlistItems.filter(item => item.stock > 0).length
+})
+
+const suggestedProducts = computed(() => {
+  return props.suggestions.slice(0, 4) // Show only 4 suggestions
+})
+
+const allItemsInCart = computed(() => {
+  return props.wishlistItems.every(item => isInCart(item.product_id))
+})
+
 // Helper functions
+const getProductImage = (item) => {
+  if (!item) return 'https://placehold.co/300x300/e0f2f1/065f46?text=Product+Image'
+  if (item.image && item.image.startsWith('http')) return item.image
+  if (item.image) return `/storage/${item.image}`
+  return 'https://placehold.co/300x300/e0f2f1/065f46?text=Product+Image'
+}
+
+const handleImageError = (event) => {
+  event.target.src = 'https://placehold.co/300x300/e0f2f1/065f46?text=Product+Image'
+}
+
 const formatPrice = (price) => {
   const num = parseFloat(price || 0)
   return isNaN(num) ? '0.00' : num.toFixed(2)
 }
 
-const formatDate = (dateString) => {
-  if (!dateString) return 'recently'
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffTime = Math.abs(now - date)
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  
-  if (diffDays === 1) return 'today'
-  if (diffDays < 7) return `${diffDays} days ago`
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
-  return `${Math.floor(diffDays / 30)} months ago`
-}
-
-const handleImageError = (event) => {
-  event.target.src = 'https://placehold.co/400x300/e0f2f1/065f46?text=Product+Image'
-}
-
 const truncateDescription = (description) => {
   if (!description) return ''
-  if (description.length > 120) {
-    return description.substring(0, 120) + '...'
+  if (description.length > 80) {
+    return description.substring(0, 80) + '...'
   }
   return description
 }
 
+const generateBuyNowLink = (item) => {
+  return `/submit-payment?product_id=${item.product_id}&quantity=1&price=${item.price}&name=${encodeURIComponent(item.name)}`
+}
+
+const isInCart = (productId) => {
+  return props.cartItems?.some(item => item.product_id === productId) || false
+}
+
+const prepareBuyNow = (item) => {
+  const productInfo = {
+    product_id: item.product_id,
+    quantity: 1,
+    name: item.name,
+    price: item.price,
+    image: item.image,
+    stock: item.stock
+  }
+  localStorage.setItem('buy_now_product', JSON.stringify(productInfo))
+}
+
+// Modal functions
+const showLoading = () => {
+  if (window.bootstrap) {
+    const modalElement = document.getElementById('loadingModal')
+    if (modalElement) {
+      const modal = new window.bootstrap.Modal(modalElement)
+      modal.show()
+    }
+  }
+}
+
+const hideLoading = () => {
+  if (window.bootstrap) {
+    const modalElement = document.getElementById('loadingModal')
+    if (modalElement) {
+      const modal = window.bootstrap.Modal.getInstance(modalElement)
+      if (modal) modal.hide()
+    }
+  }
+}
+
+const showConfirmation = (message, callback) => {
+  const modalElement = document.getElementById('confirmationModal')
+  const messageElement = document.getElementById('confirmationMessage')
+  const confirmButton = document.getElementById('confirmAction')
+  
+  if (modalElement && messageElement && confirmButton) {
+    messageElement.textContent = message
+    
+    const modal = new window.bootstrap.Modal(modalElement)
+    
+    // Remove previous event listeners
+    confirmButton.replaceWith(confirmButton.cloneNode(true))
+    const newConfirmButton = document.getElementById('confirmAction')
+    
+    newConfirmButton.onclick = () => {
+      modal.hide()
+      callback()
+    }
+    
+    modal.show()
+  }
+}
+
 // Wishlist actions
 const removeFromWishlist = (productId) => {
-  if (confirm('Remove this item from wishlist?')) {
+  showConfirmation('Are you sure you want to remove this item from your wishlist?', () => {
+    showLoading()
     router.delete(route('wishlist.remove', productId), {
       preserveScroll: true,
-      onSuccess: (page) => {
-        // Check if page has success message
-        if (page.props.flash?.success) {
-          showNotificationMessage(page.props.flash.success, 'success', 'fas fa-trash')
-        } else {
-          showNotificationMessage('Item removed from wishlist', 'success', 'fas fa-trash')
-        }
-      },
-      onError: (errors) => {
-        const errorMsg = errors.message || 'Failed to remove item'
-        showNotificationMessage(errorMsg, 'error', 'fas fa-exclamation-circle')
+      onFinish: () => {
+        hideLoading()
       }
     })
-  }
+  })
 }
 
 const clearWishlist = () => {
-  if (confirm('Clear all items from wishlist?')) {
+  if (props.wishlistItems.length === 0) return
+  
+  showConfirmation('Are you sure you want to clear your entire wishlist? This action cannot be undone.', () => {
+    showLoading()
     router.delete(route('wishlist.clear'), {
       preserveScroll: true,
-      onSuccess: (page) => {
-        if (page.props.flash?.success) {
-          showNotificationMessage(page.props.flash.success, 'success', 'fas fa-check-circle')
-        } else {
-          showNotificationMessage('Wishlist cleared', 'success', 'fas fa-check-circle')
-        }
-      },
-      onError: (errors) => {
-        const errorMsg = errors.message || 'Failed to clear wishlist'
-        showNotificationMessage(errorMsg, 'error', 'fas fa-exclamation-circle')
+      onFinish: () => {
+        hideLoading()
       }
     })
-  }
+  })
 }
 
 const addToCart = (item) => {
-  if (item.stock <= 0) return
+  if (item.stock <= 0) {
+    showConfirmation('This item is out of stock. Remove it from wishlist?', () => {
+      removeFromWishlist(item.product_id)
+    })
+    return
+  }
   
+  showLoading()
   router.post(route('cart.add'), {
     product_id: item.product_id,
     quantity: 1
   }, {
     preserveScroll: true,
-    onSuccess: (page) => {
-      // Don't show raw JSON - show success message from flash or generic message
-      const successMsg = page.props.flash?.success || `${item.name} added to cart!`
-      showNotificationMessage(successMsg, 'success', 'fas fa-cart-plus')
-    },
-    onError: (errors) => {
-      const errorMsg = errors.message || 'Failed to add to cart'
-      showNotificationMessage(errorMsg, 'error', 'fas fa-exclamation-circle')
+    onFinish: () => {
+      hideLoading()
     }
   })
 }
 
 const addAllToCart = () => {
   const inStockItems = props.wishlistItems.filter(item => item.stock > 0)
+  const outOfStockItems = props.wishlistItems.filter(item => item.stock <= 0)
   
   if (inStockItems.length === 0) {
-    showNotificationMessage('No items in stock to add to cart', 'warning', 'fas fa-exclamation-triangle')
+    if (outOfStockItems.length > 0) {
+      showConfirmation('All items in your wishlist are out of stock. Clear wishlist?', () => {
+        clearWishlist()
+      })
+    }
     return
   }
   
-  if (confirm(`Add ${inStockItems.length} items to cart?`)) {
-    // Add items one by one (you might want to implement a batch endpoint)
-    inStockItems.forEach((item, index) => {
-      setTimeout(() => {
-        router.post(route('cart.add'), {
-          product_id: item.product_id,
-          quantity: 1
-        }, {
-          preserveScroll: true,
-          onFinish: () => {
-            if (index === inStockItems.length - 1) {
-              showNotificationMessage(`${inStockItems.length} items added to cart!`, 'success', 'fas fa-cart-plus')
-            }
-          }
+  showConfirmation(`Add ${inStockItems.length} items to cart?`, () => {
+    showLoading()
+    
+    // Process items sequentially
+    const processItems = async (items) => {
+      for (const item of items) {
+        await new Promise(resolve => {
+          router.post(route('cart.add'), {
+            product_id: item.product_id,
+            quantity: 1
+          }, {
+            preserveScroll: true,
+            onFinish: resolve
+          })
         })
-      }, index * 100) // Small delay between requests
-    })
-  }
+      }
+      
+      hideLoading()
+    }
+    
+    processItems(inStockItems)
+  })
 }
 
 const addSuggestionToWishlist = (suggestion) => {
+  showLoading()
   router.post(route('wishlist.add'), {
     product_id: suggestion.id
   }, {
     preserveScroll: true,
-    onSuccess: (page) => {
-      // Handle success response properly
-      const successMsg = page.props.flash?.success || 'Added to wishlist'
-      showNotificationMessage(successMsg, 'success', 'fas fa-heart')
-      
-      // Refresh page to show updated wishlist
-      setTimeout(() => {
-        router.reload({ only: ['wishlistItems'] })
-      }, 500)
-    },
-    onError: (errors) => {
-      const errorMsg = errors.message || 'Failed to add to wishlist'
-      showNotificationMessage(errorMsg, 'error', 'fas fa-exclamation-circle')
+    onFinish: () => {
+      hideLoading()
     }
   })
 }
 
-const showNotificationMessage = (message, type = 'success', icon = 'fas fa-check-circle') => {
-  notificationMessage.value = message
-  notificationType.value = type
-  notificationIcon.value = icon
-  showNotification.value = true
-  
-  setTimeout(() => {
-    showNotification.value = false
-  }, 3000)
-}
-
+// Initialize modals
 onMounted(() => {
-  // Load suggested products if not passed as props
-  if (suggestedProducts.value.length === 0 && props.wishlistItems.length > 0) {
-    loadSuggestedProducts()
+  // Check for out of stock items
+  const outOfStockItems = props.wishlistItems.filter(item => item.stock <= 0)
+  if (outOfStockItems.length > 0) {
+    setTimeout(() => {
+      showConfirmation(
+        `${outOfStockItems.length} item(s) in your wishlist are out of stock. Remove them?`,
+        () => {
+          outOfStockItems.forEach(item => {
+            removeFromWishlist(item.product_id)
+          })
+        }
+      )
+    }, 1000)
   }
 })
-
-const loadSuggestedProducts = () => {
-  // Fetch suggested products from API
-  fetch('/api/products/suggested')
-    .then(response => response.json())
-    .then(data => {
-      suggestedProducts.value = data.slice(0, 4) // Get 4 suggestions
-    })
-    
-}
 </script>
 
 <style scoped>
-/* Keep all your existing CSS styles - they're good */
-.wishlist-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-}
-
-/* Header */
-.wishlist-header {
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.page-title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
-}
-
-.wishlist-stats {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #6b7280;
-  font-size: 0.95rem;
-}
-
-.stat-item i {
-  color: #ef4444;
-}
-
-/* Empty State */
-.empty-wishlist {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: #f9fafb;
-  border-radius: 12px;
-  border: 2px dashed #d1d5db;
-}
-
-.empty-icon {
-  font-size: 4rem;
-  color: #d1d5db;
-  margin-bottom: 1rem;
-}
-
-.empty-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #4b5563;
-  margin-bottom: 0.5rem;
-}
-
-.empty-description {
-  color: #6b7280;
-  margin-bottom: 2rem;
-}
-
-/* Actions Bar */
-.wishlist-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.actions-left,
-.actions-right {
-  display: flex;
-  gap: 1rem;
-}
-
-/* Buttons */
-.btn-primary {
-  background: #3b82f6;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s;
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-}
-
-.btn-primary:hover {
-  background: #2563eb;
-  transform: translateY(-1px);
-}
-
-.btn-secondary {
-  background: #6b7280;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s;
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-}
-
-.btn-secondary:hover {
-  background: #4b5563;
-}
-
-.btn-danger {
-  background: #ef4444;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s;
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-}
-
-.btn-danger:hover {
-  background: #dc2626;
-}
-
-/* Wishlist Grid */
-.wishlist-grid {
-  display: grid;
-  gap: 1.5rem;
-  margin-bottom: 3rem;
-}
-
-.wishlist-item {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 1.5rem;
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s;
-}
-
-.wishlist-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Image Container */
-.item-image-container {
-  position: relative;
-  height: 200px;
-  overflow: hidden;
-}
-
-.item-image {
-  width: 100%;
-  height: 100%;
+/* Custom Styles */
+.product-thumbnail {
+  width: 80px;
+  height: 80px;
   object-fit: cover;
 }
 
-.remove-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #ef4444;
-  transition: all 0.3s;
-}
-
-.remove-btn:hover {
-  background: #ef4444;
-  color: white;
+.product-image-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
 }
 
 .stock-badge {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: white;
-}
-
-.out-of-stock {
-  background: #ef4444;
-}
-
-.low-stock {
-  background: #f59e0b;
-}
-
-/* Item Details */
-.item-details {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-}
-
-.item-header {
-  margin-bottom: 0.75rem;
-}
-
-.item-name {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 0.25rem 0;
-}
-
-.item-reference {
-  font-size: 0.85rem;
-  color: #6b7280;
-  background: #f3f4f6;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.item-description {
-  color: #4b5563;
-  line-height: 1.5;
-  margin-bottom: 1rem;
-  flex: 1;
-}
-
-.item-meta {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-  color: #6b7280;
-}
-
-.item-meta i {
-  margin-right: 0.5rem;
-  color: #9ca3af;
-}
-
-.item-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.item-price {
-  display: flex;
-  flex-direction: column;
-}
-
-.price-amount {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #10b981;
-}
-
-.stock-info {
-  font-size: 0.85rem;
-  color: #6b7280;
-}
-
-.item-actions {
-  display: flex;
-  gap: 1rem;
-}
-
-.btn-cart {
-  background: #3b82f6;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.3s;
-}
-
-.btn-cart:hover:not(:disabled) {
-  background: #2563eb;
-}
-
-.btn-cart.disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-.btn-view {
-  background: #6b7280;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-weight: 600;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.3s;
-}
-
-.btn-view:hover {
-  background: #4b5563;
-}
-
-/* Suggestions */
-.suggestions-section {
-  margin-top: 3rem;
-  padding-top: 2rem;
-  border-top: 2px solid #e5e7eb;
-}
-
-.section-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 1.5rem;
-}
-
-.suggestions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1.5rem;
-}
-
-.suggestion-item {
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s;
-}
-
-.suggestion-item:hover {
-  transform: translateY(-4px);
-}
-
-.suggestion-image {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-}
-
-.suggestion-details {
-  padding: 1rem;
-  position: relative;
-}
-
-.suggestion-details h4 {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 0.5rem 0;
-  line-height: 1.3;
-}
-
-.suggestion-price {
-  color: #10b981;
-  font-weight: 600;
-  margin: 0;
-}
-
-.btn-wishlist {
-  position: absolute;
-  top: -15px;
-  right: 10px;
-  background: white;
-  border: none;
-  width: 30px;
-  height: 30px;
+  top: -5px;
+  right: -5px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  color: #ef4444;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s;
-}
-
-.btn-wishlist:hover {
-  background: #ef4444;
+  font-size: 0.8rem;
   color: white;
 }
 
-/* Notification */
-.notification {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: white;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  z-index: 1000;
-  animation: slideIn 0.3s ease;
+.stock-out {
+  background-color: #dc3545;
 }
 
-.notification.success {
-  border-left: 4px solid #10b981;
+.stock-low {
+  background-color: #ffc107;
+  color: #000 !important;
 }
 
-.notification.error {
-  border-left: 4px solid #ef4444;
+.product-suggestion-img {
+  height: 150px;
+  object-fit: cover;
 }
 
-.notification.warning {
-  border-left: 4px solid #f59e0b;
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.notification i {
-  font-size: 1.2rem;
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 
-.notification.success i {
-  color: #10b981;
+.product-row {
+  transition: background-color 0.2s ease;
 }
 
-.notification.error i {
-  color: #ef4444;
+.product-row:hover {
+  background-color: rgba(13, 110, 253, 0.05);
 }
 
-.notification.warning i {
-  color: #f59e0b;
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .product-thumbnail {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .product-image-container {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .table-responsive {
+    font-size: 0.9rem;
+  }
+  
+  .display-5 {
+    font-size: 2rem;
+  }
 }
 
-.close-notification {
-  background: none;
-  border: none;
-  color: #6b7280;
-  cursor: pointer;
-  margin-left: 1rem;
-}
-
-@keyframes slideIn {
+/* Animation for new items */
+@keyframes fadeIn {
   from {
-    transform: translateX(100%);
     opacity: 0;
+    transform: translateY(10px);
   }
   to {
-    transform: translateX(0);
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .wishlist-item {
-    grid-template-columns: 1fr;
-  }
-  
-  .item-image-container {
-    height: 200px;
-  }
-  
-  .wishlist-actions {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .actions-left,
-  .actions-right {
-    width: 100%;
-  }
-  
-  .actions-left button,
-  .actions-right a,
-  .actions-right button {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .item-footer {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-  
-  .item-actions {
-    width: 100%;
-  }
-  
-  .item-actions button,
-  .item-actions a {
-    flex: 1;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .page-title {
-    font-size: 1.75rem;
-  }
-  
-  .wishlist-stats {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .suggestions-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
+.product-row {
+  animation: fadeIn 0.3s ease forwards;
 }
 </style>

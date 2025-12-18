@@ -6,9 +6,52 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\User;
+use Inertia\Inertia; // Add this
 
 class ProfileController extends Controller
 {
+    /**
+     * Show the profile settings page (for old route)
+     */
+    public function settings()
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        
+        return Inertia::render('SettingsPage', [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name ?? $user->full_name ?? 'User',
+                'email' => $user->email,
+                'account_number' => $user->account_number,
+                'phone' => $user->phone,
+                'created_at' => $user->created_at->format('d M, Y'),
+            ]
+        ]);
+    }
+    
+    /**
+     * Update settings (for old route)
+     */
+    public function updateSettings(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'account_number' => 'nullable|string|max:50|unique:users,account_number,' . Auth::id(),
+        ]);
+        
+        /** @var User $user */
+        $user = Auth::user();
+        $user->update([
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'account_number' => $request->account_number,
+        ]);
+        
+        return redirect()->back()->with('success', 'Settings updated successfully!');
+    }
+    
     public function uploadProfilePicture(Request $request)
     {
         $request->validate([

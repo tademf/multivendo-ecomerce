@@ -13,14 +13,28 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id'); // Customer who paid
-            $table->string('name'); // Customer name
-            $table->string('payment_image')->nullable(); // Screenshot upload
-            $table->decimal('amount', 12, 2); // Amount paid
-            $table->text('shipment_address'); // Shipping address for the product
-            $table->string('status')->default('pending'); // pending, verified, completed, rejected
-            $table->string('transaction_id')->nullable();
+            
+            // User and Product Info
+            $table->unsignedBigInteger('user_id');
+            $table->string('product_id')->nullable();
+            $table->string('product_name')->nullable();
+            $table->string('product_image')->nullable();
+            
+            // Customer Info
+            $table->string('name');
+            
+            // Payment Info
+            $table->string('payment_image')->nullable();
+            $table->decimal('amount', 12, 2);
+            $table->integer('quantity')->default(1);
+            
+            // Shipping
+            $table->text('shipment_address');
+            
+            // Status
+            $table->string('status')->default('pending');
             $table->string('order_reference')->unique();
+            
             $table->timestamps();
             
             // Foreign key
@@ -30,6 +44,7 @@ return new class extends Migration
             $table->index('user_id');
             $table->index('status');
             $table->index('order_reference');
+            $table->index('product_id');
         });
     }
 

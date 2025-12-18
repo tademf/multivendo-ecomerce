@@ -18,7 +18,7 @@ class DashboardController extends Controller
         
         $stats = [
             'total_products' => Product::where('user_id', $user->id)->count(),
-            'total_orders' => Shipment::where('user_id', $user->id)->count(),
+            'total_orders' => Order::where('user_id', $user->id)->count(),
             'total_wishlist' => Wishlist::where('user_id', $user->id)->count(),
             'recent_products' => Product::where('user_id', $user->id)
                 ->latest()
