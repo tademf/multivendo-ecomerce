@@ -7,17 +7,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class AuthController extends Controller
 {
+    // ============================================
+    // REGISTRATION
+    // ============================================
+    
     // Show registration form
     public function showRegister()
     {
         return Inertia::render('RegisterPage');
     }
 
-    // Register new user (for Inertia)
+    // Register new user
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -34,28 +40,33 @@ class AuthController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        // Create the user with 'active' status
         $user = User::create([
             'full_name' => $request->full_name,
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
+            'status' => 'active', // Default status is active
+            'security_question' => 'What city were you born in?',
+            'security_answer_hash' => Hash::make('default'),
+            'is_verified' => false,
         ]);
 
-        // Log in the user WITHOUT "remember me"
-        Auth::login($user, false); // false = don't remember
-
-        return redirect()->route('dashboard')->with([
-            'success' => 'Registration successful! Welcome to E-Shop.'
-        ]);
+        // Redirect to login page
+        return redirect()->route('login')->with('success', 'Registration successful! Please login to continue.');
     }
 
+    // ============================================
+    // LOGIN WITH STATUS CHECK
+    // ============================================
+    
     // Show login form
     public function showLogin()
     {
         return Inertia::render('LoginPage');
     }
 
-    // Login user (for Inertia) - UPDATED: Force no "remember me"
+    // Login user with status check
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -63,26 +74,56 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        // IGNORE the "remember" checkbox - ALWAYS use false
-        // This ensures session expires when browser closes
-        if (Auth::attempt($credentials, false)) { // false = never remember
-            $request->session()->regenerate();
-            
-            // Force session configuration for browser-close expiry
-            // This overrides any configuration
-            config(['session.expire_on_close' => true]);
+        // First check if user exists
+        $user = User::where('email', $credentials['email'])->first();
 
-            // TEMPORARY: Redirect to home instead of dashboard for testing
-            return redirect('/')->with([
-                'success' => 'Login successful!'
-            ]);
+        // If user not found
+        if (!$user) {
+            return back()->withErrors([
+                'email' => 'The provided credentials do not match our records.',
+            ])->onlyInput('email');
         }
 
+        // Check user status before attempting login
+        if ($user->status === 'banned') {
+            return back()->withErrors([
+                'email' => 'Your account has been banned. Please contact support.',
+                'status' => 'banned'
+            ])->onlyInput('email');
+        }
+
+        if ($user->status === 'inactive') {
+            return back()->withErrors([
+                'email' => 'Your account is inactive. Please contact support.',
+                'status' => 'inactive'
+            ])->onlyInput('email');
+        }
+
+        // Only active users can attempt login
+        if ($user->status === 'active') {
+            if (Auth::attempt($credentials, $request->remember)) {
+                $request->session()->regenerate();
+                
+                // Redirect to homepage
+                return redirect('/')->with('success', 'Login successful! Welcome back.');
+            }
+
+            // If credentials don't match
+            return back()->withErrors([
+                'email' => 'The provided credentials do not match our records.',
+            ])->onlyInput('email');
+        }
+
+        // Fallback for any other status
         return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
+            'email' => 'Your account is not active. Please contact support.',
         ])->onlyInput('email');
     }
 
+    // ============================================
+    // LOGOUT
+    // ============================================
+    
     // Logout user
     public function logout(Request $request)
     {
@@ -94,128 +135,19 @@ class AuthController extends Controller
         return redirect()->route('login')->with('success', 'Logged out successfully.');
     }
 
-    // Get authenticated user (for API - if you still need it)
-    public function me(Request $request)
-    {
-        if ($request->wantsJson()) {
-            return response()->json($request->user());
-        }
-
-        return Inertia::render('Profile/Index', [
-            'auth' => [
-                'user' => $request->user()
-            ]
-        ]);
-    }
-
-    // API-only method for token-based authentication
-    public function apiRegister(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'full_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'required|string|max:20|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $user = User::create([
-            'full_name' => $request->full_name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
-        ]);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'User registered successfully',
-            'user' => $user,
-            'token' => $token,
-            'token_type' => 'Bearer'
-        ], 201);
-    }
-
-    // API-only method for token-based login
-    public function apiLogin(Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
-
-        if (!Auth::attempt($credentials)) {
-            return response()->json([
-                'message' => 'Invalid credentials'
-            ], 401);
-        }
-
-        $user = User::where('email', $request->email)->firstOrFail();
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Login successful',
-            'user' => $user,
-            'token' => $token,
-            'token_type' => 'Bearer'
-        ]);
-    }
-
-    // API-only logout
-    public function apiLogout(Request $request)
-    {
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json([
-            'message' => 'Logged out successfully'
-        ]);
-    }
-
-    // Update verification data (for admin)
-    public function verifyUser(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
-        
-        $validator = Validator::make($request->all(), [
-            'national_id' => 'required|string|unique:users',
-            'profile_picture' => 'nullable|image|max:2048',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        if ($request->hasFile('profile_picture')) {
-            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
-            $user->profile_picture = $path;
-        }
-
-        $user->national_id = $request->national_id;
-        $user->verified_at = now();
-        $user->save();
-
-        return response()->json([
-            'message' => 'User verified successfully',
-            'user' => $user
-        ]);
-    }
+    // ============================================
+    // SESSION MANAGEMENT
+    // ============================================
     
-    // Force logout middleware check (optional)
     public function checkSession(Request $request)
     {
-        // This can be called from your frontend to check session status
         return response()->json([
             'logged_in' => Auth::check(),
-            'session_active' => $request->session()->isStarted(),
-            'user' => Auth::user() ? [
+            'user' => Auth::check() ? [
                 'id' => Auth::user()->id,
                 'email' => Auth::user()->email,
                 'full_name' => Auth::user()->full_name,
+                'status' => Auth::user()->status,
             ] : null,
         ]);
     }

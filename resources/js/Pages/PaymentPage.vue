@@ -4,18 +4,18 @@
       <!-- Container -->
       <div class="container">
         <!-- Header -->
-        <div class="text-center mb-5">
+        <!-- <div class="text-center mb-5">
           <div class="mb-3">
             <i class="fas fa-credit-card fa-3x text-primary"></i>
           </div>
           <h1 class="display-6 fw-bold text-dark mb-2">Complete Your Purchase</h1>
           <p class="text-muted mb-0">Secure payment process with instant confirmation</p>
-        </div>
+        </div> -->
 
         <div class="row justify-content-center">
           <div class="col-lg-10 col-xl-8">
             <!-- Progress Steps -->
-            <div class="card border-0 shadow-sm mb-4">
+            <!-- <div class="card border-0 shadow-sm mb-4">
               <div class="card-body">
                 <div class="steps">
                   <div class="step active">
@@ -34,7 +34,7 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </div> -->
 
             <!-- Loading State -->
             <div v-if="loading" class="text-center py-5">
@@ -75,9 +75,40 @@
                             {{ productData.stock || '∞' }} available
                           </span>
                         </div>
+                        
+                        <!-- DISCOUNT BADGE IF APPLICABLE -->
+                        <div v-if="productData.is_discounted" class="mb-3">
+                          <span class="badge bg-danger fs-6">
+                            <i class="fas fa-fire me-1"></i>{{ productData.discount_amount || calculateDiscountPercent() }}% OFF
+                          </span>
+                          <span v-if="productData.discount_name" class="badge bg-danger-subtle text-danger border border-danger ms-2">
+                            <i class="fas fa-tag me-1"></i>{{ productData.discount_name }}
+                          </span>
+                        </div>
+                        
                         <div class="price-display mb-3">
-                          <span class="price-main">{{ formatPrice(productData.price) }} Birr</span>
-                          <span class="price-unit text-muted">per unit</span>
+                          <!-- Show original price with strikethrough if discounted -->
+                          <div v-if="productData.is_discounted" class="mb-1">
+                            <span class="text-muted text-decoration-line-through">
+                              Original: {{ formatPrice(productData.original_price) }} Birr
+                            </span>
+                          </div>
+                          
+                          <!-- Show current price -->
+                          <div class="d-flex align-items-center">
+                            <span class="price-main">
+                              {{ formatPrice(getCurrentPrice()) }} Birr
+                            </span>
+                            <span class="price-unit text-muted ms-2">per unit</span>
+                          </div>
+                          
+                          <!-- Show savings if discounted -->
+                          <div v-if="productData.is_discounted" class="mt-1">
+                            <span class="badge bg-success">
+                              <i class="fas fa-piggy-bank me-1"></i>
+                              Save {{ formatPrice(calculateSavings()) }} Birr
+                            </span>
+                          </div>
                         </div>
                       </div>
                       
@@ -117,8 +148,15 @@
                             <h5 class="text-muted mb-1">Order Total</h5>
                             <h2 class="text-success fw-bold">{{ formatPrice(calculatedAmount) }} Birr</h2>
                             <small class="text-muted">
-                              {{ productData.quantity }} item(s) × {{ formatPrice(productData.price) }} Birr
+                              {{ productData.quantity }} item(s) × {{ formatPrice(getCurrentPrice()) }} Birr
                             </small>
+                            <!-- Show total savings if discounted -->
+                            <div v-if="productData.is_discounted" class="mt-2">
+                              <small class="text-success">
+                                <i class="fas fa-money-bill-wave me-1"></i>
+                                Total Savings: {{ formatPrice(calculateTotalSavings()) }} Birr
+                              </small>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -128,7 +166,7 @@
               </div>
             </div>
 
-            <!-- Payment Form Card (Only shown when product is loaded) -->
+            <!-- Payment Form Card -->
             <div v-if="productData.product_id" class="card border-0 shadow-sm">
               <div class="card-header bg-white border-0">
                 <div class="d-flex align-items-center">
@@ -149,7 +187,7 @@
                       Personal Information
                     </h6>
                     <div class="row g-3">
-                      <div class="col-md-6">
+                      <div class="col-md-12">
                         <label for="name" class="form-label required">Full Name</label>
                         <div class="input-group">
                           <span class="input-group-text">
@@ -166,21 +204,6 @@
                           <div class="invalid-feedback">
                             Please enter your name
                           </div>
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="email" class="form-label">Email Address (Optional)</label>
-                        <div class="input-group">
-                          <span class="input-group-text">
-                            <i class="fas fa-envelope"></i>
-                          </span>
-                          <input 
-                            id="email"
-                            v-model="form.email"
-                            type="email"
-                            class="form-control form-control-lg"
-                            placeholder="you@example.com"
-                          />
                         </div>
                       </div>
                     </div>
@@ -210,7 +233,7 @@
                                 <div class="flex-grow-1">
                                   <h5 class="fw-bold text-primary mb-1">Vendor Account Number</h5>
                                   <div class="d-flex align-items-center">
-                                    <code class="h4 mb-0 me-3">{{ vendorAccountNumber }}</code>
+                                    <code class="h4 mb-0 me-3">{{ vendorAccountNumber }}(CBE)</code>
                                     <button 
                                       type="button" 
                                       class="btn btn-outline-primary btn-sm"
@@ -255,12 +278,17 @@
                           <div class="col-md-6 text-md-end mt-3 mt-md-0">
                             <div class="amount-breakdown">
                               <div class="d-flex justify-content-between mb-1">
-                                <span class="text-muted">Price:</span>
-                                <span>{{ formatPrice(productData.price) }} Birr</span>
+                                <span class="text-muted">Price per unit:</span>
+                                <span>{{ formatPrice(getCurrentPrice()) }} Birr</span>
                               </div>
                               <div class="d-flex justify-content-between mb-1">
                                 <span class="text-muted">Quantity:</span>
                                 <span>{{ productData.quantity }}</span>
+                              </div>
+                              <!-- Show discount if applicable -->
+                              <div v-if="productData.is_discounted" class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Discount:</span>
+                                <span class="text-success">-{{ formatPrice(calculateTotalSavings()) }} Birr</span>
                               </div>
                               <hr class="my-2">
                               <div class="d-flex justify-content-between">
@@ -407,6 +435,12 @@
                   <input type="hidden" :value="productData.product_image" name="product_image" />
                   <input type="hidden" :value="productData.quantity" name="quantity" />
                   <input type="hidden" :value="calculatedAmount" name="amount" />
+                  <!-- Discount Hidden Fields -->
+                  <input v-if="productData.is_discounted" type="hidden" :value="productData.is_discounted" name="is_discounted" />
+                  <input v-if="productData.is_discounted && productData.discount_id" type="hidden" :value="productData.discount_id" name="discount_id" />
+                  <input v-if="productData.is_discounted" type="hidden" :value="productData.discounted_price" name="discounted_price" />
+                  <input v-if="productData.is_discounted" type="hidden" :value="productData.original_price" name="original_price" />
+                  <input v-if="productData.is_discounted && productData.discount_name" type="hidden" :value="productData.discount_name" name="discount_name" />
 
                   <!-- Terms and Submit -->
                   <div class="mb-4">
@@ -437,7 +471,7 @@
                         </template>
                         <template v-else>
                           <i class="fas fa-lock me-2"></i>
-                          Submit Payment & Place Order
+                          {{ productData.is_discounted ? 'Submit Discounted Payment & Place Order' : 'Submit Payment & Place Order' }}
                         </template>
                       </button>
                     </div>
@@ -467,6 +501,29 @@
                   <i class="fas fa-shopping-cart me-2"></i>
                   Browse Products
                 </Link>
+              </div>
+            </div>
+
+            <!-- Notification Component -->
+            <div v-if="notification.show" 
+                 class="notification-toast position-fixed top-0 end-0 p-3"
+                 style="z-index: 9999">
+              <div class="toast show" 
+                   :class="`border-0 text-bg-${notification.type}`" 
+                   role="alert" 
+                   aria-live="assertive" 
+                   aria-atomic="true">
+                <div class="toast-header border-0" :class="`text-bg-${notification.type}`">
+                  <i :class="notification.icon" class="me-2"></i>
+                  <strong class="me-auto">{{ notification.type.toUpperCase() }}</strong>
+                  <button type="button" 
+                          class="btn-close btn-close-white" 
+                          @click="hideNotification" 
+                          aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                  {{ notification.message }}
+                </div>
               </div>
             </div>
 
@@ -515,8 +572,10 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
-import { router, Link } from '@inertiajs/vue3'
+import { router, Link, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
+
+const page = usePage()
 
 const props = defineProps({
   productData: {
@@ -525,9 +584,14 @@ const props = defineProps({
       product_id: null,
       product_name: '',
       product_image: '',
-      price: 0,
+      unit_price: 0,
       quantity: 1,
-      stock: null
+      stock: null,
+      is_discounted: false,
+      discount_id: null,
+      original_price: 0,
+      discount_name: null,
+      total_amount: 0
     })
   },
   user: {
@@ -546,12 +610,23 @@ const uploadedFile = ref(null)
 const uploadedPreview = ref(null)
 const loading = ref(false)
 
+// Notification system
+const notification = reactive({
+  show: false,
+  message: '',
+  type: 'success',
+  icon: 'fas fa-check-circle'
+})
+
 // Form data
 const form = reactive({
   name: props.user.name || props.user.full_name || '',
-  email: props.user.email || '',
   amount: 0,
   shipment_address: '',
+  is_discounted: false,
+  discount_id: null,
+  original_price: 0,
+  discount_name: null
 })
 
 // Product data (reactive copy)
@@ -559,23 +634,114 @@ const productData = reactive({
   product_id: props.productData.product_id,
   product_name: props.productData.product_name,
   product_image: props.productData.product_image,
-  price: parseFloat(props.productData.price) || 0,
+  unit_price: parseFloat(props.productData.unit_price) || 0,
   quantity: parseInt(props.productData.quantity) || 1,
-  stock: props.productData.stock
+  stock: props.productData.stock,
+  is_discounted: props.productData.is_discounted || false,
+  discount_id: props.productData.discount_id || null,
+  original_price: parseFloat(props.productData.original_price) || parseFloat(props.productData.unit_price) || 0,
+  discount_name: props.productData.discount_name || null,
+  total_amount: parseFloat(props.productData.total_amount) || 0
 })
+
+// Helper methods for discount calculations
+const getCurrentPrice = () => {
+  return productData.unit_price
+}
+
+const calculateDiscountPercent = () => {
+  if (!productData.is_discounted || productData.original_price <= 0) return 0
+  
+  const original = productData.original_price
+  const unitPrice = productData.unit_price
+  const discount = original - unitPrice
+  const percent = (discount / original) * 100
+  
+  return Math.round(percent)
+}
+
+const calculateSavings = () => {
+  if (!productData.is_discounted || productData.original_price <= 0) return 0
+  
+  const original = productData.original_price
+  const unitPrice = productData.unit_price
+  
+  return original - unitPrice
+}
+
+const calculateTotalSavings = () => {
+  const savingsPerUnit = calculateSavings()
+  return savingsPerUnit * productData.quantity
+}
 
 // Computed properties
 const calculatedAmount = computed(() => {
-  return (productData.price * productData.quantity).toFixed(2)
+  const price = getCurrentPrice()
+  const total = price * productData.quantity
+  return parseFloat(total.toFixed(2))
 })
 
-// Initialize form with product amount
+// Show notification
+const showNotification = (message, type = 'success') => {
+  const icons = {
+    success: 'fas fa-check-circle',
+    error: 'fas fa-times-circle',
+    warning: 'fas fa-exclamation-triangle',
+    info: 'fas fa-info-circle'
+  }
+  
+  notification.show = true
+  notification.message = message
+  notification.type = type
+  notification.icon = icons[type] || 'fas fa-info-circle'
+  
+  setTimeout(() => {
+    hideNotification()
+  }, 5000)
+}
+
+// Hide notification
+const hideNotification = () => {
+  notification.show = false
+}
+
+// Initialize form
 onMounted(() => {
+  // Set form values
   form.amount = calculatedAmount.value
   form.name = props.user.name || props.user.full_name || ''
-  form.email = props.user.email || ''
   
-  // Fix for Bootstrap validation - wait for DOM to be ready
+  // Set discount form values if applicable
+  if (productData.is_discounted) {
+    form.is_discounted = true
+    form.discount_id = productData.discount_id
+    form.original_price = productData.original_price
+    form.discount_name = productData.discount_name
+    
+    // Show discount notification
+    const savings = calculateSavings()
+    const percent = calculateDiscountPercent()
+    showNotification(
+      `🎉 Discount applied! You're saving ${formatPrice(savings)} Birr (${percent}%) per unit!`, 
+      'success'
+    )
+    
+    console.log('Discount initialized:', {
+      is_discounted: productData.is_discounted,
+      discount_id: productData.discount_id,
+      original_price: productData.original_price,
+      unit_price: productData.unit_price,
+      discount_name: productData.discount_name,
+      savings_per_unit: savings,
+      discount_percent: percent
+    })
+  } else {
+    // For non-discounted products, original_price = unit_price
+    form.is_discounted = false
+    form.original_price = productData.unit_price
+  }
+  
+  // Fix for Bootstrap validation
   nextTick(() => {
     const forms = document.querySelectorAll('.needs-validation')
     Array.from(forms).forEach(form => {
@@ -594,10 +760,8 @@ onMounted(() => {
 const getProductImage = (imagePath) => {
   if (!imagePath) return 'https://placehold.co/400x300/e0f2f1/065f46?text=Product+Image'
   
-  // Fix for image 403 errors
   if (imagePath.startsWith('http')) return imagePath
   
-  // Handle different image path formats
   if (imagePath.startsWith('storage/')) {
     return `/${imagePath}`
   }
@@ -606,14 +770,12 @@ const getProductImage = (imagePath) => {
     return imagePath
   }
   
-  // Default - assume it's a relative path from storage
   return `/storage/${imagePath}`
 }
 
 const handleImageError = (event) => {
-  console.warn('Image failed to load, using fallback:', event.target.src)
   event.target.src = 'https://placehold.co/400x300/e0f2f1/065f46?text=Product+Image'
-  event.target.onerror = null // Prevent infinite loop
+  event.target.onerror = null
 }
 
 const decreaseQuantity = () => {
@@ -655,7 +817,6 @@ const copyToClipboard = (text) => {
     })
     .catch(err => {
       console.error('Failed to copy: ', err)
-      // Fallback for older browsers
       const textArea = document.createElement('textarea')
       textArea.value = text
       document.body.appendChild(textArea)
@@ -719,53 +880,6 @@ const formatPrice = (price) => {
   return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 }
 
-const showNotification = (message, type = 'success') => {
-  // Check if Bootstrap is available
-  if (typeof bootstrap === 'undefined') {
-    console.log(`${type}: ${message}`)
-    return
-  }
-  
-  // Create Bootstrap toast
-  const toastContainer = document.createElement('div')
-  toastContainer.className = 'position-fixed bottom-0 end-0 p-3'
-  toastContainer.style.zIndex = '1050'
-  
-  const toast = document.createElement('div')
-  toast.className = `toast align-items-center text-bg-${type === 'error' ? 'danger' : type} border-0`
-  toast.setAttribute('role', 'alert')
-  toast.setAttribute('aria-live', 'assertive')
-  toast.setAttribute('aria-atomic', 'true')
-  
-  toast.innerHTML = `
-    <div class="d-flex">
-      <div class="toast-body">
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
-        ${message}
-      </div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-    </div>
-  `
-  
-  toastContainer.appendChild(toast)
-  document.body.appendChild(toastContainer)
-  
-  try {
-    // Initialize and show toast
-    const bsToast = new bootstrap.Toast(toast)
-    bsToast.show()
-    
-    // Remove after animation
-    toast.addEventListener('hidden.bs.toast', () => {
-      if (toastContainer.parentNode) {
-        document.body.removeChild(toastContainer)
-      }
-    })
-  } catch (e) {
-    console.error('Toast error:', e)
-  }
-}
-
 const validateForm = () => {
   // Manual validation
   let isValid = true
@@ -811,48 +925,71 @@ const submitPayment = async () => {
 
   processing.value = true
 
-  // Update form with calculated amount
+  // Update form with calculated amount (TOTAL amount)
   form.amount = calculatedAmount.value
 
   const formData = new FormData()
   formData.append('name', form.name)
-  formData.append('email', form.email)
-  formData.append('amount', form.amount)
+  formData.append('amount', form.amount) // TOTAL amount
   formData.append('quantity', productData.quantity)
   formData.append('shipment_address', form.shipment_address)
   formData.append('payment_image', uploadedFile.value)
   formData.append('product_id', productData.product_id)
   formData.append('product_name', productData.product_name)
   formData.append('product_image', productData.product_image)
-  formData.append('vendor_account_number', props.vendorAccountNumber || '')
+  
+  // FIX: Send is_discounted as boolean (1/0) instead of string
+  if (productData.is_discounted) {
+    formData.append('is_discounted', '1') // Send as string '1' for true
+    if (productData.discount_id) {
+      formData.append('discount_id', productData.discount_id)
+    }
+    formData.append('original_price', productData.original_price) // Original UNIT price
+    if (productData.discount_name) {
+      formData.append('discount_name', productData.discount_name)
+    }
+    
+    console.log('Submitting discount data:', {
+      is_discounted: true,
+      discount_id: productData.discount_id,
+      original_price: productData.original_price,
+      unit_price: productData.unit_price,
+      total_amount: form.amount,
+      discount_name: productData.discount_name
+    })
+  } else {
+    // For non-discounted products
+    formData.append('is_discounted', '0') // Send as string '0' for false
+    formData.append('original_price', productData.unit_price) // Unit price = original price
+  }
 
   try {
-    // Submit payment, create order, and update stock
     await router.post('/payment/process', formData, {
       forceFormData: true,
       preserveScroll: true,
-      preserveState: false, // IMPORTANT: Changed to false
+      preserveState: false,
       onSuccess: () => {
-        // Show success message
-        showNotification('Order placed successfully! Redirecting to your orders...', 'success')
-        
-        // Use Inertia router to redirect after delay
-        setTimeout(() => {
-          router.visit('/orders/my-orders')
-        }, 1500)
+        showNotification('Payment submitted successfully! Redirecting to your orders...', 'success')
       },
       onError: (errors) => {
         console.error('Payment submission error:', errors)
+        
         let errorMessage = 'Error submitting payment. Please try again.'
         
-        if (errors.payment_image) {
+        if (errors.message) {
+          errorMessage = errors.message
+        } else if (errors.payment_image) {
           errorMessage = errors.payment_image[0]
         } else if (errors.amount) {
           errorMessage = errors.amount[0]
         } else if (errors.shipment_address) {
           errorMessage = errors.shipment_address[0]
-        } else if (errors.message) {
-          errorMessage = errors.message
+        } else if (errors.original_price) {
+          errorMessage = errors.original_price[0]
+        } else if (errors.discount_id) {
+          errorMessage = errors.discount_id[0]
+        } else if (errors.is_discounted) {
+          errorMessage = 'Discount validation error: ' + errors.is_discounted[0]
         }
         
         showNotification(errorMessage, 'error')
@@ -867,7 +1004,56 @@ const submitPayment = async () => {
 }
 </script>
 <style scoped>
-/* Progress Steps */
+  .notification-toast {
+  animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 350px;
+}
+
+.toast-header {
+  border-radius: 8px 8px 0 0;
+  padding: 0.75rem 1rem;
+}
+
+.toast-body {
+  padding: 1rem;
+}
+
+/* Toast color variants */
+.text-bg-success {
+  background-color: #198754 !important;
+  color: white !important;
+}
+
+.text-bg-error {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
+
+.text-bg-warning {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+
+.text-bg-info {
+  background-color: #0dcaf0 !important;
+  color: white !important;
+}
 .steps {
   display: flex;
   align-items: center;
@@ -1122,5 +1308,20 @@ code {
 
 .was-validated .form-control:valid {
   border-color: #198754;
+}
+
+/* Discount badge styling */
+.bg-danger-subtle {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.text-decoration-line-through {
+  text-decoration-thickness: 2px;
+}
+
+/* Highlight discount section */
+.card .price-display .badge.bg-success {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
 }
 </style>

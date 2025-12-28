@@ -23,8 +23,10 @@ class User extends Authenticatable
         'password',
         'profile_picture',
         'account_number',
-         'is_verified'
-        
+        'is_verified',
+        'verified_at',
+        'national_id',             // National ID NUMBER (string/number)
+        'remember_token',
     ];
 
     /**
@@ -57,47 +59,15 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_verified' => 'boolean',
         ];
     }
 
-    /**
-     * ROLE HELPERS
-     */
-    
-    public function isVendor(): bool
-    {
-        return $this->role === 'vendor';
-    }
-
-    public function isCustomer(): bool
-    {
-        return $this->role === 'customer';
-    }
-
-    public function isAdmin(): bool
-    {
-        return $this->role === 'admin';
-    }
-
-    public function scopeVendors($query)
-    {
-        return $query->where('role', 'vendor');
-    }
-
-    public function scopeCustomers($query)
-    {
-        return $query->where('role', 'customer');
-    }
-
-    public function scopeAdmins($query)
-    {
-        return $query->where('role', 'admin');
-    }
-
-    /**
-     * VERIFICATION SYSTEM
-     */
+    // ============================================
+    // VERIFICATION SYSTEM
+    // ============================================
     
     public function verificationRequest()
     {
@@ -116,6 +86,7 @@ class User extends Authenticatable
 
     /**
      * Get is_identity_verified attribute for frontend
+     * This is for vendor-specific verification
      */
     public function getIsIdentityVerifiedAttribute(): bool
     {
@@ -131,16 +102,26 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if user is verified (general verification)
+     * This checks the is_verified field in users table
+     */
+    public function isVerified(): bool
+    {
+        return $this->is_verified && !is_null($this->verified_at);
+    }
+
+    /**
      * Check if user can sell products
      */
     public function canSell(): bool
     {
-        return $this->isVendor() && $this->isVerifiedVendor();
+        // This can be removed if you don't have vendor system
+        return false;
     }
 
-    /**
-     * PROFILE PICTURE
-     */
+    // ============================================
+    // PROFILE PICTURE
+    // ============================================
     
     public function getProfilePictureUrlAttribute()
     {
@@ -155,104 +136,89 @@ class User extends Authenticatable
         return asset('storage/' . $this->profile_picture);
     }
 
+    // ============================================
+    // ACCOUNT HELPERS
+    // ============================================
+
     /**
-     * PRODUCTS & WISHLIST
+     * Check if user has bank account set
      */
-    
-    public function products()
+    public function hasBankAccount(): bool
     {
-        return $this->hasMany(Product::class, 'user_id');
-    }
-
-    public function wishlist()
-    {
-        return $this->belongsToMany(
-            Product::class,
-            'wishlist',
-            'user_id',
-            'product_id'
-        )->withTimestamps();
-    }
-
-    public function hasInWishlist($productId): bool
-    {
-        return $this->wishlist()->where('product_id', $productId)->exists();
+        return !empty($this->account_number);
     }
 
     /**
-     * STOCK HISTORY
+     * Get masked account number (for display)
      */
-    
-    public function stockHistories()
+    public function getMaskedAccountNumberAttribute(): string
     {
-        return $this->hasMany(StockHistory::class, 'user_id');
-    }
-
-    /**
-     * EMAIL VERIFICATION (from Laravel)
-     */
-    
-    public function isEmailVerified(): bool
-    {
-        return !is_null($this->email_verified_at);
-    }
-
-    /**
-     * BAN/STATUS SYSTEM (optional - add if needed)
-     */
-    
-    public function isBanned(): bool
-    {
-        // If you add a 'banned_at' column
-        // return !is_null($this->banned_at);
-        return false;
-    }
-
-    public function isActive(): bool
-    {
-        return !$this->isBanned();
-    }
-
-    /**
-     * NOTIFICATIONS PREFERENCES (optional)
-     */
-    
-    public function shouldReceiveEmailNotifications(): bool
-    {
-        // If you add notification preferences
-        // return $this->email_notifications === true;
-        return true;
-    }
-
-    /**
-     * USER STATISTICS (optional)
-     */
-    
-    public function getProductsCountAttribute(): int
-    {
-        return $this->products()->count();
-    }
-
-    public function getWishlistCountAttribute(): int
-    {
-        return $this->wishlist()->count();
-    }
-
-    /**
-     * Get user's initials for avatar placeholder
-     */
-    public function getInitialsAttribute(): string
-    {
-        $names = explode(' ', $this->full_name);
-        $initials = '';
-        
-        foreach ($names as $name) {
-            if (!empty($name)) {
-                $initials .= strtoupper($name[0]);
-                if (strlen($initials) >= 2) break;
-            }
+        if (!$this->account_number) {
+            return 'Not Set';
         }
         
-        return $initials ?: strtoupper(substr($this->email, 0, 2));
+        $length = strlen($this->account_number);
+        if ($length <= 4) {
+            return $this->account_number;
+        }
+        
+        return substr($this->account_number, 0, 4) . str_repeat('*', $length - 4);
+    }
+
+    // ============================================
+    // QUERY SCOPES
+    // ============================================
+
+    /**
+     * Scope for verified users
+     */
+    public function scopeVerified($query)
+    {
+        return $query->where('is_verified', true)
+                    ->whereNotNull('verified_at');
+    }
+
+    /**
+     * Scope for users with national ID
+     */
+    public function scopeHasNationalId($query)
+    {
+        return $query->whereNotNull('national_id');
+    }
+
+    /**
+     * Scope for users with bank account
+     */
+    public function scopeHasBankAccount($query)
+    {
+        return $query->whereNotNull('account_number');
+    }
+
+    // ============================================
+    // STATISTICS & REPORTING
+    // ============================================
+
+    /**
+     * Get user registration date in human-readable format
+     */
+    public function getRegistrationDateAttribute(): string
+    {
+        return $this->created_at->format('F j, Y');
+    }
+
+    /**
+     * Get user age (based on registration)
+     */
+    public function getAccountAgeAttribute(): string
+    {
+        return $this->created_at->diffForHumans();
+    }
+
+    /**
+     * Check if user is new (registered within last 7 days)
+     */
+    public function getIsNewUserAttribute(): bool
+    {
+        return $this->created_at->gt(now()->subDays(7));
     }
 }

@@ -2,251 +2,173 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Shipment extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    protected $table = 'shipments';
+
     protected $fillable = [
         'user_id',
-        'delivery_address',
+        'payment_id',
+        'product_id',
+        'product_name',
+        'product_image',
+        'name',
+        'email',
+        'phone',
+        'amount',
+        'quantity',
+        'shipment_address',
+        'payment_image',
         'status',
         'cancellation_reason',
+        'order_number',
+        'vendor_id',
+        'vendor_account_number',
+        'payment_method',
+        'payment_status',
+        'payment_reference',
+        'shipping_status',
         'tracking_number',
-        'carrier',
-        'shipping_cost',
-        'total_amount',
         'notes',
-        'shipped_at',
-        'delivered_at',
-        'cancelled_at',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-        'shipping_cost' => 'decimal:2',
-        'total_amount' => 'decimal:2',
-        'shipped_at' => 'datetime',
-        'delivered_at' => 'datetime',
-        'cancelled_at' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'amount' => 'decimal:2',
+        'quantity' => 'integer',
     ];
 
-    /**
-     * Status constants.
-     */
-    public const STATUS_PENDING = 'pending';
-    public const STATUS_PROCESSING = 'processing';
-    public const STATUS_SHIPPED = 'shipped';
-    public const STATUS_DELIVERED = 'delivered';
-    public const STATUS_CANCELLED = 'cancelled';
-
-    /**
-     * Get status options.
-     *
-     * @return array<string, string>
-     */
-    public static function getStatusOptions(): array
-    {
-        return [
-            self::STATUS_PENDING => 'Pending',
-            self::STATUS_PROCESSING => 'Processing',
-            self::STATUS_SHIPPED => 'Shipped',
-            self::STATUS_DELIVERED => 'Delivered',
-            self::STATUS_CANCELLED => 'Cancelled',
-        ];
-    }
-
-    /**
-     * Get human-readable status.
-     */
-    public function getStatusTextAttribute(): string
-    {
-        return self::getStatusOptions()[$this->status] ?? ucfirst($this->status);
-    }
-
-    /**
-     * Check if shipment is pending.
-     */
-    public function isPending(): bool
-    {
-        return $this->status === self::STATUS_PENDING;
-    }
-
-    /**
-     * Check if shipment is processing.
-     */
-    public function isProcessing(): bool
-    {
-        return $this->status === self::STATUS_PROCESSING;
-    }
-
-    /**
-     * Check if shipment is shipped.
-     */
-    public function isShipped(): bool
-    {
-        return $this->status === self::STATUS_SHIPPED;
-    }
-
-    /**
-     * Check if shipment is delivered.
-     */
-    public function isDelivered(): bool
-    {
-        return $this->status === self::STATUS_DELIVERED;
-    }
-
-    /**
-     * Check if shipment is cancelled.
-     */
-    public function isCancelled(): bool
-    {
-        return $this->status === self::STATUS_CANCELLED;
-    }
-
-    /**
-     * Cancel the shipment with a reason.
-     */
-    public function cancel(string $reason): bool
-    {
-        $this->update([
-            'status' => self::STATUS_CANCELLED,
-            'cancellation_reason' => $reason,
-            'cancelled_at' => now(),
-        ]);
-
-        return true;
-    }
-
-    /**
-     * Mark as shipped.
-     */
-    public function markAsShipped(?string $trackingNumber = null, ?string $carrier = null): bool
-    {
-        $this->update([
-            'status' => self::STATUS_SHIPPED,
-            'tracking_number' => $trackingNumber,
-            'carrier' => $carrier,
-            'shipped_at' => now(),
-        ]);
-
-        return true;
-    }
-
-    /**
-     * Mark as delivered.
-     */
-    public function markAsDelivered(): bool
-    {
-        $this->update([
-            'status' => self::STATUS_DELIVERED,
-            'delivered_at' => now(),
-        ]);
-
-        return true;
-    }
-
-    /**
-     * Calculate total amount (items + shipping).
-     */
-    public function calculateTotal(): float
-    {
-        $itemsTotal = $this->items()->sum('total_price');
-        return $itemsTotal + $this->shipping_cost;
-    }
-
-    /**
-     * Get the user that owns the shipment.
-     */
-    public function user(): BelongsTo
+    // Relationships
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the items for the shipment.
-     */
-    public function items(): HasMany
+    public function payment()
     {
-        return $this->hasMany(ShipmentItem::class);
+        return $this->belongsTo(Payment::class);
     }
 
-    /**
-     * Scope to get shipments by status.
-     */
-    public function scopeByStatus($query, $status)
+    public function product()
     {
-        return $query->where('status', $status);
+        return $this->belongsTo(Product::class, 'product_id', 'product_id');
     }
 
-    /**
-     * Scope to get shipments for a user.
-     */
-    public function scopeForUser($query, $userId)
+    public function vendor()
     {
-        return $query->where('user_id', $userId);
+        return $this->belongsTo(User::class, 'vendor_id');
     }
 
-    /**
-     * Scope to get pending shipments.
-     */
-    public function scopePending($query)
+    // Alias for customer (for vendor view)
+    public function customer()
     {
-        return $query->where('status', self::STATUS_PENDING);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    /**
-     * Scope to get shipped shipments.
-     */
-    public function scopeShipped($query)
+    // ✅ ADD THIS: Messages relationship
+    public function messages()
     {
-        return $query->where('status', self::STATUS_SHIPPED);
+        return $this->hasMany(Message::class, 'shipment_id');
     }
 
-    /**
-     * Scope to get delivered shipments.
-     */
-    public function scopeDelivered($query)
+    // ✅ ADD THIS: Helper to get other user in chat
+    public function getOtherUser($currentUserId)
     {
-        return $query->where('status', self::STATUS_DELIVERED);
+        if ($currentUserId === $this->user_id) {
+            // Current user is customer, return vendor
+            return $this->product->user ?? $this->vendor;
+        } else {
+            // Current user is vendor, return customer
+            return $this->user;
+        }
     }
 
-    /**
-     * Scope to get cancelled shipments.
-     */
-    public function scopeCancelled($query)
+    // Status options
+    public static function statusOptions()
     {
-        return $query->where('status', self::STATUS_CANCELLED);
+        return [
+            'pending' => 'Pending',
+            'processing' => 'Processing',
+            'shipped' => 'Shipped',
+            'delivered' => 'Delivered',
+            'cancelled' => 'Cancelled',
+        ];
     }
 
-    /**
-     * Get formatted total amount.
-     */
-    public function getFormattedTotalAttribute(): string
+    // Get status color - Vue expects this
+    public function getStatusColorAttribute()
     {
-        return '₦' . number_format($this->total_amount, 2);
+        $colors = [
+            'pending' => 'bg-yellow-100 text-yellow-800',
+            'processing' => 'bg-blue-100 text-blue-800',
+            'shipped' => 'bg-purple-100 text-purple-800',
+            'delivered' => 'bg-green-100 text-green-800',
+            'cancelled' => 'bg-red-100 text-red-800',
+        ];
+
+        return $colors[$this->status] ?? 'bg-gray-100 text-gray-800';
     }
 
-    /**
-     * Get formatted shipping cost.
-     */
-    public function getFormattedShippingCostAttribute(): string
+    // Get product image URL
+    public function getProductImageUrlAttribute()
     {
-        return '₦' . number_format($this->shipping_cost, 2);
+        if (!$this->product_image) {
+            return $this->product?->main_image_url ?? asset('images/default-product.png');
+        }
+        
+        if (str_starts_with($this->product_image, 'http')) {
+            return $this->product_image;
+        }
+        
+        return asset('storage/' . $this->product_image);
+    }
+
+    // Get payment image URL
+    public function getPaymentImageUrlAttribute()
+    {
+        if (!$this->payment_image) {
+            return asset('images/default-payment.png');
+        }
+        
+        if (str_starts_with($this->payment_image, 'http')) {
+            return $this->payment_image;
+        }
+        
+        return asset('storage/' . $this->payment_image);
+    }
+
+    // For Vue compatibility - return order_number or id
+    public function getOrderNumberAttribute()
+    {
+        return $this->attributes['order_number'] ?? '#' . $this->id;
+    }
+
+    // Get formatted amount with Birr
+    public function getFormattedAmountAttribute()
+    {
+        return number_format($this->amount, 2) . ' Birr';
+    }
+
+    // Get payment status text
+    public function getPaymentStatusTextAttribute()
+    {
+        $statuses = [
+            'pending' => 'Pending',
+            'completed' => 'Completed',
+            'cancelled' => 'Cancelled',
+        ];
+        
+        return $statuses[$this->payment_status] ?? $this->payment_status;
+    }
+
+    // Check if shipment can be cancelled
+    public function getCanCancelAttribute()
+    {
+        return in_array($this->status, ['pending', 'processing']);
     }
 }

@@ -23,9 +23,6 @@ class VerificationRequest extends Model
         'reviewed_at' => 'datetime',
     ];
 
-    // Append these custom attributes to JSON/array output
-    protected $appends = ['national_id_image_url', 'status_badge'];
-
     // Status constants
     const STATUS_PENDING = 'pending';
     const STATUS_APPROVED = 'approved';
@@ -58,24 +55,6 @@ class VerificationRequest extends Model
         return $this->status === self::STATUS_REJECTED;
     }
 
-    // Status badge (HTML)
-    public function getStatusBadgeAttribute()
-    {
-        $badges = [
-            self::STATUS_PENDING => '<span class="badge bg-warning">Pending</span>',
-            self::STATUS_APPROVED => '<span class="badge bg-success">Approved</span>',
-            self::STATUS_REJECTED => '<span class="badge bg-danger">Rejected</span>',
-        ];
-
-        return $badges[$this->status] ?? '<span class="badge bg-secondary">Unknown</span>';
-    }
-
-    // Status badge (text only for forms)
-    public function getStatusTextAttribute()
-    {
-        return ucfirst($this->status);
-    }
-
     // Get image URL
     public function getNationalIdImageUrlAttribute()
     {
@@ -104,5 +83,43 @@ class VerificationRequest extends Model
     public function scopeRejected($query)
     {
         return $query->where('status', self::STATUS_REJECTED);
+    }
+
+    /**
+     * Mark the request as approved
+     */
+    public function approve($reviewerId = null)
+    {
+        $this->update([
+            'status' => self::STATUS_APPROVED,
+            'reviewed_by' => $reviewerId,
+            'reviewed_at' => now(),
+        ]);
+
+        // Mark user as verified AND store national_id
+        if ($this->user) {
+            $this->user->update([
+                'national_id' => $this->national_id, // Store national ID number
+                'is_verified' => true,
+                'verified_at' => now(),
+            ]);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Mark the request as rejected
+     */
+    public function reject($reason, $reviewerId = null)
+    {
+        $this->update([
+            'status' => self::STATUS_REJECTED,
+            'rejection_reason' => $reason,
+            'reviewed_by' => $reviewerId,
+            'reviewed_at' => now(),
+        ]);
+
+        return $this;
     }
 }

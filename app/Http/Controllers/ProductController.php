@@ -220,4 +220,53 @@ class ProductController extends Controller
                 ->with('error', 'Error deleting product: ' . $e->getMessage());
         }
     }
+
+    // NEW METHOD: Show page for adding additional images
+    public function showAddImages($id)
+    {
+        $product = Product::with(['additionalImages', 'category'])
+                         ->findOrFail($id);
+        
+        // Check if user owns the product
+        if (Auth::id() !== $product->user_id) {
+            abort(403, 'Unauthorized action.');
+        }
+        
+        return Inertia::render('AddImagesPage', [
+            'product' => $product,
+            'success' => session('success'),
+            'error' => session('error')
+        ]);
+    }
+
+    // NEW METHOD: Show product details with all images for public
+    public function showDetails($id)
+    {
+        $product = Product::with(['category', 'additionalImages', 'user', 'discount'])
+                         ->findOrFail($id);
+        
+        $isOwner = Auth::check() && Auth::id() === $product->user_id;
+        
+        return Inertia::render('ProductDetails', [
+            'product' => $product,
+            'isOwner' => $isOwner,
+            'allImages' => $product->all_images,
+            'selectedImageId' => request()->query('selected_image_id')
+        ]);
+    }
+
+    // NEW METHOD: Show public product details
+    public function show(Product $product)
+    {
+        $product->load(['category', 'additionalImages', 'user', 'discount']);
+        
+        $isOwner = Auth::check() && Auth::id() === $product->user_id;
+        
+        return Inertia::render('ProductDetails', [
+            'product' => $product,
+            'isOwner' => $isOwner,
+            'allImages' => $product->all_images,
+            'selectedImageId' => request()->query('selected_image_id')
+        ]);
+    }
 }

@@ -1,198 +1,71 @@
 <template>
   <AppLayout>
-    <!-- Hero Section with Bootstrap Carousel -->
-    <section class="hero-section">
-      <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
-        <!-- Carousel Indicators -->
-        <div class="carousel-indicators">
-          <button 
-            v-for="(_, index) in heroImages" 
-            :key="index"
-            type="button" 
-            data-bs-target="#heroCarousel"
-            :data-bs-slide-to="index"
-            :class="{ active: currentSlide === index }"
-          ></button>
+    <div class="animated-background">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+      <div class="shape shape-4"></div>
+    </div>
+
+    <div>
+      <!-- Hero Section -->
+      <section class="hero-section bg-white position-relative overflow-hidden">
+        <div class="position-absolute top-0 start-0 w-100 h-100">
+          <div class="pattern-dots"></div>
+          <div class="pattern-gradient"></div>
         </div>
 
-        <!-- Carousel Items -->
-        <div class="carousel-inner">
-          <div 
-            v-for="(image, index) in heroImages" 
-            :key="index"
-            class="carousel-item"
-            :class="{ active: currentSlide === index }"
-            :style="{ backgroundImage: `url(${image})` }"
-          >
-            <div class="slideshow-overlay"></div>
-          </div>
-        </div>
-
-        <!-- Carousel Content -->
-        <div class="carousel-content">
-          <div class="container">
-            <div class="row justify-content-center text-center">
-              <div class="col-12 col-lg-10 col-xl-8">
-                <h1 class="display-3 fw-bold mb-4 text-white">Discover Amazing Products</h1>
-                <p class="lead mb-5 text-white">Shop the latest trends with exclusive deals</p>
-                
-                <!-- REMOVED: Search container -->
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Products Section with Bootstrap Grid -->
-    <section class="products-section py-5 bg-light">
-      <div class="container">
-        <!-- Section Header -->
-        <div class="row align-items-center mb-5">
-          <div class="col-12 col-md-6">
-            <h2 class="h1 fw-bold mb-3">
-              {{ selectedCategory ? selectedCategory + ' Products' : 'All Products' }}
-              <!-- Show search term if searching -->
-              <span v-if="searchTerm" class="text-primary">: "{{ searchTerm }}"</span>
-            </h2>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="d-flex justify-content-md-end">
-              <div class="sort-controls w-100 w-md-auto">
-                <select v-model="sortBy" class="form-select form-select-lg border-0 shadow-sm">
-                  <option value="name">Sort by Name</option>
-                  <option value="price_low">Price: Low to High</option>
-                  <option value="price_high">Price: High to Low</option>
-                  <option value="newest">Newest First</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Products Grid - Bootstrap 5 Grid -->
-        <div v-if="filteredProducts.length > 0" class="row g-4">
-          <div 
-            v-for="product in filteredProducts" 
-            :key="product.product_id"
-            class="col-6 col-md-4 col-lg-3 col-xl-2-4"
-          >
-            <div class="card product-card h-100 border-0 shadow-sm hover-shadow">
-              <!-- Product Image -->
-              <div class="position-relative overflow-hidden bg-light rounded-top">
-                <img 
-                  :src="getProductImage(product.image)" 
-                  :alt="product.name"
-                  class="card-img-top product-image p-3"
-                  @error="handleImageError"
-                  style="height: 200px; object-fit: contain;"
-                />
-                
-                <!-- Stock Badge -->
-                <div v-if="product.stock <= 0" class="badge bg-danger position-absolute start-0 bottom-0 m-3">
-                  Out of Stock
-                </div>
-                <div v-else-if="product.stock < 10" class="badge bg-warning text-dark position-absolute start-0 bottom-0 m-3">
-                  Only {{ product.stock }} left
-                </div>
-              </div>
-
-              <!-- Product Info -->
-              <div class="card-body d-flex flex-column">
-                <h5 class="card-title fw-bold mb-2 text-truncate" :title="product.name">
-                  {{ product.name }}
-                </h5>
-                
-                <div class="mt-auto">
-                  <!-- Price -->
-                  <div class="d-flex align-items-center mb-3">
-                    <span class="h4 fw-bold text-primary mb-0">
-                      {{ formatPrice(product.price) }} Birr
-                    </span>
-                    <span v-if="product.original_price" class="text-muted text-decoration-line-through ms-2">
-                      {{ formatPrice(product.original_price) }} Birr
-                    </span>
-                  </div>
-
-                  <!-- Buy Button -->
-                  <button 
-                    class="btn btn-primary w-100 fw-bold py-2"
-                    @click="buyNow(product)"
-                    :disabled="product.stock <= 0"
-                    :class="{ 'btn-secondary': product.stock <= 0 }"
+        <div class="container position-relative z-2 py-5 py-lg-6">
+          <div class="row align-items-center">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+              <div class="pe-lg-4">
+                <h1 class="display-4 fw-bold mb-4">
+                  Welcome to
+                  <span class="text-gradient-primary"> E-SHOP</span>
+                </h1>
+                <p class="lead text-muted mb-4 fs-5">
+                  Discover amazing products from trusted sellers.
+                  Shop with confidence and convenience.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                  <button
+                    @click="scrollToProducts"
+                    class="btn btn-lg btn-primary px-4 shadow-sm"
+                    type="button"
                   >
-                    <i class="fas fa-bolt me-2"></i>
-                    {{ product.stock > 0 ? 'Buy Now' : 'Out of Stock' }}
+                    <i class="fas fa-shopping-bag me-2"></i>Shop Now
                   </button>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Empty State -->
-        <div v-else class="text-center py-5">
-          <div class="empty-state">
-            <div class="empty-icon mb-4">
-              <i class="fas fa-box-open fa-4x text-muted"></i>
-            </div>
-            <h3 class="h2 fw-bold mb-3">No Products Found</h3>
-            <p class="text-muted mb-4" v-if="searchTerm">
-              No products found for "{{ searchTerm }}"
-            </p>
-            <p class="text-muted mb-4" v-else-if="selectedCategory">
-              No products found in {{ selectedCategory }}
-            </p>
-            <p class="text-muted mb-4" v-else>
-              No products available
-            </p>
-            <button @click="clearFilters" class="btn btn-primary btn-lg px-4">
-              Clear Filters
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Cart Offcanvas (Bootstrap 5 Offcanvas) -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel">
-      <div class="offcanvas-header">
-        <h5 class="offcanvas-title fw-bold" id="cartOffcanvasLabel">
-          <i class="fas fa-shopping-cart me-2"></i>Shopping Cart
-        </h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-      </div>
-      
-      <div class="offcanvas-body">
-        <div v-if="cartItems.length > 0" class="cart-items">
-          <div v-for="item in cartItems" :key="item.product_id" class="card mb-3 border-0 shadow-sm">
-            <div class="row g-0 align-items-center">
-              <div class="col-4">
-                <img :src="getProductImage(item.image)" :alt="item.name" class="img-fluid rounded-start" style="height: 80px; object-fit: cover;">
-              </div>
-              <div class="col-8">
-                <div class="card-body py-2">
-                  <h6 class="card-title fw-bold mb-1 text-truncate">{{ item.name }}</h6>
-                  <p class="card-text text-primary fw-bold mb-2">{{ formatPrice(item.price) }} Birr</p>
-                  <div class="d-flex align-items-center">
-                    <div class="btn-group btn-group-sm" role="group">
-                      <button 
-                        class="btn btn-outline-secondary"
-                        @click="decreaseCartQuantity(item.product_id)"
+            <div class="col-lg-6">
+              <div class="position-relative">
+                <div class="hero-slider rounded-4 overflow-hidden shadow-lg">
+                  <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner rounded-4">
+                      <div
+                        v-for="(image, index) in heroImages"
+                        :key="index"
+                        class="carousel-item"
+                        :class="{ active: index === 0 }"
                       >
-                        <i class="fas fa-minus"></i>
-                      </button>
-                      <span class="btn btn-light border px-3">{{ item.quantity }}</span>
-                      <button 
-                        class="btn btn-outline-secondary"
-                        @click="increaseCartQuantity(item.product_id)"
-                        :disabled="item.quantity >= getProductStock(item.product_id)"
-                      >
-                        <i class="fas fa-plus"></i>
-                      </button>
+                        <img
+                          :src="image"
+                          class="d-block w-100"
+                          alt="Featured Product"
+                          style="height: 400px; object-fit: cover;"
+                        >
+                        <div class="carousel-overlay"></div>
+                      </div>
                     </div>
-                    <button @click="removeFromCart(item.product_id)" class="btn btn-link text-danger ms-auto">
-                      <i class="fas fa-trash"></i>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                      <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                      <span class="visually-hidden">Next</span>
                     </button>
                   </div>
                 </div>
@@ -200,689 +73,1323 @@
             </div>
           </div>
         </div>
-        
-        <div v-else class="text-center py-5">
-          <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
-          <p class="text-muted">Your cart is empty</p>
-        </div>
-      </div>
-      
-      <div v-if="cartItems.length > 0" class="offcanvas-footer border-top p-3">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <span class="h5 fw-bold mb-0">Total:</span>
-          <span class="h4 fw-bold text-primary mb-0">{{ formatPrice(cartTotal) }} Birr</span>
-        </div>
-        <button @click="checkout" class="btn btn-success w-100 fw-bold py-3">
-          Proceed to Checkout
-        </button>
-      </div>
-    </div>
+      </section>
 
-    <!-- Cart Toggle Button -->
-    <button 
-      class="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle shadow-lg"
-      style="width: 64px; height: 64px; z-index: 1000;"
-      data-bs-toggle="offcanvas"
-      data-bs-target="#cartOffcanvas"
-      aria-controls="cartOffcanvas"
-    >
-      <i class="fas fa-shopping-cart"></i>
-      <span v-if="cartTotalItems > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-        {{ cartTotalItems }}
-      </span>
-    </button>
+      <!-- Regular Products Section -->
+      <section class="products-section py-5 bg-white" ref="productsSection">
+        <div class="container">
+          <div class="row align-items-center mb-4">
+            <div class="col-md-8">
+              <h2 class="h3 fw-bold mb-2">
+                {{ selectedCategory ? selectedCategory : 'All Products' }}
+                <span v-if="searchTerm" class="text-primary">: "{{ searchTerm }}"</span>
+              </h2>
+              <p class="text-muted mb-0">
+                {{ filteredProducts.length }} products found
+              </p>
+            </div>
+            <div class="col-md-4">
+              <div class="d-flex gap-2 justify-content-md-end">
+                <!-- Pure CSS Dropdown -->
+                <div class="sort-dropdown-container" ref="sortDropdown">
+                  <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" 
+                            type="button" 
+                            @click="toggleDropdown"
+                            :class="{ 'show': isDropdownOpen }"
+                            aria-expanded="false">
+                      <i class="fas fa-sort me-1"></i> Sort
+                    </button>
+                    <ul class="dropdown-menu" :class="{ 'show': isDropdownOpen }">
+                      <li>
+                        <a href="#"
+                           class="dropdown-item"
+                           :class="{ active: sortBy === 'newest' }"
+                           @click.prevent="setSort('newest')">
+                          Newest First
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#"
+                           class="dropdown-item"
+                           :class="{ active: sortBy === 'price_low' }"
+                           @click.prevent="setSort('price_low')">
+                          Price: Low to High
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#"
+                           class="dropdown-item"
+                           :class="{ active: sortBy === 'price_high' }"
+                           @click.prevent="setSort('price_high')">
+                          Price: High to Low
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-    <!-- Bootstrap Toast Notification -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
-      <div 
-        class="toast"
-        :class="{ show: notification.show }"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-      >
-        <div class="toast-header" :class="getToastHeaderClass(notification.type)">
-          <i :class="notification.icon" class="me-2"></i>
-          <strong class="me-auto">{{ getNotificationTitle(notification.type) }}</strong>
-          <button type="button" class="btn-close btn-close-white" @click="hideNotification"></button>
+          <!-- Regular Products Grid -->
+          <div v-if="filteredProducts.length > 0" class="row g-4">
+            <div
+              v-for="product in paginatedProducts"
+              :key="product.product_id"
+              class="col-6 col-md-4 col-lg-3"
+            >
+              <div class="card product-card h-100 border-0 shadow-sm">
+                <!-- Product Image -->
+                <div class="product-image-container position-relative overflow-hidden bg-light rounded-top">
+                  <img
+                    :src="getProductImage(product.image)"
+                    :alt="product.name"
+                    class="product-img"
+                    @error="handleImageError"
+                    @click="goToProductPage(product)"
+                  />
+
+                  <!-- Action Icons Overlay -->
+                  <div class="product-actions position-absolute top-0 end-0 m-2 d-flex flex-column gap-2">
+                    <!-- Wishlist Icon -->
+                    <button
+                      @click.stop="toggleWishlist(product)"
+                      class="btn btn-sm shadow-sm"
+                      :class="isInWishlist(product) ? 'btn-danger' : 'btn-light'"
+                      type="button"
+                      :title="isInWishlist(product) ? 'Remove from wishlist' : 'Add to wishlist'"
+                    >
+                      <i class="fas fa-heart"></i>
+                    </button>
+                    
+                    <!-- Cart Icon -->
+                    <button
+                      v-if="!isProductOwner(product) && product.stock > 0"
+                      @click.stop="addToCart(product)"
+                      class="btn btn-sm btn-primary shadow-sm"
+                      type="button"
+                      title="Add to cart"
+                    >
+                      <i class="fas fa-shopping-cart"></i>
+                    </button>
+                  </div>
+
+                  <!-- Owner Badge -->
+                  <div v-if="isProductOwner(product)" class="badge bg-secondary position-absolute top-0 start-0 m-2">
+                    <i class="fas fa-store me-1"></i> Your Product
+                  </div>
+
+                  <!-- Stock Badge -->
+                  <div v-else-if="product.stock <= 0" class="badge bg-danger position-absolute bottom-0 start-0 m-2">
+                    <i class="fas fa-times-circle me-1"></i> Out of Stock
+                  </div>
+                  <div v-else-if="product.stock < 10" class="badge bg-warning position-absolute bottom-0 start-0 m-2">
+                    <i class="fas fa-exclamation-triangle me-1"></i> {{ product.stock }} left
+                  </div>
+                </div>
+
+                <!-- Product Info -->
+                <div class="card-body d-flex flex-column p-3">
+                  <h6 class="card-title fw-bold mb-2 text-truncate cursor-pointer" @click="goToProductPage(product)">
+                    {{ product.name }}
+                  </h6>
+
+                  <!-- Price -->
+                  <div class="d-flex align-items-center mb-3">
+                    <span class="h5 fw-bold text-primary mb-0">
+                      {{ formatPrice(product.price) }} Birr
+                    </span>
+                  </div>
+
+                  <!-- Category -->
+                  <div class="mb-3">
+                    <span class="badge bg-light text-dark">
+                      {{ getCategoryName(product.category_id) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State for Regular Products -->
+          <div v-else class="text-center py-5">
+            <div class="empty-state">
+              <div class="empty-icon mb-4">
+                <i class="fas fa-search fa-4x text-muted"></i>
+              </div>
+              <h3 class="h4 fw-bold mb-3">No Products Found</h3>
+              <p class="text-muted mb-4">
+                {{ searchTerm ? `No results for "${searchTerm}"` :
+                   selectedCategory ? `No products in "${selectedCategory}"` :
+                   'No products available' }}
+              </p>
+              <button @click="clearFilters" class="btn btn-primary" type="button">
+                <i class="fas fa-redo me-2"></i>Show All Products
+              </button>
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <div v-if="filteredProducts.length > 0 && totalPages > 1" class="d-flex justify-content-center mt-5">
+            <nav aria-label="Product pagination">
+              <ul class="pagination">
+                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                  <button class="page-link" type="button" @click="prevPage">
+                    <i class="fas fa-chevron-left"></i>
+                  </button>
+                </li>
+
+                <li
+                  v-for="page in visiblePages"
+                  :key="page"
+                  class="page-item"
+                  :class="{ active: page === currentPage }"
+                >
+                  <button class="page-link" type="button" @click="goToPage(page)">
+                    {{ page }}
+                  </button>
+                </li>
+
+                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                  <button class="page-link" type="button" @click="nextPage">
+                    <i class="fas fa-chevron-right"></i>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
         </div>
-        <div class="toast-body">
-          {{ notification.message }}
+      </section>
+
+      <!-- Discounted Products Section -->
+      <section class="discounted-products-section py-5 bg-light">
+        <div class="container">
+          <!-- Section Header -->
+          <div class="row align-items-center mb-4">
+            <div class="col-md-12">
+              <h2 class="h3 fw-bold mb-2 text-danger">
+                <i class="fas fa-percent me-2"></i>Discounted Products
+              </h2>
+              <p class="text-muted mb-0">
+                Limited time offers - Save big on these products
+              </p>
+            </div>
+          </div>
+
+          <!-- Discounted Products Grid -->
+          <div v-if="discountedProducts.length > 0" class="row g-4">
+            <div
+              v-for="product in discountedProducts"
+              :key="product.product_id"
+              class="col-6 col-md-4 col-lg-3"
+            >
+              <div class="card product-card h-100 border-0 shadow-sm position-relative">
+                <!-- Discount Badge -->
+                <div class="position-absolute top-0 start-0 m-2">
+                  <span class="badge bg-danger">
+                    <i class="fas fa-fire me-1"></i>{{ product.discount_percent }}% OFF
+                  </span>
+                </div>
+
+                <!-- Product Image -->
+                <div class="product-image-container position-relative overflow-hidden bg-light rounded-top">
+                  <img
+                    :src="getProductImage(product.image)"
+                    :alt="product.name"
+                    class="product-img"
+                    @error="handleImageError"
+                    @click="goToProductPage(product)"
+                  />
+
+                  <!-- Action Icons Overlay -->
+                  <div class="product-actions position-absolute top-0 end-0 m-2 d-flex flex-column gap-2">
+                    <!-- Wishlist Icon -->
+                    <button
+                      @click.stop="toggleWishlist(product)"
+                      class="btn btn-sm shadow-sm"
+                      :class="isInWishlist(product) ? 'btn-danger' : 'btn-light'"
+                      type="button"
+                      :title="isInWishlist(product) ? 'Remove from wishlist' : 'Add to wishlist'"
+                    >
+                      <i class="fas fa-heart"></i>
+                    </button>
+                    
+                    <!-- Cart Icon -->
+                    <button
+                      v-if="!isProductOwner(product) && product.stock > 0"
+                      @click.stop="addToCart(product)"
+                      class="btn btn-sm btn-danger shadow-sm"
+                      type="button"
+                      title="Add to cart"
+                    >
+                      <i class="fas fa-shopping-cart"></i>
+                    </button>
+                  </div>
+
+                  <!-- Owner Badge -->
+                  <div v-if="isProductOwner(product)" class="badge bg-secondary position-absolute top-0 end-0 m-2">
+                    <i class="fas fa-store me-1"></i> Your Product
+                  </div>
+
+                  <!-- Stock Badge -->
+                  <div v-else-if="product.stock <= 0" class="badge bg-danger position-absolute bottom-0 start-0 m-2">
+                    <i class="fas fa-times-circle me-1"></i> Out of Stock
+                  </div>
+                  <div v-else-if="product.stock < 10" class="badge bg-warning position-absolute bottom-0 start-0 m-2">
+                    <i class="fas fa-exclamation-triangle me-1"></i> {{ product.stock }} left
+                  </div>
+                </div>
+
+                <!-- Product Info -->
+                <div class="card-body d-flex flex-column p-3">
+                  <!-- Discount Name -->
+                  <div class="mb-2">
+                    <span class="badge bg-danger-subtle text-danger border border-danger fw-normal">
+                      <i class="fas fa-tag me-1"></i>{{ product.discount_name }}
+                    </span>
+                  </div>
+
+                  <!-- Product Name -->
+                  <h6 class="card-title fw-bold mb-2 text-truncate cursor-pointer" @click="goToProductPage(product)">
+                    {{ product.name }}
+                  </h6>
+
+                  <!-- Price with Discount -->
+                  <div class="mb-3">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                      <!-- Original Price (Strikethrough) -->
+                      <span class="text-muted text-decoration-line-through small">
+                        {{ formatPrice(product.price) }} Birr
+                      </span>
+
+                      <!-- Discounted Price -->
+                      <span class="h5 fw-bold text-danger mb-0">
+                        {{ formatPrice(product.discounted_price) }} Birr
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Category -->
+                  <div class="mb-3">
+                    <span class="badge bg-light text-dark">
+                      {{ getCategoryName(product.category_id) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State for Discounted Products -->
+          <div v-else class="text-center py-5">
+            <div class="empty-state">
+              <div class="empty-icon mb-4">
+                <i class="fas fa-percent fa-4x text-muted"></i>
+              </div>
+              <h3 class="h4 fw-bold mb-3">No Active Discounts</h3>
+              <p class="text-muted mb-4">
+                Check back later for special offers
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Toast Notification -->
+      <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055">
+        <div
+          class="toast align-items-center"
+          :class="[`text-bg-${notification.type}`, { show: notification.show }]"
+          role="alert"
+        >
+          <div class="d-flex">
+            <div class="toast-body d-flex align-items-center">
+              <i :class="notification.icon" class="me-2"></i>
+              {{ notification.message }}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" @click="hideNotification"></button>
+          </div>
         </div>
       </div>
     </div>
   </AppLayout>
 </template>
 
-<script>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import axios from 'axios' // Make sure axios is imported
 
-export default {
-  name: "HomePage",
-  
-  components: {
-    AppLayout
-  },
+const page = usePage()
 
-  props: {
-    products: {
-      type: Array,
-      default: () => []
-    },
-    categories: {
-      type: Array,
-      default: () => []
-    },
-    auth: {
-      type: Object,
-      default: () => ({})
-    },
-    // Add these props to receive search/category from URL
-    search: {
-      type: String,
-      default: ''
-    },
-    category: {
-      type: String,
-      default: ''
-    }
-  },
+// Refs
+const heroImages = ref([
+  'https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+  'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-4.0.3&auto=format&fit=crop&w=2071&q=80',
+  'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+])
 
-  setup(props) {
-    let heroCarousel = null
-    
-    // Hero images slideshow
-    const heroImages = ref([
-      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-      'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-      'https://images.unsplash.com/photo-1486401899868-0e435ed85128?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-      'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-4.0.3&auto=format&fit=crop&w=2071&q=80',
-      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-    ])
-    
-    const currentSlide = ref(0)
+const searchTerm = ref(page.props.search || '')
+const selectedCategory = ref(page.props.category || '')
+const sortBy = ref('newest')
+const currentPage = ref(1)
+const itemsPerPage = 12
+const productsSection = ref(null)
+const sortDropdown = ref(null)
+const isDropdownOpen = ref(false)
+const wishlistItems = ref([])
+const cartItems = ref([])
+const loading = ref(false)
 
-    // State - Initialize with props from URL
-    const searchTerm = ref(props.search || '')
-    const selectedCategory = ref(props.category || '')
-    const sortBy = ref('newest')
-    const cartItems = ref([])
-    
-    const user = computed(() => {
-      return props.auth?.user || usePage().props.auth?.user || null
-    })
-    
-    const notification = ref({
-      show: false,
-      message: '',
-      type: 'success',
-      icon: 'fas fa-check-circle'
-    })
+const notification = ref({
+  show: false,
+  message: '',
+  type: 'success',
+  icon: 'fas fa-check-circle'
+})
 
-    // Initialize
-    onMounted(() => {
-      loadCartFromLocalStorage()
-      
-      // Initialize Bootstrap Carousel using window.bootstrap
-      const carouselElement = document.getElementById('heroCarousel')
-      if (carouselElement && window.bootstrap) {
-        heroCarousel = new window.bootstrap.Carousel(carouselElement, {
-          interval: 5000,
-          ride: 'carousel'
-        })
-        
-        // Update current slide when carousel slides
-        carouselElement.addEventListener('slid.bs.carousel', (event) => {
-          currentSlide.value = event.to
-        })
-      }
-      
-      // Listen for custom search events from navbar
-      window.addEventListener('navbar-search', handleNavbarSearch)
-      window.addEventListener('navbar-category-select', handleNavbarCategorySelect)
-    })
+const stats = ref({
+  products: 0,
+  sellers: 0,
+  orders: 0
+})
 
-    onUnmounted(() => {
-      if (heroCarousel) {
-        heroCarousel.dispose()
-      }
-      // Remove event listeners
-      window.removeEventListener('navbar-search', handleNavbarSearch)
-      window.removeEventListener('navbar-category-select', handleNavbarCategorySelect)
-    })
+// Get categories from Inertia props
+const categories = computed(() => page.props.categories || [])
 
-    // Watch for changes in search/category and update URL
-    watch(searchTerm, (newValue) => {
-      updateURL()
-    })
+// Get products from Inertia props
+const products = computed(() => page.props.products || [])
 
-    watch(selectedCategory, (newValue) => {
-      updateURL()
-    })
+// Get auth user from Inertia props
+const user = computed(() => page.props.auth?.user || null)
 
-    // Computed Properties
-    const filteredProducts = computed(() => {
-      if (!props.products || !Array.isArray(props.products)) {
-        return []
-      }
+// Computed property for discounted products - REMOVED DISCOUNT LOGIC
+const discountedProducts = computed(() => {
+  // Return empty array since we don't have discount functionality
+  return []
+})
 
-      let filtered = [...props.products]
+// Check if current user owns the product
+const isProductOwner = (product) => {
+  if (!user.value || !product || !product.user_id) return false
+  return user.value.id === product.user_id
+}
 
-      // Filter by category if selected
-      if (selectedCategory.value) {
-        // Find the category object
-        const categoryObj = props.categories.find(c => 
-          c.name.toLowerCase() === selectedCategory.value.toLowerCase()
-        )
-        
-        if (categoryObj) {
-          filtered = filtered.filter(product => {
-            return product.category_id === categoryObj.category_id
-          })
-        }
-      }
+// Check if product is in wishlist
+const isInWishlist = (product) => {
+  if (!product || !product.product_id) return false
+  return wishlistItems.value.some(item => 
+    item.product?.product_id === product.product_id
+  )
+}
 
-      // Filter by search term if provided
-      if (searchTerm.value && searchTerm.value.trim()) {
-        const term = searchTerm.value.toLowerCase().trim()
-        
-        filtered = filtered.filter(product => {
-          const nameMatch = product.name && product.name.toLowerCase().includes(term)
-          const descMatch = product.description && product.description.toLowerCase().includes(term)
-          const refMatch = product.reference && product.reference.toLowerCase().includes(term)
-          
-          return nameMatch || descMatch || refMatch
-        })
-      }
+// Check if product is in cart
+const isInCart = (product) => {
+  if (!product || !product.product_id) return false
+  return cartItems.value.some(item => 
+    item.product?.product_id === product.product_id
+  )
+}
 
-      // Sort products
-      switch (sortBy.value) {
-        case 'price_low':
-          filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price))
-          break
-        case 'price_high':
-          filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price))
-          break
-        case 'name':
-          filtered.sort((a, b) => a.name.localeCompare(b.name))
-          break
-        case 'newest':
-          filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
-          break
-      }
+// Get category name from category_id
+const getCategoryName = (categoryId) => {
+  if (!categoryId) return 'Uncategorized'
 
-      return filtered
-    })
+  const category = categories.value.find(cat =>
+    cat.category_id == categoryId || cat.id == categoryId
+  )
+  return category ? category.name : 'Uncategorized'
+}
 
-    const cartTotal = computed(() => {
-      return cartItems.value.reduce((total, item) => {
-        return total + (parseFloat(item.price || 0) * (item.quantity || 1))
-      }, 0)
-    })
+// Computed Properties
+const filteredProducts = computed(() => {
+  if (!Array.isArray(products.value)) return []
 
-    const cartTotalItems = computed(() => {
-      return cartItems.value.reduce((total, item) => total + (item.quantity || 1), 0)
-    })
+  let filtered = [...products.value]
 
-    // Methods
-    const getProductImage = (imagePath) => {
-      if (!imagePath) return 'https://placehold.co/400x300/e0f2f1/065f46?text=Product+Image'
-      return imagePath.startsWith('http') ? imagePath : `/storage/${imagePath}`
-    }
+  // Filter by category (using category_id)
+  if (selectedCategory.value) {
+    const selectedCat = categories.value.find(cat =>
+      cat.name.toLowerCase() === selectedCategory.value.toLowerCase()
+    )
 
-    const handleImageError = (event) => {
-      event.target.src = 'https://placehold.co/400x300/e0f2f1/065f46?text=Product+Image'
-    }
-
-    const formatPrice = (price) => {
-      const num = parseFloat(price) || 0
-      return new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }).format(num)
-    }
-
-    const clearFilters = () => {
-      searchTerm.value = ''
-      selectedCategory.value = ''
-      updateURL()
-      showNotification('Showing all products', 'info', 'fas fa-list')
-    }
-
-    const isLoggedIn = () => {
-      return !!user.value
-    }
-
-    // Update URL with current filters
-    const updateURL = () => {
-      const url = new URL(window.location)
-      
-      if (searchTerm.value) {
-        url.searchParams.set('search', encodeURIComponent(searchTerm.value))
-      } else {
-        url.searchParams.delete('search')
-      }
-      
-      if (selectedCategory.value) {
-        url.searchParams.set('category', encodeURIComponent(selectedCategory.value))
-      } else {
-        url.searchParams.delete('category')
-      }
-      
-      window.history.replaceState({}, '', url)
-    }
-
-    // Handle navbar search event
-    const handleNavbarSearch = (event) => {
-      searchTerm.value = event.detail.searchTerm
-      selectedCategory.value = '' // Clear category when searching
-      
-      if (event.detail.searchTerm) {
-        showNotification(`Search results for: "${event.detail.searchTerm}"`, 'info', 'fas fa-search')
-      }
-    }
-
-    // Handle navbar category selection
-    const handleNavbarCategorySelect = (event) => {
-      selectedCategory.value = event.detail.categoryName
-      searchTerm.value = '' // Clear search when selecting category
-      
-      if (event.detail.categoryName) {
-        showNotification(`Showing: ${event.detail.categoryName}`, 'info', 'fas fa-filter')
-      }
-    }
-
-    // Buy Now function
-    const buyNow = (product) => {
-      if (product.stock <= 0) {
-        showNotification('Product out of stock', 'warning', 'fas fa-exclamation-triangle')
-        return
-      }
-      
-      if (!isLoggedIn()) {
-        showNotification('You must be logged in to buy products', 'warning', 'fas fa-exclamation-triangle')
-        sessionStorage.setItem('buyAfterLogin', JSON.stringify({
-          product_id: product.product_id,
-          product_name: product.name,
-          product_image: product.image,
-          price: product.price,
-          stock: product.stock,
-          quantity: 1
-        }))
-        setTimeout(() => {
-          router.visit('/login')
-        }, 1500)
-        return
-      }
-      
-      router.visit('/payment', {
-        method: 'get',
-        data: {
-          product_id: product.product_id,
-          product_name: product.name,
-          product_image: product.image,
-          price: product.price,
-          quantity: 1
-        }
-      })
-    }
-
-    // Checkout function
-    const checkout = () => {
-      if (cartItems.value.length === 0) {
-        showNotification('Your cart is empty', 'warning', 'fas fa-shopping-cart')
-        return
-      }
-      
-      if (!isLoggedIn()) {
-        showNotification('Please login to checkout', 'warning', 'fas fa-sign-in-alt')
-        sessionStorage.setItem('cartAfterLogin', JSON.stringify(cartItems.value))
-        setTimeout(() => {
-          router.visit('/login')
-        }, 1500)
-        return
-      }
-      
-      // For cart checkout, redirect to payment with first item
-      const firstItem = cartItems.value[0]
-      router.visit('/payment', {
-        method: 'get',
-        data: {
-          product_id: firstItem.product_id,
-          product_name: firstItem.name,
-          product_image: firstItem.image,
-          price: firstItem.price,
-          quantity: firstItem.quantity
-        }
-      })
-    }
-
-    const addToCart = (product) => {
-      const existingItem = cartItems.value.find(item => item.product_id === product.product_id)
-      
-      if (existingItem) {
-        if (existingItem.quantity < product.stock) {
-          existingItem.quantity++
-          showNotification(`Increased ${product.name} quantity to ${existingItem.quantity}`, 'success', 'fas fa-cart-plus')
-        } else {
-          showNotification(`Cannot add more than available stock (${product.stock})`, 'warning', 'fas fa-exclamation-triangle')
-          return
-        }
-      } else {
-        if (product.stock > 0) {
-          cartItems.value.push({
-            product_id: product.product_id,
-            name: product.name,
-            price: product.price,
-            image: product.image,
-            stock: product.stock,
-            quantity: 1
-          })
-          showNotification(`${product.name} added to cart`, 'success', 'fas fa-cart-plus')
-        } else {
-          showNotification('Product out of stock', 'warning', 'fas fa-exclamation-triangle')
-          return
-        }
-      }
-      
-      saveCartToLocalStorage()
-    }
-
-    const getProductStock = (productId) => {
-      if (!props.products || !Array.isArray(props.products)) return 0
-      const product = props.products.find(p => p.product_id === productId)
-      return product ? product.stock : 0
-    }
-
-    const increaseCartQuantity = (productId) => {
-      const product = props.products.find(p => p.product_id === productId)
-      if (!product) return
-      
-      const cartItem = cartItems.value.find(item => item.product_id === productId)
-      if (cartItem && cartItem.quantity < product.stock) {
-        cartItem.quantity++
-        saveCartToLocalStorage()
-      }
-    }
-
-    const decreaseCartQuantity = (productId) => {
-      const cartItem = cartItems.value.find(item => item.product_id === productId)
-      if (cartItem) {
-        if (cartItem.quantity > 1) {
-          cartItem.quantity--
-        } else {
-          removeFromCart(productId)
-        }
-        saveCartToLocalStorage()
-      }
-    }
-
-    const removeFromCart = (productId) => {
-      const index = cartItems.value.findIndex(item => item.product_id === productId)
-      if (index > -1) {
-        cartItems.value.splice(index, 1)
-        saveCartToLocalStorage()
-      }
-    }
-
-    const toggleCart = () => {
-      const offcanvasElement = document.getElementById('cartOffcanvas')
-      if (offcanvasElement && window.bootstrap) {
-        const offcanvas = window.bootstrap.Offcanvas.getInstance(offcanvasElement) || new window.bootstrap.Offcanvas(offcanvasElement)
-        offcanvas.toggle()
-      }
-    }
-
-    const showNotification = (message, type = 'success', icon = 'fas fa-check-circle') => {
-      notification.value = { show: true, message, type, icon }
-      setTimeout(hideNotification, 3000)
-    }
-
-    const hideNotification = () => {
-      notification.value.show = false
-    }
-
-    const getToastHeaderClass = (type) => {
-      const classes = {
-        success: 'bg-success text-white',
-        warning: 'bg-warning text-dark',
-        error: 'bg-danger text-white',
-        info: 'bg-info text-white'
-      }
-      return classes[type] || classes.success
-    }
-
-    const getNotificationTitle = (type) => {
-      const titles = {
-        success: 'Success',
-        warning: 'Warning',
-        error: 'Error',
-        info: 'Information'
-      }
-      return titles[type] || 'Notification'
-    }
-
-    const saveCartToLocalStorage = () => {
-      localStorage.setItem('cart', JSON.stringify(cartItems.value))
-    }
-
-    const loadCartFromLocalStorage = () => {
-      const savedCart = localStorage.getItem('cart')
-      if (savedCart) {
-        try {
-          cartItems.value = JSON.parse(savedCart)
-        } catch (error) {
-          console.error('Error loading cart from localStorage:', error)
-          cartItems.value = []
-        }
-      }
-    }
-
-    return {
-      heroImages,
-      currentSlide,
-      searchTerm,
-      selectedCategory,
-      sortBy,
-      cartItems,
-      user,
-      notification,
-      filteredProducts,
-      cartTotal,
-      cartTotalItems,
-      getProductImage,
-      handleImageError,
-      formatPrice,
-      clearFilters,
-      getProductStock,
-      buyNow,
-      addToCart,
-      checkout,
-      increaseCartQuantity,
-      decreaseCartQuantity,
-      removeFromCart,
-      toggleCart,
-      showNotification,
-      hideNotification,
-      getToastHeaderClass,
-      getNotificationTitle,
-      isLoggedIn,
-      saveCartToLocalStorage,
-      loadCartFromLocalStorage,
-      handleNavbarSearch,
-      handleNavbarCategorySelect
+    if (selectedCat) {
+      filtered = filtered.filter(product =>
+        product.category_id == selectedCat.category_id ||
+        product.category_id == selectedCat.id
+      )
     }
   }
+
+  // Filter by search term
+  if (searchTerm.value.trim()) {
+    const term = searchTerm.value.toLowerCase().trim()
+    filtered = filtered.filter(product => {
+      const categoryName = getCategoryName(product.category_id).toLowerCase()
+
+      return (
+        product.name?.toLowerCase().includes(term) ||
+        product.description?.toLowerCase().includes(term) ||
+        product.reference?.toLowerCase().includes(term) ||
+        categoryName.includes(term)
+      )
+    })
+  }
+
+  // Sort products
+  switch (sortBy.value) {
+    case 'price_low':
+      filtered.sort((a, b) => {
+        const priceA = parseFloat(a.price) || 0
+        const priceB = parseFloat(b.price) || 0
+        return priceA - priceB
+      })
+      break
+    case 'price_high':
+      filtered.sort((a, b) => {
+        const priceA = parseFloat(a.price) || 0
+        const priceB = parseFloat(b.price) || 0
+        return priceB - priceA
+      })
+      break
+    case 'newest':
+    default:
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.created_at || 0)
+        const dateB = new Date(b.created_at || 0)
+        return dateB - dateA
+      })
+  }
+
+  return filtered
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredProducts.value.length / itemsPerPage)
+})
+
+const paginatedProducts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredProducts.value.slice(start, end)
+})
+
+const visiblePages = computed(() => {
+  const pages = []
+  const start = Math.max(1, currentPage.value - 2)
+  const end = Math.min(totalPages.value, currentPage.value + 2)
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+
+  return pages
+})
+
+// Methods
+const formatPrice = (price) => {
+  const num = parseFloat(price) || 0
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(num)
+}
+
+const getProductImage = (imagePath) => {
+  if (!imagePath) return 'https://placehold.co/400x300/e0e7ff/667eea?text=E-SHOP'
+
+  if (imagePath.startsWith('http') || imagePath.startsWith('/')) {
+    return imagePath
+  }
+
+  return `/storage/${imagePath}`
+}
+
+const handleImageError = (event) => {
+  event.target.src = 'https://placehold.co/400x300/e0e7ff/667eea?text=E-SHOP'
+}
+
+const clearFilters = () => {
+  searchTerm.value = ''
+  selectedCategory.value = ''
+  currentPage.value = 1
+  window.location.href = '/'
+}
+
+const scrollToProducts = () => {
+  if (productsSection.value) {
+    productsSection.value.scrollIntoView({ behavior: 'smooth' })
+  }
+}
+
+const handleSearch = () => {
+  currentPage.value = 1
+}
+
+// Go to product page
+const goToProductPage = (product) => {
+  if (!product || !product.product_id) return
+  window.location.href = `/product/${product.product_id}`
+}
+
+// Wishlist Methods
+const toggleWishlist = async (product) => {
+  if (!user.value) {
+    showNotification('Please login to add to wishlist', 'warning')
+    return
+  }
+
+  if (loading.value) return
+  loading.value = true
+
+  try {
+    if (isInWishlist(product)) {
+      // Remove from wishlist
+      try {
+        const response = await axios.delete(`/wishlist/${product.product_id}`)
+        wishlistItems.value = wishlistItems.value.filter(item => 
+          item.product?.product_id !== product.product_id
+        )
+        showNotification('Removed from wishlist', 'success')
+        
+        // Update wishlist count
+        window.dispatchEvent(new CustomEvent('wishlist-updated', {
+          detail: {
+            wishlistCount: response.data.wishlistCount || 0
+          }
+        }))
+      } catch (error) {
+        // If old route fails, try to fetch wishlist items and remove by ID
+        const wishlistResponse = await axios.get('/wishlist')
+        const wishlistItem = wishlistResponse.data.wishlistItems?.find(
+          item => item.product?.product_id === product.product_id
+        )
+        
+        if (wishlistItem) {
+          const response = await axios.delete(`/wishlist/${wishlistItem.id}`)
+          wishlistItems.value = wishlistItems.value.filter(item => 
+            item.product?.product_id !== product.product_id
+          )
+          showNotification('Removed from wishlist', 'success')
+          
+          // Update wishlist count
+          window.dispatchEvent(new CustomEvent('wishlist-updated', {
+            detail: {
+              wishlistCount: response.data.wishlistCount || 0
+            }
+          }))
+        }
+      }
+    } else {
+      // Add to wishlist
+      const response = await axios.post('/wishlist/add', {
+        product_id: product.product_id
+      })
+      
+      // Add to local wishlist items
+      if (response.data.wishlistItem) {
+        wishlistItems.value.push(response.data.wishlistItem)
+      } else if (response.data.action === 'added') {
+        wishlistItems.value.push({ product })
+      }
+      
+      showNotification('Added to wishlist', 'success')
+      
+      // Update wishlist count
+      window.dispatchEvent(new CustomEvent('wishlist-updated', {
+        detail: {
+          wishlistCount: response.data.wishlistCount || 0
+        }
+      }))
+    }
+  } catch (error) {
+    console.error('Wishlist error:', error)
+    if (error.response?.status === 422) {
+      showNotification(error.response.data.message || 'Product already in wishlist', 'error')
+    } else {
+      showNotification(error.response?.data?.message || 'Something went wrong', 'error')
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+// Cart Methods - FIXED WITH PROPER ROUTES
+const addToCart = async (product) => {
+  if (!user.value) {
+    showNotification('Please login to add to cart', 'warning')
+    return
+  }
+
+  if (isProductOwner(product)) {
+    showNotification('You cannot add your own product to cart', 'warning')
+    return
+  }
+
+  if (product.stock <= 0) {
+    showNotification('Product is out of stock', 'error')
+    return
+  }
+
+  if (loading.value) return
+  loading.value = true
+
+  try {
+    // Try the new store route first (/cart)
+    const response = await axios.post('/cart', {
+      product_id: product.product_id,
+      quantity: 1
+    })
+    
+    showNotification(response.data.message || 'Added to cart', 'success')
+    
+    // Update cart count
+    window.dispatchEvent(new CustomEvent('cart-updated', {
+      detail: {
+        cartCount: response.data.cartCount || 0
+      }
+    }))
+  } catch (error) {
+    console.error('Cart error (store route):', error)
+    
+    // If store route fails, try the old add route (/cart/add)
+    if (error.response?.status === 404) {
+      try {
+        console.log('Trying /cart/add route...')
+        const fallbackResponse = await axios.post('/cart/add', {
+          product_id: product.product_id,
+          quantity: 1
+        })
+        
+        showNotification(fallbackResponse.data.message || 'Added to cart', 'success')
+        
+        // Update cart count
+        window.dispatchEvent(new CustomEvent('cart-updated', {
+          detail: {
+            cartCount: fallbackResponse.data.cartCount || 0
+          }
+        }))
+      } catch (addError) {
+        console.error('Cart error (add route):', addError)
+        if (addError.response?.status === 422) {
+          if (addError.response.data.message.includes('stock')) {
+            showNotification('Not enough stock available', 'error')
+          } else {
+            showNotification('Product already in cart', 'error')
+          }
+        } else {
+          showNotification('Something went wrong with cart', 'error')
+        }
+      }
+    } else if (error.response?.status === 422) {
+      if (error.response.data.message.includes('stock')) {
+        showNotification('Not enough stock available', 'error')
+      } else {
+        showNotification('Product already in cart', 'error')
+      }
+    } else {
+      showNotification('Something went wrong with cart', 'error')
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+// Pagination Methods
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+    scrollToProducts()
+  }
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+    scrollToProducts()
+  }
+}
+
+const goToPage = (page) => {
+  currentPage.value = page
+  scrollToProducts()
+}
+
+// Sort method
+const setSort = (type) => {
+  sortBy.value = type
+  currentPage.value = 1
+  isDropdownOpen.value = false // Close dropdown when item is selected
+}
+
+// Toggle dropdown
+const toggleDropdown = (event) => {
+  event.stopPropagation()
+  isDropdownOpen.value = !isDropdownOpen.value
+}
+
+// Notification
+const showNotification = (message, type = 'success', icon = null) => {
+  const icons = {
+    success: 'fas fa-check-circle',
+    warning: 'fas fa-exclamation-triangle',
+    error: 'fas fa-times-circle',
+    info: 'fas fa-info-circle'
+  }
+
+  notification.value = {
+    show: true,
+    message,
+    type,
+    icon: icon || icons[type] || icons.success
+  }
+
+  setTimeout(() => {
+    notification.value.show = false
+  }, 3000)
+}
+
+const hideNotification = () => {
+  notification.value.show = false
+}
+
+// Load wishlist and cart data
+const loadWishlistData = async () => {
+  if (!user.value) return
+  
+  try {
+    const response = await axios.get('/wishlist')
+    wishlistItems.value = response.data.wishlistItems || []
+  } catch (error) {
+    console.error('Error loading wishlist:', error)
+  }
+}
+
+const loadCartData = async () => {
+  if (!user.value) return
+  
+  try {
+    const response = await axios.get('/cart')
+    cartItems.value = response.data.cartItems || []
+  } catch (error) {
+    console.error('Error loading cart:', error)
+  }
+}
+
+const loadCartCount = async () => {
+  if (!user.value) return
+  
+  try {
+    const response = await axios.get('/api/cart/count')
+    // Dispatch event to update navbar
+    window.dispatchEvent(new CustomEvent('cart-updated', {
+      detail: {
+        cartCount: response.data.count || 0
+      }
+    }))
+  } catch (error) {
+    console.error('Error loading cart count:', error)
+  }
+}
+
+const loadWishlistCount = async () => {
+  if (!user.value) return
+  
+  try {
+    const response = await axios.get('/api/wishlist/count')
+    // Dispatch event to update navbar
+    window.dispatchEvent(new CustomEvent('wishlist-updated', {
+      detail: {
+        wishlistCount: response.data.count || 0
+      }
+    }))
+  } catch (error) {
+    console.error('Error loading wishlist count:', error)
+  }
+}
+
+// Initialize stats
+onMounted(() => {
+  stats.value = {
+    products: products.value.length || 0,
+    sellers: new Set(products.value.map(p => p.user_id)).size,
+    orders: Math.floor(products.value.length * 0.5)
+  }
+
+  // Initialize Bootstrap carousel
+  if (window.bootstrap) {
+    const carouselElement = document.getElementById('heroCarousel')
+    if (carouselElement) {
+      new window.bootstrap.Carousel(carouselElement, {
+        interval: 5000,
+        ride: 'carousel'
+      })
+    }
+  }
+
+  // Click outside to close dropdown
+  document.addEventListener('click', (event) => {
+    if (sortDropdown.value && !sortDropdown.value.contains(event.target)) {
+      isDropdownOpen.value = false
+    }
+  })
+
+  // Listen for navbar events
+  window.addEventListener('navbar-search', handleNavbarSearch)
+  window.addEventListener('navbar-category-select', handleNavbarCategorySelect)
+
+  // Load user data if logged in
+  if (user.value) {
+    loadWishlistData()
+    loadCartData()
+    loadCartCount()
+    loadWishlistCount()
+  }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('navbar-search', handleNavbarSearch)
+  window.removeEventListener('navbar-category-select', handleNavbarCategorySelect)
+})
+
+const handleNavbarSearch = (event) => {
+  searchTerm.value = event.detail.searchTerm
+  selectedCategory.value = ''
+  currentPage.value = 1
+  scrollToProducts()
+}
+
+const handleNavbarCategorySelect = (event) => {
+  selectedCategory.value = event.detail.categoryName
+  searchTerm.value = ''
+  currentPage.value = 1
+  scrollToProducts()
 }
 </script>
-
 <style scoped>
-.col-xl-2-4 {
-  width: 20%;
-  flex: 0 0 auto;
+.animated-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
 }
 
-/* Hero Section */
-.hero-section {
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+  animation: float 20s infinite linear;
+}
+
+.shape-1 {
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  top: 10%;
+  left: 5%;
+  animation-delay: 0s;
+}
+
+.shape-2 {
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  top: 60%;
+  right: 10%;
+  animation-delay: 5s;
+}
+
+.shape-3 {
+  width: 150px;
+  height: 150px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  bottom: 20%;
+  left: 15%;
+  animation-delay: 10s;
+}
+
+.shape-4 {
+  width: 250px;
+  height: 250px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  top: 30%;
+  right: 20%;
+  animation-delay: 15s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-20px) rotate(90deg);
+  }
+  50% {
+    transform: translateY(0) rotate(180deg);
+  }
+  75% {
+    transform: translateY(20px) rotate(270deg);
+  }
+}
+
+/* Background Patterns */
+.pattern-dots {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(rgba(102, 126, 234, 0.1) 1px, transparent 1px);
+  background-size: 30px 30px;
+  opacity: 0.5;
+}
+
+.pattern-gradient {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg,
+    rgba(102, 126, 234, 0.05) 0%,
+    rgba(118, 75, 162, 0.05) 50%,
+    transparent 100%);
+}
+
+/* Text Gradient */
+.text-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hero Slider */
+.hero-slider {
   position: relative;
 }
 
-.carousel-item {
-  height: 85vh;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.slideshow-overlay {
+.carousel-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, 
-    rgba(0, 0, 0, 0.85) 0%, 
-    rgba(0, 0, 0, 0.6) 50%, 
-    rgba(0, 0, 0, 0.4) 100%);
+  background: linear-gradient(to bottom,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.3) 100%);
+  border-radius: 1rem;
 }
 
-.carousel-content {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  z-index: 10;
-}
-
-.search-container {
-  max-width: 600px;
-}
-
-/* Product Card Customizations */
+/* Product Cards */
 .product-card {
   transition: all 0.3s ease;
-  border-radius: 16px !important;
+  border-radius: 12px;
   overflow: hidden;
 }
 
 .product-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12) !important;
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
 }
 
-.hover-shadow:hover {
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+.product-image-container {
+  height: 180px;
+  position: relative;
 }
 
-/* Offcanvas Customization */
-.offcanvas-footer {
-  background: #f8f9fa;
+.product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 15px;
+  transition: transform 0.3s ease;
+  cursor: pointer;
 }
 
-/* Custom carousel indicator color */
-.carousel-indicators button {
-  width: 12px !important;
-  height: 12px !important;
-  border-radius: 50% !important;
-  background-color: rgba(255, 255, 255, 0.5) !important;
-  border: 2px solid transparent !important;
+.product-card:hover .product-img {
+  transform: scale(1.05);
 }
 
-.carousel-indicators button.active {
-  background-color: white !important;
-  border-color: white !important;
-  transform: scale(1.2);
+/* Product Actions */
+.product-actions {
+  z-index: 2;
 }
 
-/* Toast Customization */
+.product-actions .btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+.product-actions .btn:hover {
+  transform: scale(1.1);
+}
+
+.product-actions .btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.product-actions .btn-light {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.product-actions .btn-light:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+.product-actions .btn-primary {
+  background-color: #667eea;
+  border-color: #667eea;
+}
+
+.product-actions .btn-primary:hover {
+  background-color: #5a6fd8;
+  border-color: #5a6fd8;
+}
+
+/* Cursor pointer for product name */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-pointer:hover {
+  color: #667eea;
+}
+
+/* Pagination */
+.pagination .page-item.active .page-link {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+}
+
+.pagination .page-link {
+  border: none;
+  margin: 0 2px;
+  border-radius: 8px;
+  color: #667eea;
+}
+
+.pagination .page-link:hover {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+/* Toast */
 .toast {
-  border-radius: 12px !important;
-  border: none !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
-  transition: opacity 0.3s ease;
+  border-radius: 10px;
+  border: none;
 }
 
-/* Responsive Adjustments */
-@media (max-width: 1400px) {
-  .col-xl-2-4 {
-    width: 25%;
-    flex: 0 0 auto;
+/* Dropdown Fixes */
+.dropdown-item.active {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%) !important;
+  color: #667eea !important;
+}
+
+/* NEW: Discounted Products Section Styles */
+.discounted-products-section {
+  background: linear-gradient(135deg,
+    rgba(220, 53, 69, 0.03) 0%,
+    rgba(220, 53, 69, 0.01) 100%);
+  border-top: 1px solid rgba(220, 53, 69, 0.1);
+  border-bottom: 1px solid rgba(220, 53, 69, 0.1);
+}
+
+/* Discount specific card styles */
+.discounted-products-section .product-card {
+  border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.discounted-products-section .product-card:hover {
+  border-color: rgba(220, 53, 69, 0.4);
+  box-shadow: 0 15px 35px rgba(220, 53, 69, 0.1) !important;
+}
+
+/* Discounted products cart button */
+.discounted-products-section .product-actions .btn-primary {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.discounted-products-section .product-actions .btn-primary:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+/* Price styles for discounted products */
+.text-decoration-line-through {
+  text-decoration-thickness: 2px;
+}
+
+/* Badge styles */
+.bg-danger-subtle {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.bg-success-subtle {
+  background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+/* Pure CSS Dropdown Styles */
+.sort-dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.sort-dropdown-container .dropdown {
+  position: relative;
+}
+
+.sort-dropdown-container .dropdown-toggle {
+  position: relative;
+  z-index: 1001;
+}
+
+.sort-dropdown-container .dropdown-toggle::after {
+  display: inline-block;
+  margin-left: 0.255em;
+  vertical-align: 0.255em;
+  content: "";
+  border-top: 0.3em solid;
+  border-right: 0.3em solid transparent;
+  border-bottom: 0;
+  border-left: 0.3em solid transparent;
+  transition: transform 0.2s ease;
+}
+
+.sort-dropdown-container .dropdown-toggle.show::after {
+  transform: rotate(180deg);
+}
+
+.sort-dropdown-container .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: none;
+  min-width: 10rem;
+  padding: 0.5rem 0;
+  margin: 0.125rem 0 0;
+  font-size: 1rem;
+  color: #212529;
+  text-align: left;
+  list-style: none;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.375rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.sort-dropdown-container .dropdown-menu.show {
+  display: block;
+  animation: dropdownFadeIn 0.2s ease;
+}
+
+.sort-dropdown-container .dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 1rem;
+  clear: both;
+  font-weight: 400;
+  color: #212529;
+  text-align: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sort-dropdown-container .dropdown-item:hover {
+  background-color: #f8f9fa;
+  color: #16181b;
+}
+
+.sort-dropdown-container .dropdown-item.active {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  color: #667eea;
+  font-weight: 500;
+}
+
+.sort-dropdown-container .dropdown-item:focus {
+  outline: 2px solid rgba(102, 126, 234, 0.5);
+  outline-offset: -2px;
+}
+
+/* Dropdown animation */
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (max-width: 1200px) {
-  .col-xl-2-4 {
-    width: 33.333333%;
-    flex: 0 0 auto;
-  }
+/* Ensure dropdown doesn't interfere with other Bootstrap components */
+.sort-dropdown-container .dropdown-menu {
+  z-index: 1060;
 }
 
-@media (max-width: 992px) {
-  .col-xl-2-4 {
-    width: 50%;
-    flex: 0 0 auto;
-  }
-  
-  .hero-section {
-    min-height: 70vh;
-  }
-  
-  .carousel-item {
-    height: 70vh;
-  }
-}
-
+/* Mobile responsive */
 @media (max-width: 768px) {
-  .col-xl-2-4 {
-    width: 100%;
-    flex: 0 0 auto;
+  .sort-dropdown-container .dropdown-menu {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 200px;
   }
   
+  .product-actions .btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
   .hero-section {
-    min-height: 60vh;
+    text-align: center;
   }
-  
-  .carousel-item {
-    height: 60vh;
+
+  .display-4 {
+    font-size: 2.5rem;
   }
-  
-  .display-3 {
-    font-size: 2.5rem !important;
+
+  .product-image-container {
+    height: 150px;
   }
 }
 
 @media (max-width: 576px) {
-  .hero-section {
-    min-height: 50vh;
+  .display-4 {
+    font-size: 2rem;
   }
-  
-  .carousel-item {
-    height: 50vh;
-  }
-  
-  .display-3 {
-    font-size: 2rem !important;
-  }
-  
-  .lead {
-    font-size: 1rem !important;
-  }
-}
 
-/* Ensure text is visible on carousel */
-.text-white {
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-/* Fix for badge positioning on cart button */
-.position-absolute.badge {
-  font-size: 0.7rem;
-  padding: 0.25em 0.6em;
-  min-width: 1.5em;
+  .product-image-container {
+    height: 120px;
+  }
+  
+  .product-actions .btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
 }
 </style>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Wishlist;
+use App\Models\Discount;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -18,8 +19,8 @@ class HomeController extends Controller
         $searchTerm = $request->input('search', '');
         $categoryName = $request->input('category', '');
         
-        // Base query for products
-        $query = Product::with('category')
+        // Base query for products WITH DISCOUNT
+        $query = Product::with(['category', 'discount'])
             ->where('stock', '>', 0);
         
         // Apply search filter if search term exists
@@ -43,20 +44,38 @@ class HomeController extends Controller
         $products = $query->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($product) {
-                return [
+                $productData = [
                     'product_id' => $product->product_id,
                     'name' => $product->name,
                     'price' => floatval($product->price),
-                    // Remove original_price if column doesn't exist
-                    // 'original_price' => $product->original_price ? floatval($product->original_price) : null,
                     'image' => $product->image ? asset('storage/' . $product->image) : 'https://placehold.co/400x300/e0f2f1/065f46?text=Product',
                     'category_id' => $product->category_id,
                     'stock' => $product->stock,
                     'description' => $product->description,
                     'reference' => $product->reference,
                     'created_at' => $product->created_at,
+                    'user_id' => $product->user_id,
                     'tags' => $product->tags ?? [],
                 ];
+                
+                // Add discount data if exists
+                if ($product->discount && $product->discount->status === 'active') {
+                    $discountAmount = floatval($product->discount->discount_amount);
+                    $originalPrice = floatval($product->price);
+                    $discountedPrice = $originalPrice - ($originalPrice * $discountAmount / 100);
+                    
+                    $productData['discount'] = [
+                        'discount_id' => $product->discount->discount_id,
+                        'discount_name' => $product->discount->discount_name,
+                        'discount_amount' => $discountAmount,
+                        'status' => $product->discount->status,
+                        'start_date' => $product->discount->start_date,
+                        'end_date' => $product->discount->end_date,
+                        'discounted_price' => $discountedPrice,
+                    ];
+                }
+                
+                return $productData;
             });
         
         // Get all categories
@@ -71,50 +90,96 @@ class HomeController extends Controller
         });
         
         // Get wishlist IDs for authenticated users
-        $wishlistIds = [];
-        if (Auth::check()) {
-            $wishlistIds = Wishlist::where('user_id', Auth::id())
-                ->pluck('product_id')
-                ->toArray();
-        }
+        // $wishlistIds = [];
+        // if (Auth::check()) {
+        //     $wishlistIds = Wishlist::where('user_id', Auth::id())
+        //         ->pluck('product_id')
+        //         ->toArray();
+        // }
         
-        // Get featured products
-        $featuredProducts = Product::with('category')
+        // Get featured products WITH DISCOUNT
+        $featuredProducts = Product::with(['category', 'discount'])
             ->where('stock', '>', 0)
             ->limit(8)
             ->get()
             ->map(function ($product) {
-                return [
+                $productData = [
                     'product_id' => $product->product_id,
                     'name' => $product->name,
                     'price' => floatval($product->price),
                     'image' => $product->image ? asset('storage/' . $product->image) : 'https://placehold.co/400x300/e0f2f1/065f46?text=Product',
                     'stock' => $product->stock,
                 ];
+                
+                // Add discount data if exists
+                if ($product->discount && $product->discount->status === 'active') {
+                    $discountAmount = floatval($product->discount->discount_amount);
+                    $originalPrice = floatval($product->price);
+                    $discountedPrice = $originalPrice - ($originalPrice * $discountAmount / 100);
+                    
+                    $productData['discount'] = [
+                        'discount_id' => $product->discount->discount_id,
+                        'discount_name' => $product->discount->discount_name,
+                        'discount_amount' => $discountAmount,
+                        'status' => $product->discount->status,
+                        'discounted_price' => $discountedPrice,
+                    ];
+                }
+                
+                return $productData;
             });
         
-        // Get best sellers
-        $bestSellers = Product::with('category')
+        // Get best sellers WITH DISCOUNT
+        $bestSellers = Product::with(['category', 'discount'])
             ->where('stock', '>', 0)
             ->orderBy('created_at', 'desc')
             ->limit(6)
             ->get()
             ->map(function ($product) {
-                return [
+                $productData = [
                     'product_id' => $product->product_id,
                     'name' => $product->name,
                     'price' => floatval($product->price),
                     'image' => $product->image ? asset('storage/' . $product->image) : 'https://placehold.co/400x300/e0f2f1/065f46?text=Product',
                     'stock' => $product->stock,
                 ];
+                
+                // Add discount data if exists
+                if ($product->discount && $product->discount->status === 'active') {
+                    $discountAmount = floatval($product->discount->discount_amount);
+                    $originalPrice = floatval($product->price);
+                    $discountedPrice = $originalPrice - ($originalPrice * $discountAmount / 100);
+                    
+                    $productData['discount'] = [
+                        'discount_id' => $product->discount->discount_id,
+                        'discount_name' => $product->discount->discount_name,
+                        'discount_amount' => $discountAmount,
+                        'status' => $product->discount->status,
+                        'discounted_price' => $discountedPrice,
+                    ];
+                }
+                
+                return $productData;
             });
+        
+        // Calculate discount stats
+        $activeDiscounts = Discount::where('status', 'active')
+            ->where('end_date', '>', now())
+            ->count();
+            
+        $discountedProducts = Product::whereHas('discount', function($query) {
+                $query->where('status', 'active')
+                      ->where('end_date', '>', now());
+            })
+            ->where('stock', '>', 0)
+            ->count();
         
         return Inertia::render('HomePage', [
             'products' => $products,
             'categories' => $categories,
             'featuredProducts' => $featuredProducts,
             'bestSellers' => $bestSellers,
-            'initialWishlistIds' => $wishlistIds,
+            // 'initialWishlistIds' => $wishlistIds,
             // PASS SEARCH AND CATEGORY TO THE FRONTEND
             'search' => $searchTerm,
             'category' => $categoryName,
@@ -122,7 +187,8 @@ class HomeController extends Controller
                 'total_products' => Product::count(),
                 'in_stock' => Product::where('stock', '>', 0)->count(),
                 'total_categories' => Category::count(),
-                // REMOVED: 'discounted_products' => Product::whereNotNull('original_price')->count(),
+                'discounted_products' => $discountedProducts, // ADDED: Count of products with active discounts
+                'active_discounts' => $activeDiscounts, // ADDED: Count of active discounts
                 'on_sale' => Product::where('stock', '<', 10)->count(), // Low stock items
             ],
             'flash' => [
@@ -134,7 +200,7 @@ class HomeController extends Controller
     
     public function search(Request $request)
     {
-        $query = Product::with('category')
+        $query = Product::with(['category', 'discount'])
             ->where('stock', '>', 0);
         
         if ($request->has('q') && $request->q) {
@@ -165,7 +231,7 @@ class HomeController extends Controller
     {
         $category = Category::where('slug', $categorySlug)->firstOrFail();
         
-        $products = Product::with('category')
+        $products = Product::with(['category', 'discount'])
             ->where('category_id', $category->category_id)
             ->where('stock', '>', 0)
             ->paginate(12);
@@ -176,24 +242,21 @@ class HomeController extends Controller
         ]);
     }
     
-    // Optional: Add method to get discounted products only if you add original_price column later
+    // NEW METHOD: Get discounted products
     public function discountedProducts()
     {
-        // If you add original_price column later, use this method
-        // $products = Product::with('category')
-        //     ->where('stock', '>', 0)
-        //     ->whereNotNull('original_price')
-        //     ->paginate(12);
-        
-        // For now, return empty or show low stock items
-        $products = Product::with('category')
+        $products = Product::with(['category', 'discount'])
+            ->whereHas('discount', function($query) {
+                $query->where('status', 'active')
+                      ->where('end_date', '>', now());
+            })
             ->where('stock', '>', 0)
-            ->where('stock', '<', 10)
             ->paginate(12);
         
         return Inertia::render('DiscountedPage', [
             'products' => $products,
-            'title' => 'Low Stock Items',
+            'title' => 'Discounted Products',
+            'description' => 'Special offers and discounts available now!',
         ]);
     }
 }

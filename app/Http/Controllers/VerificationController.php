@@ -2,141 +2,180 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\VerificationRequest;
 use App\Models\User;
+use App\Models\VerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class VerificationController extends Controller
 {
     /**
-     * Show the verification request form.
+     * Show verification request page
      */
     public function create()
     {
         $user = Auth::user();
         
-        // Check if user is already verified
-        if ($user->is_verified || $user->verified_at) {
-            return redirect()->route('dashboard')->with('info', 'Your account is already verified.');
-        }
-        
-        // Check for pending request
-        $pendingRequest = VerificationRequest::where('user_id', $user->id)
-            ->where('status', 'pending')
+        // Get the latest verification request
+        $latestRequest = VerificationRequest::where('user_id', $user->id)
+            ->latest()
             ->first();
-        
+
+        // Check if user is already verified AND has an approved request
+        $isFullyVerified = $user->is_verified && 
+                          $latestRequest && 
+                          $latestRequest->status === 'approved';
+
         return Inertia::render('Verification/Request', [
-            'user' => $user,
-            'pendingRequest' => $pendingRequest,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->full_name,
+                'email' => $user->email,
+                'phone' => $user->phone ?? null,
+                'user_type' => $user->user_type ?? 'Customer',
+                'is_verified' => $user->is_verified,
+                'verified_at' => $user->verified_at,
+            ],
+            'verificationRequest' => $latestRequest,
+            'isFullyVerified' => $isFullyVerified,
         ]);
     }
 
     /**
-     * Store a verification request.
+     * Handle verification submission
      */
     public function store(Request $request)
     {
         $user = Auth::user();
         
-        // Validation
-        $request->validate([
-            'national_id' => 'required|string|max:20|unique:verification_requests,national_id',
-            'national_id_image' => 'required|string', // This should be the file path from upload
-            'agree_terms' => 'required|accepted',
-        ]);
-        
-        // Check if user already has a pending request
-        $existingRequest = VerificationRequest::where('user_id', $user->id)
-            ->where('status', 'pending')
+        // Check if user is already fully verified (approved) - CANNOT resubmit
+        $latestRequest = VerificationRequest::where('user_id', $user->id)
+            ->latest()
             ->first();
             
-        if ($existingRequest) {
-            return redirect()->back()->withErrors([
-                'pending' => 'You already have a pending verification request.'
-            ]);
+        if ($user->is_verified && $latestRequest && $latestRequest->status === 'approved') {
+            return redirect()->route('home')
+                ->with('error', 'Your account is already verified and cannot submit new requests.');
         }
-        
-        // Create verification request
-        $verificationRequest = VerificationRequest::create([
-            'user_id' => $user->id,
-            'national_id' => $request->national_id,
-            'national_id_image' => $request->national_id_image,
-            'status' => 'pending',
-        ]);
-        
-        return redirect()->route('dashboard')->with('success', 'Verification request submitted successfully!');
-    }
 
-    /**
-     * Update user's account number.
-     */
-    public function updateAccountNumber(Request $request)
-    {
+        // Check for existing pending request
+        $existingPendingRequest = VerificationRequest::where('user_id', $user->id)
+            ->where('status', VerificationRequest::STATUS_PENDING)
+            ->exists();
+
+        if ($existingPendingRequest) {
+            return redirect()->route('verification.request')
+                ->with('error', 'You already have a pending verification request.');
+        }
+
         $request->validate([
-            'account_number' => 'required|string|max:50|unique:users,account_number,' . Auth::id(),
+            'national_id' => 'required|string|max:50',
+            'national_id_image' => 'required|string',
+            'agree_terms' => 'required|accepted',
+        ], [
+            'agree_terms.accepted' => 'You must agree to the terms and conditions.',
         ]);
-        
-        User::where('id', Auth::id())->update([
-            'account_number' => $request->account_number
-        ]);
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Account number updated successfully.'
-        ]);
+
+        try {
+            // Check if national ID is already used by another user
+            $existingNationalId = VerificationRequest::where('national_id', $request->national_id)
+                ->where('user_id', '!=', $user->id)
+                ->exists();
+
+            if ($existingNationalId) {
+                return redirect()->back()
+                    ->withErrors(['national_id' => 'This national ID has already been used for verification by another user.'])
+                    ->withInput();
+            }
+
+            // Create verification request
+            VerificationRequest::create([
+                'user_id' => $user->id,
+                'national_id' => $request->national_id,
+                'national_id_image' => $request->national_id_image,
+                'status' => VerificationRequest::STATUS_PENDING,
+            ]);
+
+            // Redirect to home page with success message
+            return redirect()->route('home')->with([
+                'success' => 'Verification request submitted successfully!',
+                'verification_submitted' => true,
+            ]);
+
+        } catch (\Exception $e) {
+            return back()
+                ->with('error', 'Failed to submit verification request. Please try again.')
+                ->withInput();
+        }
     }
 
     /**
-     * Upload ID image - FIXED VERSION.
-     * Use this if you're calling from JavaScript/Inertia
+     * Upload ID image
      */
     public function uploadIdImage(Request $request)
     {
         $request->validate([
             'national_id_image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
         ]);
+
+        try {
+            $user = Auth::user();
+            
+            // Create directory if it doesn't exist
+            $directory = 'public/verification_ids/' . $user->id;
+            if (!Storage::exists($directory)) {
+                Storage::makeDirectory($directory);
+            }
+
+            // Store the file
+            $path = $request->file('national_id_image')->store(
+                'verification_ids/' . $user->id,
+                'public'
+            );
+
+            return response()->json([
+                'success' => true,
+                'file_path' => $path,
+                'url' => Storage::url($path),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload image.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Admin: Approve verification request
+     */
+    public function approve(VerificationRequest $verificationRequest)
+    {
+        // This is for admin panel - you can implement admin check
+        $verificationRequest->approve(Auth::id());
         
-        $user = Auth::user();
-        
-        // Store the image
-        $path = $request->file('national_id_image')->store(
-            'verification-ids/' . $user->id,
-            'public'
-        );
-        
-        // Return as JSON for JavaScript/Inertia
         return response()->json([
             'success' => true,
-            'file_path' => $path,
-            'full_url' => Storage::url($path),
+            'message' => 'Verification request approved.',
         ]);
     }
 
     /**
-     * ALTERNATIVE: Upload ID image - Inertia version
-     * Use this if you want to return Inertia response
+     * Admin: Reject verification request
      */
-    public function uploadIdImageInertia(Request $request)
+    public function reject(VerificationRequest $verificationRequest, Request $request)
     {
         $request->validate([
-            'national_id_image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+            'rejection_reason' => 'required|string|max:500',
         ]);
         
-        $user = Auth::user();
+        $verificationRequest->reject($request->rejection_reason, Auth::id());
         
-        // Store the image
-        $path = $request->file('national_id_image')->store(
-            'verification-ids/' . $user->id,
-            'public'
-        );
-        
-        // Return to the same page with the file path
-        return back()->with('uploaded_image', [
-            'path' => $path,
-            'url' => Storage::url($path),
+        return response()->json([
+            'success' => true,
+            'message' => 'Verification request rejected.',
         ]);
     }
 }

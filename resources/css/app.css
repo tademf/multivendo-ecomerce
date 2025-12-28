@@ -1,2 +1,218 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
+
+/* Dark Mode Variables */
+:root {
+  --primary-color: #0d6efd;
+  --secondary-color: #6c757d;
+  --success-color: #198754;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #0dcaf0;
+  --light-color: #f8f9fa;
+  --dark-color: #212529;
+  --body-bg: #ffffff;
+  --body-color: #212529;
+  --card-bg: #ffffff;
+  --card-border: #dee2e6;
+  --navbar-bg: #ffffff;
+  --footer-bg: #f8f9fa;
+  --input-bg: #ffffff;
+  --input-border: #dee2e6;
+  --dropdown-bg: #ffffff;
+  --dropdown-border: #dee2e6;
+}
+
+/* Dark Theme Variables */
+[data-bs-theme="dark"] {
+  --primary-color: #0d6efd;
+  --secondary-color: #6c757d;
+  --success-color: #198754;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #0dcaf0;
+  --light-color: #212529;
+  --dark-color: #f8f9fa;
+  --body-bg: #0d1117;
+  --body-color: #e6edf3;
+  --card-bg: #161b22;
+  --card-border: #30363d;
+  --navbar-bg: #161b22;
+  --footer-bg: #0d1117;
+  --input-bg: #0d1117;
+  --input-border: #30363d;
+  --dropdown-bg: #161b22;
+  --dropdown-border: #30363d;
+}
+
+/* Apply variables globally */
+body {
+  background-color: var(--body-bg) !important;
+  color: var(--body-color) !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Force dark mode on all elements */
+[data-bs-theme="dark"] * {
+  background-color: inherit;
+  color: inherit;
+}
+
+/* Specific dark mode overrides */
+[data-bs-theme="dark"] .bg-white {
+  background-color: var(--card-bg) !important;
+}
+
+[data-bs-theme="dark"] .bg-light {
+  background-color: var(--card-bg) !important;
+}
+
+[data-bs-theme="dark"] .text-dark {
+  color: var(--body-color) !important;
+}
+
+[data-bs-theme="dark"] .border {
+  border-color: var(--card-border) !important;
+}
+
+[data-bs-theme="dark"] .border-top {
+  border-top-color: var(--card-border) !important;
+}
+
+[data-bs-theme="dark"] .border-bottom {
+  border-bottom-color: var(--card-border) !important;
+}
+
+[data-bs-theme="dark"] .shadow-sm {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Fix cards in dark mode */
+[data-bs-theme="dark"] .card {
+  background-color: var(--card-bg) !important;
+  border-color: var(--card-border) !important;
+  color: var(--body-color) !important;
+}
+
+/* Fix navbar in dark mode */
+[data-bs-theme="dark"] .navbar {
+  background-color: var(--navbar-bg) !important;
+  border-color: var(--card-border) !important;
+}
+
+/* Fix form controls */
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--body-color) !important;
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+  background-color: var(--input-bg) !important;
+  border-color: var(--primary-color) !important;
+  color: var(--body-color) !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+[data-bs-theme="dark"] .input-group-text {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--body-color) !important;
+}
+
+/* Fix dropdowns */
+[data-bs-theme="dark"] .dropdown-menu {
+  background-color: var(--dropdown-bg) !important;
+  border-color: var(--dropdown-border) !important;
+  color: var(--body-color) !important;
+}
+
+[data-bs-theme="dark"] .dropdown-item {
+  color: var(--body-color) !important;
+}
+
+[data-bs-theme="dark"] .dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+
+
+
+/* Force dark mode on all elements more aggressively */
+[data-bs-theme="dark"] {
+  background-color: var(--body-bg) !important;
+  color: var(--body-color) !important;
+}
+
+[data-bs-theme="dark"] body {
+  background-color: var(--body-bg) !important;
+  color: var(--body-color) !important;
+}
+
+/* Fix generic elements without Bootstrap classes */
+[data-bs-theme="dark"] div,
+[data-bs-theme="dark"] section,
+[data-bs-theme="dark"] article,
+[data-bs-theme="dark"] header,
+[data-bs-theme="dark"] footer {
+  background-color: var(--body-bg) !important;
+  color: var(--body-color) !important;
+}
+
+/* Fix text colors */
+[data-bs-theme="dark"] h1,
+[data-bs-theme="dark"] h2,
+[data-bs-theme="dark"] h3,
+[data-bs-theme="dark"] h4,
+[data-bs-theme="dark"] h5,
+[data-bs-theme="dark"] h6,
+[data-bs-theme="dark"] p,
+[data-bs-theme="dark"] span,
+[data-bs-theme="dark"] label {
+  color: var(--body-color) !important;
+}
+
+/* Fix background of any container-like elements */
+[data-bs-theme="dark"] [class*="container"],
+[data-bs-theme="dark"] [class*="box"],
+[data-bs-theme="dark"] [class*="panel"],
+[data-bs-theme="dark"] [class*="wrapper"] {
+  background-color: var(--body-bg) !important;
+  color: var(--body-color) !important;
+}
+
+
+/* ===========================
+   FIX: Homepage Image Slider
+   =========================== */
+
+/* Allow background images to show in dark mode */
+[data-bs-theme="dark"] .hero-section,
+[data-bs-theme="dark"] .carousel,
+[data-bs-theme="dark"] .carousel-item,
+[data-bs-theme="dark"] .swiper,
+[data-bs-theme="dark"] .swiper-slide,
+[data-bs-theme="dark"] .slider,
+[data-bs-theme="dark"] .hero-slider {
+  background-color: transparent !important;
+  background-image: inherit !important;
+}
+
+/* If slider images are inside img tags */
+[data-bs-theme="dark"] .carousel img,
+[data-bs-theme="dark"] .swiper img,
+[data-bs-theme="dark"] .hero-section img {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Prevent global dark rule from killing slider */
+[data-bs-theme="dark"] .carousel *,
+[data-bs-theme="dark"] .swiper *,
+[data-bs-theme="dark"] .hero-section * {
+  background-color: transparent !important;
+}
+

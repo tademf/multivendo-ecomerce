@@ -3,6 +3,7 @@ import '../css/app.css';
 import { createApp, h } from 'vue'
 import { createInertiaApp } from '@inertiajs/vue3'
 import { ZiggyVue } from '../../vendor/tightenco/ziggy'
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 // Import Bootstrap
 import * as bootstrap from 'bootstrap';

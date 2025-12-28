@@ -37,6 +37,7 @@ class HandleInertiaRequests extends Middleware
                         : null,
                     'verified_at' => $request->user()->verified_at,
                     'email_verified_at' => $request->user()->email_verified_at,
+                    'is_verified' => $request->user()->is_verified ?? false,
                 ] : null,
             ],
             'flash' => [
@@ -67,25 +68,27 @@ class HandleInertiaRequests extends Middleware
             }),
             
             // Cart and wishlist counts
-            'cart_count' => function () use ($request) {
-                if ($request->user()) {
-                    // You can implement cart count logic here
-                    // For example, from session or database
-                    return session()->get('cart_count', 0);
-                }
-                return session()->get('cart_count', 0);
-            },
+            // 'cart_count' => function () use ($request) {
+            //     if ($request->user()) {
+            //         // You can implement cart count logic here
+            //         // For example, from session or database
+            //         return session()->get('cart_count', 0);
+            //     }
+            //     return session()->get('cart_count', 0);
+            // },
             
-            'wishlist_count' => function () use ($request) {
-                if ($request->user()) {
-                    return Wishlist::where('user_id', $request->user()->id)->count();
-                }
-                return 0;
-            },
+            // 'wishlist_count' => function () use ($request) {
+            //     if ($request->user()) {
+            //         return Wishlist::where('user_id', $request->user()->id)->count();
+            //     }
+            //     return 0;
+            // },
             
             // Optional: Recent products for suggestions
             'recent_products' => fn () => Cache::remember('recent_products', 1800, function () {
                 return Product::with('category')
+                    ->where('stock', '>', 0) // Only products with stock
+                    ->where('status', 'active') // Only active products
                     ->orderBy('created_at', 'desc')
                     ->take(8)
                     ->get()
@@ -100,10 +103,11 @@ class HandleInertiaRequests extends Middleware
                     });
             }),
             
-            // Optional: Featured products
+            // Featured products - FIXED: Removed is_featured filter since column doesn't exist
             'featured_products' => fn () => Cache::remember('featured_products', 1800, function () {
                 return Product::with('category')
-                    ->where('is_featured', true)
+                    ->where('stock', '>', 0) // Only products with stock
+                    ->where('status', 'active') // Only active products
                     ->orderBy('created_at', 'desc')
                     ->take(6)
                     ->get()
@@ -116,6 +120,16 @@ class HandleInertiaRequests extends Middleware
                             'category_name' => $product->category->name ?? 'Uncategorized',
                         ];
                     });
+            }),
+            
+            // Global stats for dashboard/home page
+            'global_stats' => fn () => Cache::remember('global_stats', 300, function () {
+                return [
+                    'total_products' => Product::count(),
+                    'active_products' => Product::where('stock', '>', 0)->where('status', 'active')->count(),
+                    'total_categories' => Category::count(),
+                    'low_stock_products' => Product::where('stock', '<', 10)->where('stock', '>', 0)->count(),
+                ];
             }),
         ]);
     }

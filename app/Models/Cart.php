@@ -5,13 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Wishlist extends Model
+class Cart extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'product_id'
+        'product_id',
+        'quantity',
+        'price',
+        'status'
+    ];
+
+    protected $casts = [
+        'price' => 'decimal:2',
     ];
 
     // No need to specify primary key as it's 'id' by default
@@ -25,5 +32,15 @@ class Wishlist extends Model
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id', 'product_id');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    public function getTotalAttribute()
+    {
+        return $this->price * $this->quantity;
     }
 }
