@@ -25,8 +25,10 @@ class User extends Authenticatable
         'account_number',
         'is_verified',
         'verified_at',
-        'national_id',             // National ID NUMBER (string/number)
+        'national_id',             
         'remember_token',
+        'otp',              
+        'otp_expires_at',
     ];
 
     /**

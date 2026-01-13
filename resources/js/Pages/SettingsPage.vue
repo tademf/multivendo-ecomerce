@@ -2,7 +2,7 @@
   <AppLayout>
     <div v-if="isAnyModalOpen" class="modal-blur-overlay"></div>
     
-    <div class="settings-page" :class="{'blur-background': isAnyModalOpen}">
+    <div class="settings-page" :class="{'blur-background': isAnyModalOpen, 'dark-theme': isDarkMode, 'light-theme': !isDarkMode}">
       <div class="bg-shapes">
         <div class="shape-1"></div>
         <div class="shape-2"></div>
@@ -397,22 +397,25 @@
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     <strong>Security Check:</strong> Enter your current password to change it.
                   </div>
-
-                  <div class="mb-3">
-                    <label class="form-label fw-bold">Current Password *</label>
-                    <div class="input-group">
-                      <input :type="showCurrentPassword ? 'text' : 'password'" 
-                            class="form-control" v-model="passwordForm.current_password"
-                            :class="{'is-invalid': passwordForm.errors.current_password}"
-                            required placeholder="Enter current password">
-                      <button class="btn btn-outline-secondary" type="button" @click="toggleCurrentPassword">
-                        <i :class="showCurrentPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                      </button>
-                    </div>
-                    <div class="invalid-feedback" v-if="passwordForm.errors.current_password">
-                      {{ passwordForm.errors.current_password }}
-                    </div>
-                  </div>
+<div class="mb-3" v-if="!isOtpLogin">
+  <label class="form-label fw-bold">Current Password *</label>
+  <div class="input-group">
+    <input 
+      :type="showCurrentPassword ? 'text' : 'password'" 
+      class="form-control" 
+      v-model="passwordForm.current_password"
+      :class="{'is-invalid': passwordForm.errors.current_password}"
+      :required="!isOtpLogin" 
+      placeholder="Enter current password"
+    >
+    <button class="btn btn-outline-secondary" type="button" @click="toggleCurrentPassword">
+      <i :class="showCurrentPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+    </button>
+  </div>
+  <div class="invalid-feedback d-block" v-if="passwordForm.errors.current_password">
+    {{ passwordForm.errors.current_password }}
+  </div>
+</div>
 
                   <div class="mb-3">
                     <label class="form-label fw-bold">New Password *</label>
@@ -641,8 +644,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { ref, computed, onMounted, watchEffect } from 'vue'
+import { useForm, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 
 const props = defineProps({
@@ -652,8 +655,24 @@ const props = defineProps({
   }
 })
 
-const activeSection = ref('documents')
+// Dark mode
+const isDarkMode = ref(localStorage.getItem('theme') === 'dark')
 
+// Watch for theme changes
+watchEffect(() => {
+  window.addEventListener('theme-changed', (event) => {
+    isDarkMode.value = event.detail.theme === 'dark'
+  })
+  
+  // Get initial theme
+  const theme = localStorage.getItem('theme') || 'light'
+  isDarkMode.value = theme === 'dark'
+})
+
+// ተጠቃሚው በ OTP መግባቱን ከ Inertia Page props እናረጋግጣለን
+const isOtpLogin = computed(() => usePage().props.auth.is_otp_login)
+
+const activeSection = ref('documents')
 const showProfileEditModal = ref(false)
 const showPasswordModal = ref(false)
 const showAccountModal = ref(false)
@@ -802,6 +821,11 @@ const closePasswordModal = () => {
 }
 
 const updatePassword = () => {
+  // በ OTP ከገባ current_password ባዶ እንዲሆን እናደርጋለን
+  if (isOtpLogin.value) {
+    passwordForm.current_password = 'NOT_REQUIRED_OTP_LOGIN' 
+  }
+
   passwordForm.put(route('settings.password.update'), {
     preserveScroll: true,
     onSuccess: () => {
@@ -876,12 +900,169 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.settings-page {
-  position: relative;
-  min-height: 100vh;
+/* Light theme - DEFAULT */
+.settings-page.light-theme {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  color: #2c3e50;
 }
 
+.settings-page.light-theme .profile-card,
+.settings-page.light-theme .settings-nav,
+.settings-page.light-theme .settings-section,
+.settings-page.light-theme .security-card,
+.settings-page.light-theme .account-card,
+.settings-page.light-theme .document-card {
+  background: white !important;
+  border-color: #f1f3f4 !important;
+  color: #2c3e50 !important;
+}
+
+.settings-page.light-theme .section-header {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.settings-page.light-theme .detail-item {
+  background: #f8f9fa !important;
+  border: 1px solid #e9ecef !important;
+}
+
+.settings-page.light-theme .detail-label {
+  color: #495057 !important;
+}
+
+.settings-page.light-theme .detail-value {
+  color: #2c3e50 !important;
+}
+
+.settings-page.light-theme .card-header {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-bottom: 1px solid #e9ecef;
+}
+
+.settings-page.light-theme .account-card {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border: 2px solid #dee2e6;
+}
+
+.settings-page.light-theme .account-card-header {
+  background: white;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.settings-page.light-theme .document-card {
+  border: 2px solid #f1f3f4;
+}
+
+.settings-page.light-theme .section-subtitle,
+.settings-page.light-theme .card-text,
+.settings-page.light-theme .bank-info .text-muted,
+.settings-page.light-theme .document-card p,
+.settings-page.light-theme .empty-state p,
+.settings-page.light-theme .number-label {
+  color: #6c757d !important;
+}
+
+.settings-page.light-theme .text-muted {
+  color: #6c757d !important;
+}
+
+.settings-page.light-theme .empty-state i {
+  color: #dee2e6 !important;
+}
+
+.settings-page.light-theme .empty-state h4 {
+  color: #6c757d !important;
+}
+
+.settings-page.light-theme .alert-light {
+  background-color: #f8f9fa !important;
+  border-color: #e9ecef !important;
+  color: #2c3e50 !important;
+}
+
+/* Dark theme */
+.settings-page.dark-theme {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #f1f5f9;
+}
+
+.settings-page.dark-theme .profile-card,
+.settings-page.dark-theme .settings-nav,
+.settings-page.dark-theme .settings-section,
+.settings-page.dark-theme .security-card,
+.settings-page.dark-theme .account-card,
+.settings-page.dark-theme .document-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+.settings-page.dark-theme .section-header {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-bottom: 1px solid #475569;
+}
+
+.settings-page.dark-theme .detail-item {
+  background: #334155 !important;
+  border: 1px solid #475569 !important;
+}
+
+.settings-page.dark-theme .detail-label {
+  color: #cbd5e1 !important;
+}
+
+.settings-page.dark-theme .detail-value {
+  color: #f1f5f9 !important;
+}
+
+.settings-page.dark-theme .card-header {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-bottom: 1px solid #475569;
+}
+
+.settings-page.dark-theme .account-card {
+  background: linear-gradient(135deg, #334155, #475569);
+  border: 2px solid #64748b;
+}
+
+.settings-page.dark-theme .account-card-header {
+  background: #1e293b;
+  border-bottom: 1px solid #475569;
+}
+
+.settings-page.dark-theme .document-card {
+  border: 2px solid #475569;
+}
+
+.settings-page.dark-theme .section-subtitle,
+.settings-page.dark-theme .card-text,
+.settings-page.dark-theme .bank-info .text-muted,
+.settings-page.dark-theme .document-card p,
+.settings-page.dark-theme .empty-state p,
+.settings-page.dark-theme .number-label {
+  color: #94a3b8 !important;
+}
+
+.settings-page.dark-theme .text-muted {
+  color: #94a3b8 !important;
+}
+
+.settings-page.dark-theme .empty-state i {
+  color: #475569 !important;
+}
+
+.settings-page.dark-theme .empty-state h4 {
+  color: #94a3b8 !important;
+}
+
+.settings-page.dark-theme .alert-light {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+  color: #cbd5e1 !important;
+}
+
+/* Common styles for both themes */
 .bg-shapes {
   position: fixed;
   top: 0;
@@ -899,8 +1080,23 @@ onMounted(() => {
 .bg-shapes .shape-5 {
   position: absolute;
   border-radius: 50%;
-  background: linear-gradient(45deg, rgba(var(--bs-primary-rgb, 13, 110, 253), 0.05), rgba(var(--bs-success-rgb, 25, 135, 84), 0.05));
   animation: float 20s infinite linear;
+}
+
+.settings-page.light-theme .bg-shapes .shape-1,
+.settings-page.light-theme .bg-shapes .shape-2,
+.settings-page.light-theme .bg-shapes .shape-3,
+.settings-page.light-theme .bg-shapes .shape-4,
+.settings-page.light-theme .bg-shapes .shape-5 {
+  background: linear-gradient(45deg, rgba(13, 110, 253, 0.05), rgba(25, 135, 84, 0.05));
+}
+
+.settings-page.dark-theme .bg-shapes .shape-1,
+.settings-page.dark-theme .bg-shapes .shape-2,
+.settings-page.dark-theme .bg-shapes .shape-3,
+.settings-page.dark-theme .bg-shapes .shape-4,
+.settings-page.dark-theme .bg-shapes .shape-5 {
+  background: linear-gradient(45deg, rgba(59, 130, 246, 0.05), rgba(16, 185, 129, 0.05));
 }
 
 .bg-shapes .shape-1 { width: 300px; height: 300px; top: -150px; right: -100px; animation-delay: 0s; }
@@ -916,7 +1112,6 @@ onMounted(() => {
 }
 
 .profile-card {
-  background: white;
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -968,7 +1163,6 @@ onMounted(() => {
 }
 
 .settings-nav {
-  background: white;
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -995,14 +1189,21 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.5rem;
-  color: #495057;
   text-decoration: none;
   transition: all 0.3s;
   border-left: 4px solid transparent;
 }
 
+.settings-page.light-theme .nav-item {
+  color: #495057;
+}
+
+.settings-page.dark-theme .nav-item {
+  color: #cbd5e1;
+}
+
 .nav-item:hover {
-  background: #f8f9fa;
+  background: rgba(255, 255, 255, 0.05);
   color: var(--bs-primary);
   border-left-color: var(--bs-primary);
 }
@@ -1020,7 +1221,6 @@ onMounted(() => {
 }
 
 .settings-section {
-  background: white;
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
@@ -1031,8 +1231,6 @@ onMounted(() => {
 
 .section-header {
   padding: 1.5rem 2rem;
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-  border-bottom: 1px solid #f1f3f4;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -1054,11 +1252,9 @@ onMounted(() => {
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
-  color: #2c3e50;
 }
 
 .section-subtitle {
-  color: #6c757d;
   margin: 0;
 }
 
@@ -1094,20 +1290,17 @@ onMounted(() => {
   display: flex;
   align-items: center;
   padding: 1rem;
-  background: #f8f9fa;
   border-radius: 12px;
   transition: all 0.3s;
 }
 
 .detail-item:hover {
-  background: #e9ecef;
   transform: translateX(5px);
 }
 
 .detail-label {
   flex: 0 0 200px;
   font-weight: 600;
-  color: #495057;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -1115,7 +1308,6 @@ onMounted(() => {
 
 .detail-value {
   flex: 1;
-  color: #2c3e50;
   font-size: 1.1rem;
 }
 
@@ -1134,8 +1326,6 @@ onMounted(() => {
 }
 
 .security-card {
-  background: white;
-  border: 2px solid #f1f3f4;
   border-radius: 16px;
   overflow: hidden;
   transition: all 0.3s;
@@ -1149,7 +1339,6 @@ onMounted(() => {
 
 .card-header {
   padding: 1.5rem;
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -1170,7 +1359,6 @@ onMounted(() => {
 }
 
 .card-text {
-  color: #6c757d;
   margin-bottom: 1.5rem;
 }
 
@@ -1204,19 +1392,15 @@ onMounted(() => {
 }
 
 .account-card {
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
   border-radius: 16px;
   overflow: hidden;
-  border: 2px solid #dee2e6;
 }
 
 .account-card-header {
   padding: 1.5rem;
-  background: white;
   display: flex;
   align-items: center;
   gap: 1rem;
-  border-bottom: 1px solid #f1f3f4;
 }
 
 .bank-logo {
@@ -1258,13 +1442,19 @@ onMounted(() => {
   justify-content: space-between;
   margin-bottom: 1.5rem;
   padding: 1rem;
-  background: white;
   border-radius: 8px;
+}
+
+.settings-page.light-theme .account-number {
+  background: white;
+}
+
+.settings-page.dark-theme .account-number {
+  background: #334155;
 }
 
 .number-label {
   font-weight: 600;
-  color: #495057;
 }
 
 .number-value {
@@ -1290,16 +1480,15 @@ onMounted(() => {
   justify-content: center;
   gap: 0.5rem;
   transition: all 0.3s;
+  color: white;
 }
 
 .copy-btn {
   background: linear-gradient(135deg, var(--bs-primary), var(--bs-info));
-  color: white;
 }
 
 .edit-btn {
   background: linear-gradient(135deg, var(--bs-warning), #fd7e14);
-  color: white;
 }
 
 .btn-action:hover {
@@ -1313,17 +1502,14 @@ onMounted(() => {
 }
 
 .empty-state i {
-  color: #dee2e6;
   margin-bottom: 1.5rem;
 }
 
 .empty-state h4 {
-  color: #6c757d;
   margin-bottom: 0.5rem;
 }
 
 .empty-state p {
-  color: #adb5bd;
   margin-bottom: 2rem;
 }
 
@@ -1352,8 +1538,6 @@ onMounted(() => {
 }
 
 .document-card {
-  background: white;
-  border: 2px solid #f1f3f4;
   border-radius: 16px;
   padding: 2rem;
   text-align: center;
@@ -1371,7 +1555,6 @@ onMounted(() => {
   width: 80px;
   height: 80px;
   margin: 0 auto 1.5rem;
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1380,13 +1563,19 @@ onMounted(() => {
   color: var(--bs-primary);
 }
 
+.settings-page.light-theme .document-icon {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
+.settings-page.dark-theme .document-icon {
+  background: linear-gradient(135deg, #334155, #475569);
+}
+
 .document-card h4 {
   margin-bottom: 0.5rem;
-  color: #2c3e50;
 }
 
 .document-card p {
-  color: #6c757d;
   margin-bottom: 1.5rem;
 }
 
@@ -1470,21 +1659,18 @@ onMounted(() => {
 }
 
 .document-content h4 {
-  color: #2c3e50;
   border-bottom: 2px solid var(--bs-primary);
   padding-bottom: 0.5rem;
   margin-bottom: 1.5rem;
 }
 
 .document-content h5 {
-  color: #495057;
   margin-top: 1.5rem;
   padding-left: 0.75rem;
   border-left: 4px solid var(--bs-primary);
 }
 
 .document-content .text-muted {
-  color: #6c757d;
   line-height: 1.6;
 }
 
@@ -1535,6 +1721,61 @@ onMounted(() => {
   position: relative;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
   animation: modalSlideIn 0.3s ease-out;
+}
+
+.settings-page.dark-theme .modal-content {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+
+.settings-page.dark-theme .modal-body {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+
+.settings-page.dark-theme .modal-footer {
+  background-color: #1e293b !important;
+  border-top: 1px solid #334155 !important;
+}
+
+.settings-page.dark-theme .form-control {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+  color: #f1f5f9 !important;
+}
+
+.settings-page.dark-theme .form-control:focus {
+  background-color: #334155 !important;
+  border-color: var(--bs-primary) !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+.settings-page.dark-theme .alert {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+  color: #f1f5f9 !important;
+}
+
+.settings-page.dark-theme .alert-info {
+  background-color: rgba(13, 110, 253, 0.1) !important;
+  border-color: rgba(13, 110, 253, 0.2) !important;
+}
+
+.settings-page.dark-theme .alert-warning {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  border-color: rgba(255, 193, 7, 0.2) !important;
+}
+
+.settings-page.dark-theme .alert-success {
+  background-color: rgba(25, 135, 84, 0.1) !important;
+  border-color: rgba(25, 135, 84, 0.2) !important;
+}
+
+.settings-page.dark-theme .alert-light {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+  color: #cbd5e1 !important;
 }
 
 @keyframes modalSlideIn {
@@ -1600,8 +1841,15 @@ onMounted(() => {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f3f4;
   border-radius: 4px;
+}
+
+.settings-page.light-theme ::-webkit-scrollbar-track {
+  background: #f1f3f4;
+}
+
+.settings-page.dark-theme ::-webkit-scrollbar-track {
+  background: #334155;
 }
 
 ::-webkit-scrollbar-thumb {

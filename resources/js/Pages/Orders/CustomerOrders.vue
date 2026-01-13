@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4" :class="themeClass">
       <!-- Flash Messages -->
       <div class="row mb-3">
         <div class="col-12">
@@ -26,29 +26,12 @@
         </div>
       </div>
 
-      <!-- Page Header -->
-      <div class="row mb-4">
-        <div class="col-12">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h1 class="h3 fw-bold mb-1">My Orders</h1>
-              <p class="text-muted mb-0">Track and manage all your orders</p>
-            </div>
-            <div class="d-flex gap-2">
-              <a href="/" class="btn btn-outline-primary">
-                <i class="fas fa-shopping-cart me-2"></i>Continue Shopping
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Orders Table -->
       <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
+              <thead :class="theme === 'dark' ? 'table-dark' : 'table-light'">
                 <tr>
                   <th class="border-0">Order Details</th>
                   <th class="border-0">Product</th>
@@ -61,9 +44,9 @@
               <tbody>
                 <tr v-if="orders.length === 0">
                   <td colspan="6" class="text-center py-5">
-                    <i class="fas fa-shopping-bag fa-2x text-muted mb-3"></i>
+                    <i class="fas fa-shopping-bag fa-2x mb-3" :class="theme === 'dark' ? 'text-light' : 'text-muted'"></i>
                     <h6 class="fw-bold mb-2">No orders yet</h6>
-                    <p class="text-muted mb-3">You haven't placed any orders yet</p>
+                    <p class="mb-3" :class="theme === 'dark' ? 'text-light' : 'text-muted'">You haven't placed any orders yet</p>
                     <a href="/" class="btn btn-primary">
                       <i class="fas fa-shopping-cart me-2"></i>Start Shopping
                     </a>
@@ -74,9 +57,9 @@
                   <td>
                     <div class="d-flex flex-column">
                       <strong class="text-primary">#{{ order.order_number || order.id }}</strong>
-                      <small class="text-muted">{{ formatDate(order.created_at) }}</small>
+                      <small :class="theme === 'dark' ? 'text-light' : 'text-muted'">{{ formatDate(order.created_at) }}</small>
                       <div v-if="order.vendor_name" class="mt-1">
-                        <small class="text-muted">
+                        <small :class="theme === 'dark' ? 'text-light' : 'text-muted'">
                           <i class="fas fa-store me-1"></i>{{ order.vendor_name }}
                         </small>
                       </div>
@@ -113,7 +96,7 @@
                       
                       <!-- Original Price for Discounted Orders -->
                       <div v-if="order.is_discounted && order.original_price" class="mt-1">
-                        <small class="text-muted">
+                        <small :class="theme === 'dark' ? 'text-light' : 'text-muted'">
                           <s>{{ formatPrice(order.original_price) }} Birr</s>
                           <span class="text-success ms-2">
                             <i class="fas fa-piggy-bank me-1"></i>
@@ -132,7 +115,7 @@
                     
                     <!-- Cancellation Reason -->
                     <div v-if="order.status === 'cancelled' && order.cancellation_reason" class="mt-1">
-                      <small class="text-muted d-block" style="max-width: 200px;">
+                      <small :class="theme === 'dark' ? 'text-light' : 'text-muted'" class="d-block" style="max-width: 200px;">
                         <i class="fas fa-info-circle me-1"></i>
                         {{ order.cancellation_reason }}
                       </small>
@@ -164,9 +147,9 @@
         </div>
         
         <!-- Table Footer -->
-        <div v-if="orders.length > 0" class="card-footer bg-white border-0">
+        <div v-if="orders.length > 0" class="card-footer border-0" :class="theme === 'dark' ? 'bg-dark' : 'bg-white'">
           <div class="d-flex justify-content-between align-items-center">
-            <div class="text-muted">
+            <div :class="theme === 'dark' ? 'text-light' : 'text-muted'">
               Showing {{ orders.length }} orders
             </div>
             <div class="text-end">
@@ -185,25 +168,25 @@
       <!-- Order Details Modal -->
       <div v-if="selectedOrder" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-          <div class="modal-content border-0 shadow">
-            <div class="modal-header border-bottom">
+          <div class="modal-content border-0 shadow" :class="theme === 'dark' ? 'bg-dark text-light' : ''">
+            <div class="modal-header border-bottom" :class="theme === 'dark' ? 'border-secondary' : ''">
               <div>
                 <h5 class="modal-title fw-bold">Order #{{ selectedOrder.order_number || selectedOrder.id }}</h5>
-                <p class="text-muted mb-0 small">{{ formatDate(selectedOrder.created_at) }}</p>
+                <p :class="theme === 'dark' ? 'text-light' : 'text-muted'" class="mb-0 small">{{ formatDate(selectedOrder.created_at) }}</p>
               </div>
-              <button type="button" class="btn-close" @click="closeOrderDetails"></button>
+              <button type="button" class="btn-close" @click="closeOrderDetails" :class="theme === 'dark' ? 'btn-close-white' : ''"></button>
             </div>
             
             <div class="modal-body">
               <div class="row">
                 <!-- Order Status -->
                 <div class="col-12 mb-4">
-                  <div class="card border">
+                  <div class="card border" :class="theme === 'dark' ? 'border-secondary bg-dark' : ''">
                     <div class="card-body">
                       <div class="d-flex justify-content-between align-items-center">
                         <div>
                           <h6 class="fw-bold mb-1">Order Status</h6>
-                          <p class="text-muted small mb-0">Track your order progress</p>
+                          <p :class="theme === 'dark' ? 'text-light' : 'text-muted'" class="small mb-0">Track your order progress</p>
                         </div>
                         <span :class="statusBadgeClass(selectedOrder.status)" class="badge">
                           {{ formatStatus(selectedOrder.status) }}
@@ -215,7 +198,7 @@
                 
                 <!-- Product Information -->
                 <div class="col-12 mb-4">
-                  <div class="card border">
+                  <div class="card border" :class="theme === 'dark' ? 'border-secondary bg-dark' : ''">
                     <div class="card-body">
                       <h6 class="fw-bold mb-3">
                         <i class="fas fa-box me-2"></i>Product Information
@@ -240,8 +223,8 @@
                                 <div>
                                   <strong>Discount Applied: {{ selectedOrder.discount_name || 'Special Discount' }}</strong>
                                   <div class="mt-1">
-                                    <span class="text-muted">Original Price: </span>
-                                    <s class="text-muted">{{ formatPrice(selectedOrder.original_price) }} Birr</s>
+                                    <span :class="theme === 'dark' ? 'text-light' : 'text-muted'">Original Price: </span>
+                                    <s :class="theme === 'dark' ? 'text-light' : 'text-muted'">{{ formatPrice(selectedOrder.original_price) }} Birr</s>
                                     <span class="text-success ms-3">
                                       <i class="fas fa-piggy-bank me-1"></i>
                                       You saved {{ formatPrice(selectedOrder.original_price - selectedOrder.amount) }} Birr
@@ -255,19 +238,19 @@
                           <div class="row">
                             <div class="col-md-6">
                               <div class="mb-3">
-                                <label class="text-muted small">Quantity</label>
+                                <label :class="theme === 'dark' ? 'text-light' : 'text-muted'" class="small">Quantity</label>
                                 <div class="fw-bold">{{ selectedOrder.quantity || 1 }}</div>
                               </div>
                             </div>
                             <div class="col-md-6">
                               <div class="mb-3">
-                                <label class="text-muted small">Unit Price</label>
+                                <label :class="theme === 'dark' ? 'text-light' : 'text-muted'" class="small">Unit Price</label>
                                 <div class="fw-bold">{{ formatPrice(selectedOrder.amount / (selectedOrder.quantity || 1)) }} Birr</div>
                               </div>
                             </div>
                             <div class="col-12">
-                              <div class="bg-light p-3 rounded">
-                                <label class="text-muted small">Total Amount Paid</label>
+                              <div class="p-3 rounded" :class="theme === 'dark' ? 'bg-secondary' : 'bg-light'">
+                                <label :class="theme === 'dark' ? 'text-light' : 'text-muted'" class="small">Total Amount Paid</label>
                                 <div class="fw-bold text-primary fs-4">{{ formatPrice(selectedOrder.amount) }} Birr</div>
                               </div>
                             </div>
@@ -280,24 +263,24 @@
                 
                 <!-- Shipping Information -->
                 <div class="col-12 mb-4">
-                  <div class="card border">
+                  <div class="card border" :class="theme === 'dark' ? 'border-secondary bg-dark' : ''">
                     <div class="card-body">
                       <h6 class="fw-bold mb-3">
                         <i class="fas fa-truck me-2"></i>Shipping Information
                       </h6>
                       <div class="mb-3">
-                        <label class="text-muted small">Shipping Address</label>
-                        <div class="p-3 bg-light rounded">
+                        <label :class="theme === 'dark' ? 'text-light' : 'text-muted'" class="small">Shipping Address</label>
+                        <div class="p-3 rounded" :class="theme === 'dark' ? 'bg-secondary' : 'bg-light'">
                           <i class="fas fa-map-marker-alt me-2"></i>
                           {{ selectedOrder.shipment_address || 'No address provided' }}
                         </div>
                       </div>
                       
                       <div v-if="selectedOrder.tracking_number" class="mt-3">
-                        <label class="text-muted small">Tracking Number</label>
+                        <label :class="theme === 'dark' ? 'text-light' : 'text-muted'" class="small">Tracking Number</label>
                         <div class="input-group">
-                          <input type="text" class="form-control" :value="selectedOrder.tracking_number" readonly>
-                          <button @click="copyTrackingNumber" class="btn btn-outline-secondary" type="button">
+                          <input type="text" class="form-control" :value="selectedOrder.tracking_number" readonly :class="theme === 'dark' ? 'bg-secondary border-secondary text-light' : ''">
+                          <button @click="copyTrackingNumber" class="btn btn-outline-secondary" type="button" :class="theme === 'dark' ? 'border-secondary text-light' : ''">
                             <i class="fas fa-copy"></i>
                           </button>
                         </div>
@@ -308,7 +291,7 @@
                 
                 <!-- Payment Information -->
                 <div v-if="selectedOrder.payment_image" class="col-12">
-                  <div class="card border">
+                  <div class="card border" :class="theme === 'dark' ? 'border-secondary bg-dark' : ''">
                     <div class="card-body">
                       <h6 class="fw-bold mb-3">
                         <i class="fas fa-receipt me-2"></i>Payment Information
@@ -318,10 +301,10 @@
                           <img :src="getPaymentImage(selectedOrder.payment_image)" 
                                alt="Payment Proof"
                                class="img-fluid rounded border"
-                               style="max-height: 300px;">
+                               style="max-height: 300px;" :class="theme === 'dark' ? 'border-secondary' : ''">
                         </div>
                         <button @click="downloadPaymentProof(selectedOrder)" 
-                                class="btn btn-outline-success">
+                                class="btn btn-outline-success" :class="theme === 'dark' ? 'border-success' : ''">
                           <i class="fas fa-download me-2"></i>Download Payment Proof
                         </button>
                       </div>
@@ -331,7 +314,7 @@
               </div>
             </div>
             
-            <div class="modal-footer border-top">
+            <div class="modal-footer border-top" :class="theme === 'dark' ? 'border-secondary' : ''">
               <button type="button" class="btn btn-secondary" @click="closeOrderDetails">Close</button>
               <button @click="openChatFromModal(selectedOrder)"
                       class="btn btn-info"
@@ -352,10 +335,10 @@
       <!-- Cancel Order Modal -->
       <div v-if="showCancelModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
         <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content border-0 shadow">
-            <div class="modal-header border-bottom">
+          <div class="modal-content border-0 shadow" :class="theme === 'dark' ? 'bg-dark text-light' : ''">
+            <div class="modal-header border-bottom" :class="theme === 'dark' ? 'border-secondary' : ''">
               <h5 class="modal-title fw-bold">Cancel Order</h5>
-              <button type="button" class="btn-close" @click="closeCancelModal"></button>
+              <button type="button" class="btn-close" @click="closeCancelModal" :class="theme === 'dark' ? 'btn-close-white' : ''"></button>
             </div>
             
             <div class="modal-body">
@@ -370,7 +353,7 @@
                           class="form-control"
                           rows="3"
                           placeholder="Please provide a reason for cancellation..."
-                          required></textarea>
+                          required :class="theme === 'dark' ? 'bg-secondary border-secondary text-light' : ''"></textarea>
               </div>
             </div>
             
@@ -390,7 +373,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 
@@ -409,6 +392,33 @@ const selectedOrder = ref(null)
 const showCancelModal = ref(false)
 const cancellationReason = ref('')
 const orderToCancel = ref(null)
+const theme = ref('light')
+
+// Theme handling
+const initTheme = () => {
+  const savedTheme = localStorage.getItem('theme') || 'light'
+  theme.value = savedTheme
+  applyTheme(savedTheme)
+  
+  window.addEventListener('theme-changed', (event) => {
+    const newTheme = event.detail.theme
+    theme.value = newTheme
+    applyTheme(newTheme)
+  })
+}
+
+const applyTheme = (themeMode) => {
+  const html = document.documentElement
+  html.setAttribute('data-theme', themeMode)
+}
+
+const themeClass = computed(() => {
+  return theme.value === 'dark' ? 'dark-theme' : 'light-theme'
+})
+
+onMounted(() => {
+  initTheme()
+})
 
 // Computed Properties
 const totalSpent = computed(() => {
@@ -426,7 +436,7 @@ const totalSavings = computed(() => {
     }, 0)
 })
 
-// Helper Methods
+// Helper Methods (same as before)
 const formatPrice = (price) => {
   if (!price) return '0'
   const num = parseFloat(price)
@@ -490,7 +500,7 @@ const handleImageError = (event) => {
   event.target.src = 'https://placehold.co/400x300/e0e7ff/667eea?text=Product'
 }
 
-// Order Actions
+// Order Actions (same as before)
 const viewOrderDetails = (order) => {
   selectedOrder.value = order
 }
@@ -499,11 +509,8 @@ const closeOrderDetails = () => {
   selectedOrder.value = null
 }
 
-// Chat Functions
 const openChatWithVendor = (order) => {
-  // Navigate to the chat page for this specific shipment/order
   router.get(route('messages.show', { shipment: order.id }), {
-    // Pass order information for context
     order_id: order.id,
     vendor_id: order.vendor_id,
     product_name: order.product_name
@@ -566,16 +573,130 @@ const downloadPaymentProof = (order) => {
 </script>
 
 <style scoped>
-.container-fluid {
+/* Theme variables */
+.light-theme {
+  background-color: #f8f9fa !important;
+  color: #212529 !important;
+}
+
+.dark-theme {
+  background-color: #121212 !important;
+  color: #f8f9fa !important;
+}
+
+.light-theme .container-fluid {
   background-color: #f8f9fa;
 }
 
+.dark-theme .container-fluid {
+  background-color: #121212;
+}
+
+.light-theme .card {
+  background: white;
+}
+
+.dark-theme .card {
+  background: #1e1e1e;
+  border-color: #444;
+}
+
+.light-theme .table {
+  color: #212529;
+}
+
+.dark-theme .table {
+  color: #f8f9fa;
+}
+
+.light-theme .table thead th {
+  background-color: #f8f9fa;
+}
+
+.dark-theme .table thead th {
+  background-color: #2d2d2d;
+  border-color: #444;
+  color: #f8f9fa;
+}
+
+.light-theme .table tbody tr {
+  background-color: white;
+}
+
+.dark-theme .table tbody tr {
+  background-color: #1e1e1e;
+  border-color: #444;
+}
+
+.light-theme .order-row:hover {
+  background-color: #f8f9fa;
+}
+
+.dark-theme .order-row:hover {
+  background-color: #2d2d2d;
+}
+
+.light-theme .table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.dark-theme .table tbody tr:hover {
+  background-color: #2d2d2d;
+}
+
+.light-theme .modal-content {
+  background: white;
+  color: #212529;
+}
+
+.dark-theme .modal-content {
+  background: #1e1e1e;
+  color: #f8f9fa;
+}
+
+.light-theme .bg-light {
+  background-color: #f8f9fa !important;
+}
+
+.dark-theme .bg-light {
+  background-color: #2d2d2d !important;
+}
+
+.light-theme .text-muted {
+  color: #6c757d !important;
+}
+
+.dark-theme .text-muted {
+  color: #adb5bd !important;
+}
+
+.light-theme .border {
+  border-color: #dee2e6 !important;
+}
+
+.dark-theme .border {
+  border-color: #444 !important;
+}
+
+.light-theme .border-bottom {
+  border-bottom-color: #dee2e6 !important;
+}
+
+.dark-theme .border-bottom {
+  border-bottom-color: #444 !important;
+}
+
+.light-theme .border-top {
+  border-top-color: #dee2e6 !important;
+}
+
+.dark-theme .border-top {
+  border-top-color: #444 !important;
+}
+
+/* Base styles */
 .order-row {
   transition: background-color 0.2s;
-}
-
-.order-row:hover {
-  background-color: #f8f9fa;
 }
 
 .product-thumb {

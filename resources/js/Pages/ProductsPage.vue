@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="products-management-page">
+    <div class="products-management-page" :class="themeClass">
       <!-- Subtle Animated Background -->
       <div class="subtle-background">
         <div class="bubble bubble-1"></div>
@@ -10,25 +10,10 @@
       </div>
 
       <div class="container py-4">
-        <!-- Page Header -->
-        <div class="page-header mb-4">
-          <div class="row align-items-center">
-            <div class="col-lg-8">
-              <h1 class="h2 fw-bold mb-2">
-                <i class="fas fa-boxes me-2 text-primary"></i>Product Management
-              </h1>
-            </div>
-            <div class="col-lg-4 text-lg-end">
-              <button @click="showAddForm" 
-                      class="btn btn-primary btn-sm rounded-pill">
-                <i class="fas fa-plus me-1"></i>Add Product
-              </button>
-            </div>
-          </div>
-        </div>
+        <!-- REMOVED: Theme Toggle Button (now in AppNavbar) -->
 
         <!-- Stats Cards -->
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-4" style="margin-left: 70px;">
           <div class="col-xl-3 col-md-6">
             <div class="stat-card card border-0 shadow-sm">
               <div class="card-body">
@@ -38,7 +23,7 @@
                   </div>
                   <div>
                     <h6 class="text-muted mb-1">Total Products</h6>
-                    <h3 class="mb-0 fw-bold">{{ filteredProducts.length }}</h3>
+                    <h6 class="mb-0 fw-bold">{{ filteredProducts.length }}</h6>
                   </div>
                 </div>
               </div>
@@ -54,7 +39,7 @@
                   </div>
                   <div>
                     <h6 class="text-muted mb-1">Stock Value</h6>
-                    <h3 class="mb-0 fw-bold">{{ formatPrice(calculateTotalValue()) }}</h3>
+                    <h6 class="mb-0 fw-bold">{{ formatPrice(calculateTotalValue()) }}</h6>
                   </div>
                 </div>
               </div>
@@ -70,7 +55,7 @@
                   </div>
                   <div>
                     <h6 class="text-muted mb-1">Low Stock</h6>
-                    <h3 class="mb-0 fw-bold">{{ calculateLowStock() }}</h3>
+                    <h6 class="mb-0 fw-bold">{{ calculateLowStock() }}</h6>
                   </div>
                 </div>
               </div>
@@ -78,17 +63,12 @@
           </div>
           
           <div class="col-xl-3 col-md-6">
-            <div class="stat-card card border-0 shadow-sm">
-              <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="stat-icon me-3">
-                    <i class="fas fa-tags fa-2x text-info"></i>
-                  </div>
-                  <div>
-                    <h6 class="text-muted mb-1">Categories</h6>
-                    <h3 class="mb-0 fw-bold">{{ categories.length }}</h3>
-                  </div>
-                </div>
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <button @click="showAddForm" 
+                        class="btn btn-primary btn-sm rounded-pill" style="margin-left: 80px;">
+                  <i class="fas fa-plus me-1"></i>Add Product
+                </button>
               </div>
             </div>
           </div>
@@ -101,16 +81,16 @@
               <!-- Search -->
               <div class="col-md-4">
                 <div class="input-group input-group-sm">
-                  <span class="input-group-text bg-light border-0">
+                  <span class="input-group-text">
                     <i class="fas fa-search text-muted"></i>
                   </span>
                   <input type="text" 
                          v-model="searchQuery" 
                          placeholder="Search products..." 
-                         class="form-control form-control-sm border-0" />
+                         class="form-control form-control-sm" />
                   <button v-if="searchQuery" 
                           @click="searchQuery = ''" 
-                          class="btn btn-outline-secondary border-0 btn-sm" 
+                          class="btn btn-outline-secondary btn-sm" 
                           type="button">
                     <i class="fas fa-times"></i>
                   </button>
@@ -130,7 +110,7 @@
               </div>
               
               <!-- Tags Filter Dropdown -->
-              <div class="col-md-3" >
+              <div class="col-md-3">
                 <select v-model="filterCategory" class="form-select form-select-sm">
                   <option value="all">All Tags</option>
                   <option v-for="tag in allTags" 
@@ -186,11 +166,10 @@
                   </span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                  <span class="badge bg-light text-dark border small">
+                  <span class="badge small category-badge">
                     {{ getCategoryName(product.category_id) }}
                   </span>
-                  <span class="badge small" 
-                        :class="product.product_type === 'onstock' ? 'bg-info' : 'bg-primary'">
+                  <span class="badge small product-type-badge">
                     {{ product.product_type === 'onstock' ? 'T' : 'F' }}
                   </span>
                 </div>
@@ -237,7 +216,7 @@
           </div>
         </div>
 
-        <!-- Pagination - Fixed v-html issue -->
+        <!-- Pagination -->
         <div v-if="products?.data?.length > 0 && products?.links" class="mt-4">
           <nav aria-label="Product pagination">
             <ul class="pagination justify-content-center pagination-sm">
@@ -248,7 +227,6 @@
                 <Link v-if="link.url" 
                       :href="link.url" 
                       class="page-link">
-                  <!-- Fixed: Render pagination icons safely -->
                   <span v-if="link.label.includes('&laquo; Previous')">
                     <i class="fas fa-chevron-left"></i> Previous
                   </span>
@@ -312,7 +290,7 @@
                     <label class="form-label small fw-bold">Reference</label>
                     <input v-model="formData.reference" 
                            type="text" 
-                           class="form-control form-control-sm bg-light" 
+                           class="form-control form-control-sm" 
                            readonly>
                   </div>
                   
@@ -612,7 +590,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, inject } from 'vue';
 import { useForm, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
@@ -624,7 +602,13 @@ const props = defineProps({
   error: String
 });
 
-// State
+// INJECT theme from AppLayout (AppNavbar controls it)
+const darkMode = inject('darkMode', ref(false));
+
+// Get theme class
+const themeClass = computed(() => darkMode.value ? 'dark-theme' : 'light-theme');
+
+// Other State
 const searchQuery = ref('');
 const filterCategory = ref('all');
 const filterTags = ref([]);
@@ -956,10 +940,22 @@ const deleteProduct = async (product) => {
 
 <style scoped>
 .products-management-page {
-  background: #f8f9fa;
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Light Theme Styles */
+.light-theme .products-management-page {
+  background: #f8f9fa;
+  color: #212529;
+}
+
+/* Dark Theme Styles */
+.dark-theme .products-management-page {
+  background: #121212;
+  color: #f8f9fa;
 }
 
 /* Subtle Animated Background */
@@ -976,9 +972,17 @@ const deleteProduct = async (product) => {
 .bubble {
   position: absolute;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
   animation: float 25s infinite linear;
-  opacity: 0.3;
+}
+
+.light-theme .bubble {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  opacity: 0.1;
+}
+
+.dark-theme .bubble {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  opacity: 0.15;
 }
 
 .bubble-1 {
@@ -1035,6 +1039,18 @@ const deleteProduct = async (product) => {
   overflow: hidden;
 }
 
+.light-theme .stat-card {
+  background: white !important;
+  border: 1px solid #dee2e6;
+  color: #212529;
+}
+
+.dark-theme .stat-card {
+  background: #1e1e1e !important;
+  border: 1px solid #444;
+  color: #f8f9fa;
+}
+
 .stat-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
@@ -1047,7 +1063,78 @@ const deleteProduct = async (product) => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.light-theme .stat-icon {
   background: rgba(0,0,0,0.03);
+}
+
+.dark-theme .stat-icon {
+  background: rgba(255,255,255,0.05);
+}
+
+/* Text Colors */
+.light-theme .text-muted {
+  color: #6c757d !important;
+}
+
+.dark-theme .text-muted {
+  color: #adb5bd !important;
+}
+
+/* Search & Filters Card */
+.light-theme .card {
+  background: white;
+  border-color: #dee2e6;
+  color: #212529;
+}
+
+.dark-theme .card {
+  background: #1e1e1e;
+  border-color: #444;
+  color: #f8f9fa;
+}
+
+/* Inputs and Selects */
+.light-theme .form-control,
+.light-theme .form-select {
+  background-color: white;
+  color: #212529;
+  border-color: #dee2e6;
+}
+
+.dark-theme .form-control,
+.dark-theme .form-select {
+  background-color: #2d2d2d;
+  color: #f8f9fa;
+  border-color: #444;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.light-theme .form-control::placeholder {
+  color: #6c757d;
+}
+
+.dark-theme .form-control::placeholder {
+  color: #adb5bd;
+}
+
+/* Input Group */
+.light-theme .input-group-text {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+  color: #495057;
+}
+
+.dark-theme .input-group-text {
+  background-color: #2d2d2d;
+  border-color: #444;
+  color: #adb5bd;
 }
 
 /* Small Cards */
@@ -1056,6 +1143,16 @@ const deleteProduct = async (product) => {
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
+}
+
+.light-theme .product-small-card {
+  background: white;
+  border: 1px solid #dee2e6;
+}
+
+.dark-theme .product-small-card {
+  background: #1e1e1e;
+  border: 1px solid #444;
 }
 
 .product-small-card:hover {
@@ -1079,6 +1176,187 @@ const deleteProduct = async (product) => {
   transform: scale(1.05);
 }
 
+/* Category Badge */
+.category-badge {
+  transition: all 0.3s ease;
+}
+
+.light-theme .category-badge {
+  background-color: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
+}
+
+.dark-theme .category-badge {
+  background-color: #2d2d2d;
+  color: #f8f9fa;
+  border: 1px solid #444;
+}
+
+/* Product Type Badge */
+.light-theme .product-type-badge {
+  background-color: #e7f1ff;
+  color: #0d6efd;
+}
+
+.dark-theme .product-type-badge {
+  background-color: #1a365d;
+  color: #90cdf4;
+}
+
+/* Empty State */
+.empty-state {
+  color: inherit;
+}
+
+/* Buttons */
+.btn-outline-primary,
+.btn-outline-secondary,
+.btn-outline-info,
+.btn-outline-warning,
+.btn-outline-danger {
+  transition: all 0.2s ease;
+}
+
+.light-theme .btn-outline-primary,
+.light-theme .btn-outline-secondary,
+.light-theme .btn-outline-info,
+.light-theme .btn-outline-warning,
+.light-theme .btn-outline-danger {
+  border-color: #dee2e6;
+}
+
+.light-theme .btn-outline-primary:hover,
+.light-theme .btn-outline-secondary:hover,
+.light-theme .btn-outline-info:hover,
+.light-theme .btn-outline-warning:hover,
+.light-theme .btn-outline-danger:hover {
+  background-color: rgba(0,0,0,0.05);
+}
+
+.dark-theme .btn-outline-primary,
+.dark-theme .btn-outline-secondary,
+.dark-theme .btn-outline-info,
+.dark-theme .btn-outline-warning,
+.dark-theme .btn-outline-danger {
+  border-color: #444;
+}
+
+.dark-theme .btn-outline-primary:hover,
+.dark-theme .btn-outline-secondary:hover,
+.dark-theme .btn-outline-info:hover,
+.dark-theme .btn-outline-warning:hover,
+.dark-theme .btn-outline-danger:hover {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.btn-sm:hover {
+  transform: translateY(-2px);
+}
+
+/* Pagination */
+.pagination .page-link {
+  transition: all 0.2s ease;
+}
+
+.light-theme .page-link {
+  background-color: white;
+  color: #212529;
+  border-color: #dee2e6;
+}
+
+.dark-theme .page-link {
+  background-color: #2d2d2d;
+  color: #f8f9fa;
+  border-color: #444;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
+}
+
+/* Modal Styles */
+.modal-content {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.light-theme .modal-content {
+  background: white;
+  color: #212529;
+}
+
+.dark-theme .modal-content {
+  background: #1e1e1e;
+  color: #f8f9fa;
+}
+
+.modal-header {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.modal-footer {
+  border-top: 1px solid var(--border-color);
+}
+
+/* Table in Modal */
+.table {
+  color: inherit;
+}
+
+.light-theme .table-bordered {
+  border-color: #dee2e6;
+}
+
+.light-theme .table-bordered th,
+.light-theme .table-bordered td {
+  border-color: #dee2e6;
+}
+
+.dark-theme .table-bordered {
+  border-color: #444;
+}
+
+.dark-theme .table-bordered th,
+.dark-theme .table-bordered td {
+  border-color: #444;
+}
+
+.light-theme .table-light {
+  background-color: #f8f9fa;
+  color: #212529;
+}
+
+.dark-theme .table-light {
+  background-color: #2d2d2d;
+  color: #f8f9fa;
+}
+
+/* Checkboxes */
+.light-theme .form-check-input {
+  background-color: white;
+  border-color: #dee2e6;
+}
+
+.dark-theme .form-check-input {
+  background-color: #2d2d2d;
+  border-color: #444;
+}
+
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
 /* Badge Sizes */
 .badge-sm {
   font-size: 0.65rem;
@@ -1087,33 +1365,6 @@ const deleteProduct = async (product) => {
 
 .extra-small {
   font-size: 0.75rem;
-}
-
-/* Modal Styles */
-.modal {
-  backdrop-filter: blur(3px);
-}
-
-.modal-content {
-  border-radius: 10px;
-  border: none;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-}
-
-.modal-header {
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-}
-
-/* Form Controls */
-.form-control-sm {
-  border-radius: 5px;
-  border: 1px solid #dee2e6;
-}
-
-.form-control-sm:focus {
-  border-color: #86b7fe;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
 /* Responsive Grid */
@@ -1132,27 +1383,10 @@ const deleteProduct = async (product) => {
   }
 }
 
-/* Button Hover Effects */
-.btn-sm {
-  transition: all 0.2s ease;
-}
-
-.btn-sm:hover {
-  transform: translateY(-2px);
-}
-
 /* Table Styles */
 .table-sm th,
 .table-sm td {
   padding: 0.5rem;
-}
-
-.table-bordered {
-  border-color: #dee2e6;
-}
-
-.table-light {
-  background-color: #f8f9fa;
 }
 
 /* Pagination */
@@ -1161,11 +1395,6 @@ const deleteProduct = async (product) => {
   font-size: 0.875rem;
   border-radius: 5px;
   margin: 0 2px;
-}
-
-.pagination-sm .page-item.active .page-link {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
 }
 
 /* Animation for modal appearance */
@@ -1182,5 +1411,133 @@ const deleteProduct = async (product) => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Image Thumbnail */
+.img-thumbnail {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+/* Border Colors */
+.light-theme .border-top,
+.light-theme .border-bottom {
+  border-color: #dee2e6 !important;
+}
+
+.dark-theme .border-top,
+.dark-theme .border-bottom {
+  border-color: #444 !important;
+}
+
+/* Form Labels */
+.form-label {
+  color: inherit;
+}
+</style>
+
+<style>
+/* Global styles for theme */
+/* Ensure smooth transitions */
+body,
+.card,
+.form-control,
+.btn,
+.modal-content,
+.navbar {
+  transition: background-color 0.3s ease, 
+              color 0.3s ease, 
+              border-color 0.3s ease;
+}
+
+/* Modal backdrop fix */
+.modal-backdrop {
+  opacity: 0.5 !important;
+}
+
+/* Apply theme to all Bootstrap components */
+.light-theme .bg-light {
+  background-color: #f8f9fa !important;
+}
+
+.dark-theme .bg-light {
+  background-color: #2d2d2d !important;
+}
+
+.light-theme .border {
+  border-color: #dee2e6 !important;
+}
+
+.dark-theme .border {
+  border-color: #444 !important;
+}
+
+/* Table styles */
+.light-theme .table thead th {
+  background-color: #f8f9fa;
+  color: #212529;
+}
+
+.dark-theme .table thead th {
+  background-color: #2d2d2d;
+  color: #f8f9fa;
+}
+
+.light-theme .table tbody tr {
+  background-color: white;
+}
+
+.dark-theme .table tbody tr {
+  background-color: #1e1e1e;
+}
+
+.light-theme .table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.dark-theme .table tbody tr:hover {
+  background-color: #2d2d2d;
+}
+
+/* Text selection */
+.light-theme ::selection {
+  background-color: rgba(13, 110, 253, 0.2);
+}
+
+.dark-theme ::selection {
+  background-color: rgba(13, 110, 253, 0.4);
+}
+
+/* Scrollbar styling */
+.light-theme ::-webkit-scrollbar {
+  width: 10px;
+}
+
+.light-theme ::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.light-theme ::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+}
+
+.light-theme ::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.dark-theme ::-webkit-scrollbar {
+  width: 10px;
+}
+
+.dark-theme ::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+.dark-theme ::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+.dark-theme ::-webkit-scrollbar-thumb:hover {
+  background: #444;
 }
 </style>

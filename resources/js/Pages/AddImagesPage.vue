@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="additional-images-page">
+    <div class="additional-images-page" :class="currentThemeClass">
       <!-- Subtle Background -->
       <div class="subtle-background">
         <div class="bubble bubble-1"></div>
@@ -16,21 +16,27 @@
               <div class="d-flex align-items-center">
                 <button @click="goBack" 
                         class="btn btn-sm btn-outline-secondary me-3 rounded-pill">
-                  <i class="fas fa-arrow-left me-1"></i>Back
+                  <i class="fas fa-arrow-left me-1"></i>
                 </button>
                 <div>
-                  <h1 class="h3 fw-bold mb-1">
-                    <i class="fas fa-images me-2 text-primary"></i>Manage Product Images
-                  </h1>
-                  <p class="text-muted mb-0">
-                    Add and manage additional images for: 
-                    <span class="fw-bold text-primary">{{ product.name }}</span>
-                  </p>
+                  <h2 class="fw-bold mb-1">{{ product.name }}</h2>
+                  <div class="text-muted">
+                    <small>
+                      <i class="fas fa-hashtag me-1"></i>ID: {{ product.product_id }}
+                      <span class="mx-2">•</span>
+                      <i class="fas fa-image me-1"></i>Manage Additional Images
+                    </small>
+                  </div>
                 </div>
               </div>
             </div>
             <div class="col-lg-4 text-lg-end">
               <div class="d-flex gap-2 justify-content-end">
+                <button @click="toggleTheme" 
+                        class="btn btn-sm rounded-pill theme-toggle-btn"
+                        :title="themeIcon.title">
+                  <i :class="themeIcon.class"></i>
+                </button>
                 <button @click="viewProductDetails" 
                         class="btn btn-sm btn-info rounded-pill">
                   <i class="fas fa-eye me-1"></i>View Product
@@ -40,65 +46,12 @@
           </div>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="row g-3 mb-4">
-          <div class="col-md-4">
-            <div class="stat-card card border-0 shadow-sm">
-              <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="stat-icon me-3">
-                    <i class="fas fa-image fa-2x text-primary"></i>
-                  </div>
-                  <div>
-                    <h6 class="text-muted mb-1">Main Image</h6>
-                    <h3 class="mb-0 fw-bold">1</h3>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-md-4">
-            <div class="stat-card card border-0 shadow-sm">
-              <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="stat-icon me-3">
-                    <i class="fas fa-layer-group fa-2x text-success"></i>
-                  </div>
-                  <div>
-                    <h6 class="text-muted mb-1">Additional Images</h6>
-                    <h3 class="mb-0 fw-bold">{{ additionalImages.length }}</h3>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-md-4">
-            <div class="stat-card card border-0 shadow-sm">
-              <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="stat-icon me-3">
-                    <i class="fas fa-star fa-2x text-warning"></i>
-                  </div>
-                  <div>
-                    <h6 class="text-muted mb-1">Selected Image</h6>
-                    <h3 class="mb-0 fw-bold">
-                      {{ selectedImage ? 'Yes' : 'No' }}
-                    </h3>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Main Content -->
         <div class="row">
           <!-- Left Column: Upload Section -->
           <div class="col-lg-5 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-              <div class="card-header bg-primary text-white">
+            <div class="card border-0 shadow-sm h-100 theme-card">
+              <div class="card-header theme-card-header">
                 <h5 class="mb-0">
                   <i class="fas fa-upload me-2"></i>Upload Additional Images
                 </h5>
@@ -109,7 +62,7 @@
                      @dragover.prevent="dragover = true" 
                      @dragleave="dragover = false" 
                      @drop.prevent="handleDrop"
-                     :class="{ 'border-primary bg-primary-subtle': dragover }"
+                     :class="{ 'drag-active': dragover }"
                      @click="triggerFileInput">
                   <input type="file" 
                          ref="fileInput" 
@@ -168,11 +121,11 @@
                 </div>
                 
                 <!-- Instructions -->
-                <div class="mt-4 pt-4 border-top">
+                <div class="mt-4 pt-4 border-top theme-border">
                   <h6 class="fw-bold mb-3">
                     <i class="fas fa-info-circle me-2 text-info"></i>Instructions
                   </h6>
-                  <ul class="small text-muted mb-0">
+                  <ul class="small theme-text-muted mb-0">
                     <li class="mb-2">Upload high-quality images for better display</li>
                     <li class="mb-2">Customers can select any image when buying</li>
                     <li class="mb-2">Drag to reorder images (first image shows first)</li>
@@ -186,8 +139,8 @@
           
           <!-- Right Column: Image Gallery -->
           <div class="col-lg-7">
-            <div class="card border-0 shadow-sm h-100">
-              <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <div class="card border-0 shadow-sm h-100 theme-card">
+              <div class="card-header theme-card-header-secondary d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
                   <i class="fas fa-images me-2"></i>Product Image Gallery
                 </h5>
@@ -206,10 +159,10 @@
               <div class="card-body">
                 <!-- Main Image -->
                 <div class="mb-4">
-                  <h6 class="fw-bold mb-3">
+                  <h6 class="fw-bold mb-3 theme-text">
                     <i class="fas fa-crown text-warning me-2"></i>Main Product Image
                   </h6>
-                  <div class="main-image-container p-3 border rounded bg-light">
+                  <div class="main-image-container p-3 border rounded theme-bg-light">
                     <div class="row align-items-center">
                       <div class="col-md-3">
                         <img :src="product.main_image_url" 
@@ -221,7 +174,7 @@
                           <span class="badge bg-warning me-2">MAIN IMAGE</span>
                           <span class="text-muted small">This is the primary image shown in listings</span>
                         </div>
-                        <p class="mb-2 small">
+                        <p class="mb-2 small theme-text-muted">
                           <strong>Note:</strong> To change the main image, edit the product from the products page.
                         </p>
                       </div>
@@ -232,7 +185,7 @@
                 <!-- Additional Images -->
                 <div>
                   <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-bold mb-0">
+                    <h6 class="fw-bold mb-0 theme-text">
                       <i class="fas fa-layer-group text-primary me-2"></i>
                       Additional Images ({{ additionalImages.length }})
                       <span v-if="additionalImages.length > 0" class="text-muted small ms-2">
@@ -248,7 +201,7 @@
                   <div v-if="additionalImages.length === 0" class="text-center py-5">
                     <div class="empty-state">
                       <i class="fas fa-images fa-3x text-muted mb-3"></i>
-                      <h5 class="fw-bold mb-2">No additional images yet</h5>
+                      <h5 class="fw-bold mb-2 theme-text">No additional images yet</h5>
                       <p class="text-muted mb-3">Upload some images to get started</p>
                     </div>
                   </div>
@@ -262,10 +215,10 @@
                                class="row g-3">
                       <template #item="{ element: image, index }">
                         <div class="col-md-4 col-sm-6">
-                          <div class="image-card card border-0 shadow-sm h-100"
+                          <div class="image-card card border-0 shadow-sm h-100 theme-image-card"
                                :class="{ 'border-primary': image.is_selected }">
                             <!-- Image Header -->
-                            <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+                            <div class="card-header theme-bg-light py-2 px-3 d-flex justify-content-between align-items-center">
                               <div class="d-flex align-items-center">
                                 <span class="drag-handle me-2 text-muted" style="cursor: move;">
                                   <i class="fas fa-bars"></i>
@@ -322,7 +275,7 @@
       <!-- Toast Notification -->
       <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055">
         <div class="toast align-items-center" 
-             :class="[`text-bg-${notification.type}`, { show: notification.show }]" 
+             :class="[`toast-${notification.type}`, { show: notification.show }]" 
              role="alert">
           <div class="d-flex">
             <div class="toast-body d-flex align-items-center">
@@ -340,7 +293,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import draggable from 'vuedraggable';
@@ -359,6 +312,61 @@ const additionalImages = ref(props.product.additional_images || []);
 const isUploading = ref(false);
 const isSavingOrder = ref(false);
 const selectedImage = computed(() => additionalImages.value.find(img => img.is_selected));
+
+// Theme Management - Synced with Navbar
+const theme = ref(localStorage.getItem('theme') || 'light');
+const currentThemeClass = computed(() => `${theme.value}-theme`);
+
+// Theme icon based on current theme
+const themeIcon = computed(() => {
+  if (theme.value === 'dark') {
+    return {
+      class: 'fas fa-sun',
+      title: 'Switch to Light Mode'
+    };
+  } else {
+    return {
+      class: 'fas fa-moon',
+      title: 'Switch to Dark Mode'
+    };
+  }
+});
+
+// Toggle theme function
+const toggleTheme = () => {
+  const newTheme = theme.value === 'light' ? 'dark' : 'light';
+  theme.value = newTheme;
+  localStorage.setItem('theme', newTheme);
+  
+  // Update HTML data attribute
+  document.documentElement.setAttribute('data-theme', newTheme);
+  
+  // Update body class
+  document.body.className = document.body.className
+    .replace('light-theme', '')
+    .replace('dark-theme', '')
+    .trim();
+  document.body.classList.add(`${newTheme}-theme`);
+  
+  // Dispatch event for navbar to sync
+  window.dispatchEvent(new CustomEvent('theme-changed', {
+    detail: { theme: newTheme }
+  }));
+};
+
+// Listen to theme changes from navbar
+const handleThemeChange = (event) => {
+  const newTheme = event.detail.theme;
+  theme.value = newTheme;
+  localStorage.setItem('theme', newTheme);
+  document.documentElement.setAttribute('data-theme', newTheme);
+  
+  document.body.className = document.body.className
+    .replace('light-theme', '')
+    .replace('dark-theme', '')
+    .trim();
+  document.body.classList.add(`${newTheme}-theme`);
+};
 
 // Notification
 const notification = ref({
@@ -606,8 +614,20 @@ const hideNotification = () => {
   notification.value.show = false;
 };
 
-// Show success/error messages from props
+// Initialize theme on mount
 onMounted(() => {
+  // Get theme from localStorage or default to light
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  theme.value = savedTheme;
+  
+  // Apply theme to HTML and body
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  document.body.classList.add(`${savedTheme}-theme`);
+  
+  // Listen for theme changes from navbar
+  window.addEventListener('theme-changed', handleThemeChange);
+  
+  // Show success/error messages from props
   if (props.success) {
     showNotification(props.success, 'success');
   }
@@ -616,14 +636,98 @@ onMounted(() => {
     showNotification(props.error, 'error');
   }
 });
+
+// Cleanup on unmount
+onUnmounted(() => {
+  window.removeEventListener('theme-changed', handleThemeChange);
+});
 </script>
 
 <style scoped>
-.additional-images-page {
-  background: #f8f9fa;
-  min-height: 100vh;
-  position: relative;
-  overflow-x: hidden;
+/* Theme Variables */
+:root {
+  --page-bg-color: #f8f9fa;
+  --card-bg-color: #ffffff;
+  --card-border-color: #dee2e6;
+  --text-color: #212529;
+  --text-muted: #6c757d;
+  --border-color: #dee2e6;
+  --light-bg: #f8f9fa;
+  --header-bg: #0d6efd;
+  --header-text: #ffffff;
+  --header-secondary-bg: #198754;
+}
+
+[data-theme="dark"] {
+  --page-bg-color: #1a1d28;
+  --card-bg-color: #2d3748;
+  --card-border-color: #4a5568;
+  --text-color: #ffffff;
+  --text-muted: #a0aec0;
+  --border-color: #4a5568;
+  --light-bg: #2d3748;
+  --header-bg: #2d3748;
+  --header-text: #e2e8f0;
+  --header-secondary-bg: #276749;
+}
+
+/* Theme Classes */
+.light-theme .additional-images-page {
+  background: var(--page-bg-color);
+  color: var(--text-color);
+}
+
+.dark-theme .additional-images-page {
+  background: var(--page-bg-color);
+  color: var(--text-color);
+}
+
+.theme-card {
+  background-color: var(--card-bg-color);
+  border-color: var(--card-border-color);
+}
+
+.theme-card-header {
+  background-color: var(--header-bg) !important;
+  color: var(--header-text) !important;
+  border-bottom-color: var(--border-color);
+}
+
+.theme-card-header-secondary {
+  background-color: var(--header-secondary-bg) !important;
+  color: var(--header-text) !important;
+  border-bottom-color: var(--border-color);
+}
+
+.theme-text {
+  color: var(--text-color);
+}
+
+.theme-text-muted {
+  color: var(--text-muted);
+}
+
+.theme-border {
+  border-top-color: var(--border-color) !important;
+}
+
+.theme-bg-light {
+  background-color: var(--light-bg) !important;
+}
+
+.theme-image-card {
+  background-color: var(--card-bg-color);
+}
+
+.theme-toggle-btn {
+  background: var(--card-bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.theme-toggle-btn:hover {
+  background: var(--light-bg);
+  border-color: var(--header-bg);
 }
 
 /* Subtle Background */
@@ -640,9 +744,16 @@ onMounted(() => {
 .bubble {
   position: absolute;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
   animation: float 25s infinite linear;
-  opacity: 0.3;
+  opacity: 0.1;
+}
+
+.light-theme .bubble {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+}
+
+.dark-theme .bubble {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
 }
 
 .bubble-1 {
@@ -688,18 +799,26 @@ onMounted(() => {
 .upload-area {
   cursor: pointer;
   transition: all 0.3s ease;
-  background: #f8f9fa;
-  border: 2px dashed #dee2e6;
+  background: var(--light-bg);
+  border: 2px dashed var(--border-color);
 }
 
 .upload-area:hover {
-  border-color: #0d6efd;
+  border-color: var(--header-bg);
   background: rgba(13, 110, 253, 0.05);
 }
 
-.upload-area.border-primary {
-  border-color: #0d6efd !important;
+.drag-active {
+  border-color: var(--header-bg) !important;
   background: rgba(13, 110, 253, 0.1) !important;
+}
+
+.dark-theme .upload-area:hover {
+  background: rgba(13, 110, 253, 0.1);
+}
+
+.dark-theme .drag-active {
+  background: rgba(13, 110, 253, 0.2) !important;
 }
 
 /* Stats Cards */
@@ -707,21 +826,12 @@ onMounted(() => {
   transition: all 0.3s ease;
   border-radius: 10px;
   overflow: hidden;
+  background-color: var(--card-bg-color);
 }
 
 .stat-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-}
-
-.stat-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.03);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
 }
 
 /* Image Cards */
@@ -729,6 +839,7 @@ onMounted(() => {
   transition: all 0.3s ease;
   border-radius: 8px;
   overflow: hidden;
+  background-color: var(--card-bg-color);
 }
 
 .image-card:hover {
@@ -736,8 +847,12 @@ onMounted(() => {
   box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
 }
 
+.dark-theme .image-card:hover {
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important;
+}
+
 .image-card.border-primary {
-  border: 2px solid #0d6efd !important;
+  border: 2px solid var(--header-bg) !important;
 }
 
 .drag-handle {
@@ -745,12 +860,14 @@ onMounted(() => {
 }
 
 .drag-handle:hover {
-  color: #0d6efd !important;
+  color: var(--header-bg) !important;
 }
 
 /* Main Image Container */
 .main-image-container {
   border-radius: 8px;
+  background-color: var(--light-bg);
+  border: 1px solid var(--border-color);
 }
 
 /* Empty State */
@@ -758,10 +875,49 @@ onMounted(() => {
   padding: 3rem 1rem;
 }
 
-/* Toast */
-.toast {
-  border-radius: 10px;
-  border: none;
+/* Toast Notifications */
+.toast-success {
+  background-color: #198754 !important;
+  border-color: #198754 !important;
+}
+
+.toast-error {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
+.toast-warning {
+  background-color: #ffc107 !important;
+  border-color: #ffc107 !important;
+  color: #212529 !important;
+}
+
+.toast-warning .btn-close {
+  filter: invert(1) !important;
+}
+
+/* Custom scrollbar for images grid */
+.additional-images-grid {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.additional-images-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.additional-images-grid::-webkit-scrollbar-track {
+  background: var(--light-bg);
+  border-radius: 3px;
+}
+
+.additional-images-grid::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 3px;
+}
+
+.additional-images-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--header-bg);
 }
 
 /* Responsive */
@@ -778,29 +934,15 @@ onMounted(() => {
   .main-image-container .col-md-3 {
     margin-bottom: 1rem;
   }
-}
-
-/* Custom scrollbar for images grid */
-.additional-images-grid {
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-.additional-images-grid::-webkit-scrollbar {
-  width: 6px;
-}
-
-.additional-images-grid::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.additional-images-grid::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 3px;
-}
-
-.additional-images-grid::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  
+  .page-header .col-lg-8,
+  .page-header .col-lg-4 {
+    text-align: center !important;
+    margin-bottom: 1rem;
+  }
+  
+  .page-header .d-flex {
+    justify-content: center;
+  }
 }
 </style>

@@ -25,11 +25,11 @@ class SettingsController extends Controller
         return Inertia::render('SettingsPage', [
             'user' => [
                 'id' => $user->id,
-                'name' => $user->full_name, // Use full_name from your model
+                'name' => $user->full_name, 
                 'email' => $user->email,
                 'account_number' => $user->account_number ?? null,
                 'phone' => $user->phone ?? '',
-                'profile_picture' => $user->profile_picture_url, // Use the accessor
+                'profile_picture' => $user->profile_picture_url, 
                 'created_at' => $user->created_at ? $user->created_at->format('d M, Y') : 'N/A',
                 
                 // Security questions
@@ -70,6 +70,13 @@ class SettingsController extends Controller
      */
     public function verifyPassword(Request $request)
     {
+        // ተጠቃሚው በ OTP ገብቶ ከሆነ ይህንን ቼክ እናልፈዋለን
+        if ($request->session()->get('is_otp_login')) {
+            $request->session()->put('password_verified', true);
+            $request->session()->put('password_verified_time', now()->timestamp);
+            return redirect()->route('settings.page');
+        }
+
         $request->validate([
             'current_password' => ['required', 'current_password'],
         ]);
@@ -175,10 +182,16 @@ class SettingsController extends Controller
      */
     public function updatePassword(Request $request)
     {
-        $request->validate([
-            'current_password' => ['required', 'current_password'],
+        $rules = [
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+        ];
+
+        // ተጠቃሚው በ OTP ካልገባ የድሮውን ፓስዎርድ እንዲያረጋግጥ እናስገድዳለን
+        if (!$request->session()->get('is_otp_login')) {
+            $rules['current_password'] = ['required', 'current_password'];
+        }
+
+        $request->validate($rules);
         
         /** @var \App\Models\User $user */
         $user = Auth::user();
@@ -195,12 +208,18 @@ class SettingsController extends Controller
      */
     public function updateSecurityQuestions(Request $request)
     {
-        $request->validate([
+        $rules = [
             'question' => ['required', 'string', 'max:255'],
             'answer' => ['required', 'string', 'min:4', 'max:100'],
             'answer_confirmation' => ['required', 'same:answer'],
-            'current_password' => ['required', 'current_password'],
-        ], [
+        ];
+
+        // በ OTP ካልገባ ፓስዎርድ ይጠየቃል
+        if (!$request->session()->get('is_otp_login')) {
+            $rules['current_password'] = ['required', 'current_password'];
+        }
+
+        $request->validate($rules, [
             'answer_confirmation.same' => 'The security answers do not match.',
         ]);
         
@@ -220,9 +239,14 @@ class SettingsController extends Controller
      */
     public function deleteAccount(Request $request)
     {
-        $request->validate([
-            'password' => ['required', 'current_password'],
-        ]);
+        $rules = [];
+
+        // በ OTP ካልገባ ፓስዎርድ ይጠየቃል
+        if (!$request->session()->get('is_otp_login')) {
+            $rules['password'] = ['required', 'current_password'];
+        }
+
+        $request->validate($rules);
         
         /** @var \App\Models\User $user */
         $user = Auth::user();
@@ -243,5 +267,5 @@ class SettingsController extends Controller
         $request->session()->regenerateToken();
         
         return redirect('/')->with('success', 'Your account has been deleted successfully.');
-}
     }
+}

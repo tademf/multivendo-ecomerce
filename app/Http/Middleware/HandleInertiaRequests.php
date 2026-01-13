@@ -39,6 +39,8 @@ class HandleInertiaRequests extends Middleware
                     'email_verified_at' => $request->user()->email_verified_at,
                     'is_verified' => $request->user()->is_verified ?? false,
                 ] : null,
+                // --- አዲሱ መረጃ እዚህ ጋር ተጨምሯል ---
+                'is_otp_login' => $request->session()->get('is_otp_login', false),
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
@@ -46,7 +48,6 @@ class HandleInertiaRequests extends Middleware
                 'warning' => fn () => $request->session()->get('warning'),
                 'info' => fn () => $request->session()->get('info'),
             ],
-            // Categories available globally for all pages (navbar, filters, etc.)
             'categories' => fn () => Cache::remember('categories_with_count', 3600, function () {
                 return Category::withCount('products')
                     ->orderBy('name')
@@ -62,33 +63,14 @@ class HandleInertiaRequests extends Middleware
                     });
             }),
             
-            // Total products count for "All Categories"
             'totalProducts' => fn () => Cache::remember('total_products_count', 3600, function () {
                 return Product::count();
             }),
             
-            // Cart and wishlist counts
-            // 'cart_count' => function () use ($request) {
-            //     if ($request->user()) {
-            //         // You can implement cart count logic here
-            //         // For example, from session or database
-            //         return session()->get('cart_count', 0);
-            //     }
-            //     return session()->get('cart_count', 0);
-            // },
-            
-            // 'wishlist_count' => function () use ($request) {
-            //     if ($request->user()) {
-            //         return Wishlist::where('user_id', $request->user()->id)->count();
-            //     }
-            //     return 0;
-            // },
-            
-            // Optional: Recent products for suggestions
             'recent_products' => fn () => Cache::remember('recent_products', 1800, function () {
                 return Product::with('category')
-                    ->where('stock', '>', 0) // Only products with stock
-                    ->where('status', 'active') // Only active products
+                    ->where('stock', '>', 0)
+                    ->where('status', 'active')
                     ->orderBy('created_at', 'desc')
                     ->take(8)
                     ->get()
@@ -103,11 +85,10 @@ class HandleInertiaRequests extends Middleware
                     });
             }),
             
-            // Featured products - FIXED: Removed is_featured filter since column doesn't exist
             'featured_products' => fn () => Cache::remember('featured_products', 1800, function () {
                 return Product::with('category')
-                    ->where('stock', '>', 0) // Only products with stock
-                    ->where('status', 'active') // Only active products
+                    ->where('stock', '>', 0)
+                    ->where('status', 'active')
                     ->orderBy('created_at', 'desc')
                     ->take(6)
                     ->get()
@@ -122,7 +103,6 @@ class HandleInertiaRequests extends Middleware
                     });
             }),
             
-            // Global stats for dashboard/home page
             'global_stats' => fn () => Cache::remember('global_stats', 300, function () {
                 return [
                     'total_products' => Product::count(),

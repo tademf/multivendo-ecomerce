@@ -1,58 +1,29 @@
 <template>
   <AppLayout :initial-wishlist-count="0" :initial-cart-count="0" :user="user">
-    <div class="min-vh-100 bg-light py-4 py-md-5">
+    <div class="min-vh-100 py-4 py-md-5" :class="isDarkMode ? 'dark-theme-bg' : 'bg-light'">
       <!-- Container -->
       <div class="container">
-        <!-- Header -->
-        <!-- <div class="text-center mb-5">
-          <div class="mb-3">
-            <i class="fas fa-credit-card fa-3x text-primary"></i>
-          </div>
-          <h1 class="display-6 fw-bold text-dark mb-2">Complete Your Purchase</h1>
-          <p class="text-muted mb-0">Secure payment process with instant confirmation</p>
-        </div> -->
 
         <div class="row justify-content-center">
           <div class="col-lg-10 col-xl-8">
-            <!-- Progress Steps -->
-            <!-- <div class="card border-0 shadow-sm mb-4">
-              <div class="card-body">
-                <div class="steps">
-                  <div class="step active">
-                    <div class="step-circle">1</div>
-                    <div class="step-label">Product</div>
-                  </div>
-                  <div class="step-divider"></div>
-                  <div class="step active">
-                    <div class="step-circle">2</div>
-                    <div class="step-label">Payment</div>
-                  </div>
-                  <div class="step-divider"></div>
-                  <div class="step">
-                    <div class="step-circle">3</div>
-                    <div class="step-label">Confirmation</div>
-                  </div>
-                </div>
-              </div>
-            </div> -->
 
             <!-- Loading State -->
             <div v-if="loading" class="text-center py-5">
-              <div class="spinner-border text-primary" role="status">
+              <div class="spinner-border" :class="isDarkMode ? 'text-light' : 'text-primary'" role="status">
                 <span class="visually-hidden">Loading...</span>
               </div>
-              <p class="mt-3">Loading product information...</p>
+              <p class="mt-3" :class="isDarkMode ? 'text-light' : ''">Loading product information...</p>
             </div>
 
             <!-- Product Summary Card -->
-            <div v-else-if="productData.product_id" class="card border-0 shadow-sm mb-4">
-              <div class="card-header bg-white border-0 pb-0">
-                <h5 class="card-title mb-0">
-                  <i class="fas fa-shopping-bag me-2 text-primary"></i>
+            <div v-else-if="productData.product_id" class="card mb-4" :class="isDarkMode ? 'dark-card' : 'border-0 shadow-sm'">
+              <div class="card-header" :class="isDarkMode ? 'dark-card-header' : 'bg-white border-0 pb-0'">
+                <h5 class="card-title mb-0" :class="isDarkMode ? 'text-white' : ''">
+                  <i class="fas fa-shopping-bag me-2" :class="isDarkMode ? 'text-light' : 'text-primary'"></i>
                   Order Summary
                 </h5>
               </div>
-              <div class="card-body">
+              <div class="card-body" :class="isDarkMode ? 'dark-card-body' : ''">
                 <div class="row g-3 align-items-center">
                   <div class="col-md-3">
                     <div class="product-image-container">
@@ -60,6 +31,7 @@
                         :src="getProductImage(productData.product_image)" 
                         :alt="productData.product_name"
                         class="img-fluid rounded-3 border"
+                        :class="isDarkMode ? 'border-secondary' : ''"
                         @error="handleImageError"
                       />
                     </div>
@@ -67,10 +39,10 @@
                   <div class="col-md-9">
                     <div class="d-flex flex-column h-100">
                       <div class="mb-3">
-                        <h4 class="fw-bold mb-2">{{ productData.product_name }}</h4>
+                        <h4 class="fw-bold mb-2" :class="isDarkMode ? 'text-white' : ''">{{ productData.product_name }}</h4>
                         <div class="d-flex align-items-center mb-2">
                           <span class="badge bg-primary me-2">In Stock</span>
-                          <span class="text-muted">
+                          <span :class="isDarkMode ? 'text-light' : 'text-muted'">
                             <i class="fas fa-box me-1"></i>
                             {{ productData.stock || '∞' }} available
                           </span>
@@ -81,7 +53,7 @@
                           <span class="badge bg-danger fs-6">
                             <i class="fas fa-fire me-1"></i>{{ productData.discount_amount || calculateDiscountPercent() }}% OFF
                           </span>
-                          <span v-if="productData.discount_name" class="badge bg-danger-subtle text-danger border border-danger ms-2">
+                          <span v-if="productData.discount_name" class="badge ms-2" :class="isDarkMode ? 'bg-dark text-light border-light' : 'bg-danger-subtle text-danger border border-danger'">
                             <i class="fas fa-tag me-1"></i>{{ productData.discount_name }}
                           </span>
                         </div>
@@ -89,17 +61,17 @@
                         <div class="price-display mb-3">
                           <!-- Show original price with strikethrough if discounted -->
                           <div v-if="productData.is_discounted" class="mb-1">
-                            <span class="text-muted text-decoration-line-through">
+                            <span :class="isDarkMode ? 'text-light text-decoration-line-through' : 'text-muted text-decoration-line-through'">
                               Original: {{ formatPrice(productData.original_price) }} Birr
                             </span>
                           </div>
                           
                           <!-- Show current price -->
                           <div class="d-flex align-items-center">
-                            <span class="price-main">
+                            <span class="price-main" :class="isDarkMode ? 'text-success' : 'text-success'">
                               {{ formatPrice(getCurrentPrice()) }} Birr
                             </span>
-                            <span class="price-unit text-muted ms-2">per unit</span>
+                            <span class="price-unit ms-2" :class="isDarkMode ? 'text-light' : 'text-muted'">per unit</span>
                           </div>
                           
                           <!-- Show savings if discounted -->
@@ -115,10 +87,11 @@
                       <div class="row align-items-center mt-auto">
                         <div class="col-md-6">
                           <div class="quantity-selector">
-                            <label class="form-label mb-2">Quantity:</label>
+                            <label class="form-label mb-2" :class="isDarkMode ? 'text-light' : ''">Quantity:</label>
                             <div class="input-group input-group-lg w-auto">
                               <button 
-                                class="btn btn-outline-secondary" 
+                                class="btn" 
+                                :class="isDarkMode ? 'btn-outline-light' : 'btn-outline-secondary'"
                                 @click="decreaseQuantity"
                                 :disabled="productData.quantity <= 1"
                               >
@@ -130,11 +103,13 @@
                                 min="1"
                                 :max="productData.stock || 100"
                                 class="form-control text-center"
+                                :class="isDarkMode ? 'dark-input' : ''"
                                 style="width: 70px;"
                                 @change="validateQuantity"
                               >
                               <button 
-                                class="btn btn-outline-secondary" 
+                                class="btn" 
+                                :class="isDarkMode ? 'btn-outline-light' : 'btn-outline-secondary'"
                                 @click="increaseQuantity"
                                 :disabled="productData.quantity >= (productData.stock || 100)"
                               >
@@ -145,9 +120,9 @@
                         </div>
                         <div class="col-md-6 text-md-end mt-3 mt-md-0">
                           <div class="total-section">
-                            <h5 class="text-muted mb-1">Order Total</h5>
-                            <h2 class="text-success fw-bold">{{ formatPrice(calculatedAmount) }} Birr</h2>
-                            <small class="text-muted">
+                            <h5 :class="isDarkMode ? 'text-light' : 'text-muted mb-1'">Order Total</h5>
+                            <h2 class="fw-bold" :class="isDarkMode ? 'text-success' : 'text-success'">{{ formatPrice(calculatedAmount) }} Birr</h2>
+                            <small :class="isDarkMode ? 'text-light' : 'text-muted'">
                               {{ productData.quantity }} item(s) × {{ formatPrice(getCurrentPrice()) }} Birr
                             </small>
                             <!-- Show total savings if discounted -->
@@ -167,30 +142,30 @@
             </div>
 
             <!-- Payment Form Card -->
-            <div v-if="productData.product_id" class="card border-0 shadow-sm">
-              <div class="card-header bg-white border-0">
+            <div v-if="productData.product_id" class="card" :class="isDarkMode ? 'dark-card' : 'border-0 shadow-sm'">
+              <div class="card-header" :class="isDarkMode ? 'dark-card-header' : 'bg-white border-0'">
                 <div class="d-flex align-items-center">
-                  <i class="fas fa-user-circle fa-2x text-primary me-3"></i>
+                  <i class="fas fa-user-circle fa-2x me-3" :class="isDarkMode ? 'text-light' : 'text-primary'"></i>
                   <div>
-                    <h5 class="card-title mb-0">Payment & Shipping Details</h5>
-                    <p class="card-text text-muted small mb-0">Fill in your information to complete the order</p>
+                    <h5 class="card-title mb-0" :class="isDarkMode ? 'text-white' : ''">Payment & Shipping Details</h5>
+                    <p class="card-text small mb-0" :class="isDarkMode ? 'text-light' : 'text-muted'">Fill in your information to complete the order</p>
                   </div>
                 </div>
               </div>
               
-              <div class="card-body">
+              <div class="card-body" :class="isDarkMode ? 'dark-card-body' : ''">
                 <form @submit.prevent="submitPayment" class="needs-validation" id="paymentForm" novalidate>
                   <!-- Personal Information -->
                   <div class="mb-4">
-                    <h6 class="border-bottom pb-2 mb-3">
+                    <h6 class="border-bottom pb-2 mb-3" :class="isDarkMode ? 'border-light text-white' : ''">
                       <i class="fas fa-user me-2"></i>
                       Personal Information
                     </h6>
                     <div class="row g-3">
                       <div class="col-md-12">
-                        <label for="name" class="form-label required">Full Name</label>
+                        <label for="name" class="form-label required" :class="isDarkMode ? 'text-light' : ''">Full Name</label>
                         <div class="input-group">
-                          <span class="input-group-text">
+                          <span class="input-group-text" :class="isDarkMode ? 'dark-input-group' : ''">
                             <i class="fas fa-user"></i>
                           </span>
                           <input 
@@ -198,6 +173,7 @@
                             v-model="form.name"
                             type="text"
                             class="form-control form-control-lg"
+                            :class="isDarkMode ? 'dark-input' : ''"
                             placeholder="Enter your full name"
                             required
                           />
@@ -211,38 +187,39 @@
 
                   <!-- Vendor Account Number Section -->
                   <div class="mb-4" v-if="vendorAccountNumber">
-                    <h6 class="border-bottom pb-2 mb-3">
+                    <h6 class="border-bottom pb-2 mb-3" :class="isDarkMode ? 'border-light text-white' : ''">
                       <i class="fas fa-university me-2 text-success"></i>
                       Payment Instructions
                     </h6>
-                    <div class="alert alert-success">
+                    <div class="alert" :class="isDarkMode ? 'alert-dark text-light border-light' : 'alert-success'">
                       <div class="d-flex align-items-start">
-                        <i class="fas fa-info-circle me-3 mt-1"></i>
+                        <i class="fas fa-info-circle me-3 mt-1" :class="isDarkMode ? 'text-light' : ''"></i>
                         <div>
-                          <h6 class="alert-heading fw-bold mb-2">Send Payment to Vendor's Account</h6>
-                          <p class="mb-2">
-                            Please transfer <strong class="text-success">{{ formatPrice(calculatedAmount) }} Birr</strong> 
+                          <h6 class="alert-heading fw-bold mb-2" :class="isDarkMode ? 'text-light' : ''">Send Payment to Vendor's Account</h6>
+                          <p class="mb-2" :class="isDarkMode ? 'text-light' : ''">
+                            Please transfer <strong :class="isDarkMode ? 'text-success' : 'text-success'">{{ formatPrice(calculatedAmount) }} Birr</strong> 
                             to the following account number:
                           </p>
-                          <div class="card bg-white mt-3">
-                            <div class="card-body">
+                          <div class="card mt-3" :class="isDarkMode ? 'dark-card' : 'bg-white'">
+                            <div class="card-body" :class="isDarkMode ? 'dark-card-body' : ''">
                               <div class="d-flex align-items-center">
                                 <div class="me-3">
-                                  <i class="fas fa-bank fa-2x text-primary"></i>
+                                  <i class="fas fa-bank fa-2x" :class="isDarkMode ? 'text-light' : 'text-primary'"></i>
                                 </div>
                                 <div class="flex-grow-1">
-                                  <h5 class="fw-bold text-primary mb-1">Vendor Account Number</h5>
+                                  <h5 class="fw-bold mb-1" :class="isDarkMode ? 'text-light' : 'text-primary'">Vendor Account Number</h5>
                                   <div class="d-flex align-items-center">
-                                    <code class="h4 mb-0 me-3">{{ vendorAccountNumber }}(CBE)</code>
+                                    <code class="h4 mb-0 me-3" :class="isDarkMode ? 'text-light' : ''">{{ vendorAccountNumber }}(CBE)</code>
                                     <button 
                                       type="button" 
-                                      class="btn btn-outline-primary btn-sm"
+                                      class="btn btn-sm"
+                                      :class="isDarkMode ? 'btn-outline-light' : 'btn-outline-primary'"
                                       @click="copyToClipboard(vendorAccountNumber)"
                                     >
                                       <i class="fas fa-copy me-1"></i> Copy
                                     </button>
                                   </div>
-                                  <small class="text-muted">
+                                  <small :class="isDarkMode ? 'text-light' : 'text-muted'">
                                     <i class="fas fa-lightbulb me-1"></i>
                                     After payment, upload the transaction screenshot below
                                   </small>
@@ -257,12 +234,12 @@
 
                   <!-- Amount Display -->
                   <div class="mb-4">
-                    <h6 class="border-bottom pb-2 mb-3">
+                    <h6 class="border-bottom pb-2 mb-3" :class="isDarkMode ? 'border-light text-white' : ''">
                       <i class="fas fa-money-bill-wave me-2"></i>
                       Payment Amount
                     </h6>
-                    <div class="card bg-light border-0">
-                      <div class="card-body">
+                    <div class="card" :class="isDarkMode ? 'dark-card' : 'bg-light border-0'">
+                      <div class="card-body" :class="isDarkMode ? 'dark-card-body' : ''">
                         <div class="row align-items-center">
                           <div class="col-md-6">
                             <div class="d-flex align-items-center">
@@ -270,7 +247,7 @@
                                 <i class="fas fa-money-bill fa-2x text-success"></i>
                               </div>
                               <div>
-                                <h6 class="text-muted mb-1">Total Amount</h6>
+                                <h6 :class="isDarkMode ? 'text-light' : 'text-muted mb-1'">Total Amount</h6>
                                 <h3 class="fw-bold text-success mb-0">{{ formatPrice(calculatedAmount) }} Birr</h3>
                               </div>
                             </div>
@@ -278,22 +255,22 @@
                           <div class="col-md-6 text-md-end mt-3 mt-md-0">
                             <div class="amount-breakdown">
                               <div class="d-flex justify-content-between mb-1">
-                                <span class="text-muted">Price per unit:</span>
-                                <span>{{ formatPrice(getCurrentPrice()) }} Birr</span>
+                                <span :class="isDarkMode ? 'text-light' : 'text-muted'">Price per unit:</span>
+                                <span :class="isDarkMode ? 'text-light' : ''">{{ formatPrice(getCurrentPrice()) }} Birr</span>
                               </div>
                               <div class="d-flex justify-content-between mb-1">
-                                <span class="text-muted">Quantity:</span>
-                                <span>{{ productData.quantity }}</span>
+                                <span :class="isDarkMode ? 'text-light' : 'text-muted'">Quantity:</span>
+                                <span :class="isDarkMode ? 'text-light' : ''">{{ productData.quantity }}</span>
                               </div>
                               <!-- Show discount if applicable -->
                               <div v-if="productData.is_discounted" class="d-flex justify-content-between mb-1">
-                                <span class="text-muted">Discount:</span>
+                                <span :class="isDarkMode ? 'text-light' : 'text-muted'">Discount:</span>
                                 <span class="text-success">-{{ formatPrice(calculateTotalSavings()) }} Birr</span>
                               </div>
-                              <hr class="my-2">
+                              <hr :class="isDarkMode ? 'border-light my-2' : 'my-2'">
                               <div class="d-flex justify-content-between">
-                                <span class="fw-bold">Total:</span>
-                                <span class="fw-bold">{{ formatPrice(calculatedAmount) }} Birr</span>
+                                <span class="fw-bold" :class="isDarkMode ? 'text-light' : ''">Total:</span>
+                                <span class="fw-bold" :class="isDarkMode ? 'text-light' : ''">{{ formatPrice(calculatedAmount) }} Birr</span>
                               </div>
                             </div>
                           </div>
@@ -304,14 +281,14 @@
 
                   <!-- Shipping Address -->
                   <div class="mb-4">
-                    <h6 class="border-bottom pb-2 mb-3">
+                    <h6 class="border-bottom pb-2 mb-3" :class="isDarkMode ? 'border-light text-white' : ''">
                       <i class="fas fa-truck me-2"></i>
                       Shipping Address
                     </h6>
                     <div class="mb-3">
-                      <label for="shipment_address" class="form-label required">Complete Address</label>
+                      <label for="shipment_address" class="form-label required" :class="isDarkMode ? 'text-light' : ''">Complete Address</label>
                       <div class="input-group">
-                        <span class="input-group-text">
+                        <span class="input-group-text" :class="isDarkMode ? 'dark-input-group' : ''">
                           <i class="fas fa-home"></i>
                         </span>
                         <textarea 
@@ -319,6 +296,7 @@
                           v-model="form.shipment_address"
                           rows="4"
                           class="form-control form-control-lg"
+                          :class="isDarkMode ? 'dark-input' : ''"
                           placeholder="Enter your complete shipping address including postal code, city, and state"
                           required
                         ></textarea>
@@ -326,7 +304,7 @@
                           Please provide your shipping address
                         </div>
                       </div>
-                      <div class="form-text">
+                      <div class="form-text" :class="isDarkMode ? 'text-light' : ''">
                         <i class="fas fa-info-circle me-1"></i>
                         Please provide accurate address for successful delivery
                       </div>
@@ -335,7 +313,7 @@
 
                   <!-- Payment Screenshot Upload -->
                   <div class="mb-4">
-                    <h6 class="border-bottom pb-2 mb-3">
+                    <h6 class="border-bottom pb-2 mb-3" :class="isDarkMode ? 'border-light text-white' : ''">
                       <i class="fas fa-camera me-2"></i>
                       Payment Proof
                     </h6>
@@ -343,7 +321,10 @@
                     <div class="upload-area mb-3">
                       <div 
                         class="upload-zone text-center py-5"
-                        :class="{ 'border-primary bg-primary bg-opacity-10': uploadedFile }"
+                        :class="[
+                          isDarkMode ? 'bg-dark-secondary border-light' : '',
+                          uploadedFile ? 'border-primary bg-primary bg-opacity-10' : 'border-dashed'
+                        ]"
                         @click="() => fileInput?.click()"
                       >
                         <input 
@@ -358,14 +339,14 @@
                         
                         <div v-if="!uploadedFile" class="py-4">
                           <div class="mb-3">
-                            <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
+                            <i class="fas fa-cloud-upload-alt fa-3x" :class="isDarkMode ? 'text-light' : 'text-muted'"></i>
                           </div>
-                          <h5 class="mb-2">Upload Payment Screenshot</h5>
-                          <p class="text-muted mb-3">
+                          <h5 class="mb-2" :class="isDarkMode ? 'text-white' : ''">Upload Payment Screenshot</h5>
+                          <p class="mb-3" :class="isDarkMode ? 'text-light' : 'text-muted'">
                             Drag & drop or click to upload image<br>
                             JPG, PNG (Max 5MB)
                           </p>
-                          <button type="button" class="btn btn-primary">
+                          <button type="button" class="btn" :class="isDarkMode ? 'btn-outline-light' : 'btn-primary'">
                             <i class="fas fa-upload me-2"></i>
                             Choose File
                           </button>
@@ -375,8 +356,8 @@
                           <div class="d-flex align-items-center justify-content-center mb-3">
                             <i class="fas fa-file-image fa-3x text-success me-3"></i>
                             <div class="text-start">
-                              <h6 class="mb-1">{{ uploadedFile.name }}</h6>
-                              <p class="text-muted small mb-0">
+                              <h6 class="mb-1" :class="isDarkMode ? 'text-white' : ''">{{ uploadedFile.name }}</h6>
+                              <p class="small mb-0" :class="isDarkMode ? 'text-light' : 'text-muted'">
                                 {{ formatFileSize(uploadedFile.size) }} • {{ uploadedFile.type }}
                               </p>
                             </div>
@@ -387,6 +368,7 @@
                               :src="uploadedPreview" 
                               alt="Preview" 
                               class="img-thumbnail"
+                              :class="isDarkMode ? 'border-light' : ''"
                               style="max-height: 150px;"
                             />
                           </div>
@@ -395,14 +377,16 @@
                             <button 
                               type="button" 
                               @click.stop="removeFile"
-                              class="btn btn-outline-danger btn-sm"
+                              class="btn btn-sm"
+                              :class="isDarkMode ? 'btn-outline-light' : 'btn-outline-danger'"
                             >
                               <i class="fas fa-trash me-1"></i> Remove
                             </button>
                             <button 
                               type="button" 
                               @click.stop="() => fileInput?.click()"
-                              class="btn btn-outline-primary btn-sm"
+                              class="btn btn-sm"
+                              :class="isDarkMode ? 'btn-outline-light' : 'btn-outline-primary'"
                             >
                               <i class="fas fa-sync me-1"></i> Change
                             </button>
@@ -411,16 +395,16 @@
                       </div>
                       
                       <div class="upload-tips">
-                        <div class="alert alert-info mb-0">
+                        <div class="alert" :class="isDarkMode ? 'alert-dark text-light border-light' : 'alert-info mb-0'">
                           <div class="d-flex">
                             <i class="fas fa-lightbulb me-2 mt-1"></i>
                             <div>
-                              <strong>Important:</strong> 
+                              <strong :class="isDarkMode ? 'text-light' : ''">Important:</strong> 
                               <ul class="mb-0 ps-3">
-                                <li>Capture clear screenshot showing <strong>{{ formatPrice(calculatedAmount) }} Birr</strong> payment</li>
-                                <li>Ensure transaction ID and vendor account number are visible</li>
-                                <li>Payment must be sent to: <strong>{{ vendorAccountNumber || 'Vendor Account' }}</strong></li>
-                                <li>Accepted formats: JPG, PNG, GIF • Maximum file size: 5MB</li>
+                                <li :class="isDarkMode ? 'text-light' : ''">Capture clear screenshot showing <strong>{{ formatPrice(calculatedAmount) }} Birr</strong> payment</li>
+                                <li :class="isDarkMode ? 'text-light' : ''">Ensure transaction ID and vendor account number are visible</li>
+                                <li :class="isDarkMode ? 'text-light' : ''">Payment must be sent to: <strong>{{ vendorAccountNumber || 'Vendor Account' }}</strong></li>
+                                <li :class="isDarkMode ? 'text-light' : ''">Accepted formats: JPG, PNG, GIF • Maximum file size: 5MB</li>
                               </ul>
                             </div>
                           </div>
@@ -450,11 +434,12 @@
                         class="form-check-input" 
                         id="terms" 
                         required
+                        :class="isDarkMode ? 'bg-dark border-light' : ''"
                       >
-                      <label class="form-check-label" for="terms">
+                      <label class="form-check-label" for="terms" :class="isDarkMode ? 'text-light' : ''">
                         I confirm that I have transferred {{ formatPrice(calculatedAmount) }} Birr to vendor account 
                         <strong>{{ vendorAccountNumber || 'XXXXXX' }}</strong> and agree to the 
-                        <a href="#" class="text-primary">Terms & Conditions</a>
+                        <a href="#" :class="isDarkMode ? 'text-warning' : 'text-primary'">Terms & Conditions</a>
                       </label>
                     </div>
                     
@@ -477,7 +462,7 @@
                     </div>
                     
                     <div class="text-center mt-3">
-                      <p class="text-muted small mb-0">
+                      <p class="small mb-0" :class="isDarkMode ? 'text-light' : 'text-muted'">
                         <i class="fas fa-shield-alt me-1"></i>
                         Your payment information is secured with 256-bit SSL encryption
                       </p>
@@ -488,13 +473,13 @@
             </div>
 
             <!-- Missing Product Alert -->
-            <div v-if="!loading && !productData.product_id" class="card border-warning mt-4">
-              <div class="card-body text-center py-5">
+            <div v-if="!loading && !productData.product_id" class="card mt-4" :class="isDarkMode ? 'border-warning dark-card' : 'border-warning'">
+              <div class="card-body text-center py-5" :class="isDarkMode ? 'dark-card-body' : ''">
                 <div class="mb-4">
                   <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
                 </div>
-                <h4 class="mb-3">No Product Selected</h4>
-                <p class="text-muted mb-4">
+                <h4 class="mb-3" :class="isDarkMode ? 'text-white' : ''">No Product Selected</h4>
+                <p class="mb-4" :class="isDarkMode ? 'text-light' : 'text-muted'">
                   Please select a product first to proceed with payment
                 </p>
                 <Link href="/" class="btn btn-primary">
@@ -529,33 +514,33 @@
 
             <!-- Support Info -->
             <div class="mt-4 text-center">
-              <div class="card border-0 bg-light">
-                <div class="card-body">
+              <div class="card" :class="isDarkMode ? 'bg-dark-secondary border-light' : 'border-0 bg-light'">
+                <div class="card-body" :class="isDarkMode ? 'dark-card-body' : ''">
                   <div class="row">
                     <div class="col-md-4 mb-3 mb-md-0">
                       <div class="d-flex align-items-center justify-content-center">
-                        <i class="fas fa-headset fa-2x text-primary me-3"></i>
+                        <i class="fas fa-headset fa-2x me-3" :class="isDarkMode ? 'text-light' : 'text-primary'"></i>
                         <div class="text-start">
-                          <h6 class="mb-0">24/7 Support</h6>
-                          <small class="text-muted">We're here to help</small>
+                          <h6 class="mb-0" :class="isDarkMode ? 'text-white' : ''">24/7 Support</h6>
+                          <small :class="isDarkMode ? 'text-light' : 'text-muted'">We're here to help</small>
                         </div>
                       </div>
                     </div>
                     <div class="col-md-4 mb-3 mb-md-0">
                       <div class="d-flex align-items-center justify-content-center">
-                        <i class="fas fa-shield-alt fa-2x text-success me-3"></i>
+                        <i class="fas fa-shield-alt fa-2x me-3" :class="isDarkMode ? 'text-light' : 'text-success'"></i>
                         <div class="text-start">
-                          <h6 class="mb-0">Secure Payment</h6>
-                          <small class="text-muted">SSL Protected</small>
+                          <h6 class="mb-0" :class="isDarkMode ? 'text-white' : ''">Secure Payment</h6>
+                          <small :class="isDarkMode ? 'text-light' : 'text-muted'">SSL Protected</small>
                         </div>
                       </div>
                     </div>
                     <div class="col-md-4">
                       <div class="d-flex align-items-center justify-content-center">
-                        <i class="fas fa-truck-fast fa-2x text-info me-3"></i>
+                        <i class="fas fa-truck-fast fa-2x me-3" :class="isDarkMode ? 'text-light' : 'text-info'"></i>
                         <div class="text-start">
-                          <h6 class="mb-0">Fast Delivery</h6>
-                          <small class="text-muted">3-5 Business Days</small>
+                          <h6 class="mb-0" :class="isDarkMode ? 'text-white' : ''">Fast Delivery</h6>
+                          <small :class="isDarkMode ? 'text-light' : 'text-muted'">3-5 Business Days</small>
                         </div>
                       </div>
                     </div>
@@ -603,6 +588,24 @@ const props = defineProps({
     default: null
   }
 })
+
+// Dark Mode State
+const isDarkMode = ref(false)
+
+// Watch for theme changes from navbar
+const checkTheme = () => {
+  const html = document.documentElement
+  isDarkMode.value = html.getAttribute('data-theme') === 'dark'
+  
+  // Apply theme to body
+  if (isDarkMode.value) {
+    document.body.classList.add('dark-theme')
+    document.body.classList.remove('light-theme')
+  } else {
+    document.body.classList.add('light-theme')
+    document.body.classList.remove('dark-theme')
+  }
+}
 
 const processing = ref(false)
 const fileInput = ref(null)
@@ -705,8 +708,16 @@ const hideNotification = () => {
   notification.show = false
 }
 
-// Initialize form
+// Initialize form and theme
 onMounted(() => {
+  // Check theme
+  checkTheme()
+  
+  // Listen for theme changes from navbar
+  window.addEventListener('theme-changed', () => {
+    setTimeout(checkTheme, 100)
+  })
+  
   // Set form values
   form.amount = calculatedAmount.value
   form.name = props.user.name || props.user.full_name || ''
@@ -753,6 +764,11 @@ onMounted(() => {
         form.classList.add('was-validated')
       }, false)
     })
+  })
+  
+  // Cleanup
+  onUnmounted(() => {
+    window.removeEventListener('theme-changed', checkTheme)
   })
 })
 
@@ -1004,7 +1020,192 @@ const submitPayment = async () => {
 }
 </script>
 <style scoped>
-  .notification-toast {
+/* ===== DARK MODE STYLES ===== */
+.dark-theme-bg {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+
+.bg-dark-secondary {
+  background-color: #1e293b !important;
+}
+
+.dark-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark-card-header {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark-card-body {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+
+.dark-input {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+.dark-input:focus {
+  background-color: #1e293b !important;
+  border-color: #667eea !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.5) !important;
+}
+
+.dark-input-group {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark-input-group-text {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+  color: #f1f5f9 !important;
+}
+
+.border-light {
+  border-color: #475569 !important;
+}
+
+.border-dashed {
+  border: 2px dashed #475569 !important;
+}
+
+/* ===== ALERTS IN DARK MODE ===== */
+.alert-dark {
+  background-color: rgba(30, 41, 59, 0.8) !important;
+  border-color: #475569 !important;
+  color: #f1f5f9 !important;
+}
+
+.alert-dark .alert-heading {
+  color: #f1f5f9 !important;
+}
+
+.alert-dark strong {
+  color: #f1f5f9 !important;
+}
+
+.alert-dark ul li {
+  color: #cbd5e1 !important;
+}
+
+/* ===== FORM ELEMENTS ===== */
+.form-label.text-light,
+.form-check-label.text-light {
+  color: #f1f5f9 !important;
+}
+
+.form-text.text-light {
+  color: #94a3b8 !important;
+}
+
+/* ===== UPLOAD ZONE ===== */
+.upload-zone.bg-dark-secondary {
+  background-color: #1e293b !important;
+}
+
+.upload-zone.border-primary {
+  border-color: #667eea !important;
+  background-color: rgba(102, 126, 234, 0.1) !important;
+}
+
+/* ===== CODE STYLING ===== */
+code.text-light {
+  color: #f1f5f9 !important;
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+}
+
+/* ===== BUTTONS ===== */
+.btn-outline-light {
+  color: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
+
+.btn-outline-light:hover {
+  background-color: #475569 !important;
+  border-color: #475569 !important;
+  color: #f1f5f9 !important;
+}
+
+.btn-outline-light:disabled {
+  color: #94a3b8 !important;
+  border-color: #475569 !important;
+  opacity: 0.5;
+}
+
+/* ===== CUSTOM CHECKBOX ===== */
+.form-check-input.bg-dark {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+.form-check-input.bg-dark:checked {
+  background-color: #667eea !important;
+  border-color: #667eea !important;
+}
+
+/* ===== TEXT COLORS ===== */
+.text-light {
+  color: #f1f5f9 !important;
+}
+
+.text-success {
+  color: #10b981 !important;
+}
+
+.text-primary {
+  color: #667eea !important;
+}
+
+.text-warning {
+  color: #f59e0b !important;
+}
+
+.text-info {
+  color: #0ea5e9 !important;
+}
+
+/* ===== BADGES ===== */
+.badge.bg-primary {
+  background-color: #667eea !important;
+}
+
+.badge.bg-success {
+  background-color: #10b981 !important;
+}
+
+.badge.bg-danger {
+  background-color: #ef4444 !important;
+}
+
+/* ===== PROGRESS BAR ===== */
+.progress {
+  background-color: #475569 !important;
+}
+
+/* ===== IMAGE THUMBNAIL ===== */
+.img-thumbnail.border-light {
+  border-color: #475569 !important;
+  background-color: #1e293b !important;
+}
+
+/* ===== EXISTING STYLES ===== */
+.notification-toast {
   animation: slideInRight 0.3s ease;
 }
 
@@ -1054,6 +1255,7 @@ const submitPayment = async () => {
   background-color: #0dcaf0 !important;
   color: white !important;
 }
+
 .steps {
   display: flex;
   align-items: center;
@@ -1139,7 +1341,6 @@ const submitPayment = async () => {
 .price-main {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #198754;
 }
 
 .price-unit {
@@ -1323,5 +1524,265 @@ code {
 .card .price-display .badge.bg-success {
   font-size: 0.85rem;
   padding: 0.25rem 0.5rem;
+}
+
+/* ===== DARK MODE FIXES ===== */
+.dark-theme .text-muted {
+  color: #94a3b8 !important;
+}
+
+.dark-theme .form-control::placeholder {
+  color: #94a3b8 !important;
+}
+
+.dark-theme .border-bottom {
+  border-bottom-color: #475569 !important;
+}
+
+.dark-theme hr {
+  border-color: #475569 !important;
+}
+
+.dark-theme .btn-outline-primary {
+  color: #7c93ff !important;
+  border-color: #7c93ff !important;
+}
+
+.dark-theme .btn-outline-primary:hover {
+  background-color: #7c93ff !important;
+  color: white !important;
+}
+
+.dark-theme .btn-outline-danger {
+  color: #f87171 !important;
+  border-color: #f87171 !important;
+}
+
+.dark-theme .btn-outline-danger:hover {
+  background-color: #f87171 !important;
+  color: white !important;
+}
+
+.dark-theme .invalid-feedback {
+  color: #f87171 !important;
+}
+
+.dark-theme .form-control:focus {
+  box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.5) !important;
+}
+
+.dark-theme .spinner-border.text-primary {
+  color: #667eea !important;
+}
+
+.dark-theme .spinner-border.text-light {
+  color: #f1f5f9 !important;
+}
+
+/* Fix for date inputs in dark mode */
+.dark-theme input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(2);
+}
+
+/* Fix for select dropdown arrow in dark mode */
+.dark-theme .form-select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23f1f5f9' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+/* Dark mode link colors */
+.dark-theme a.text-primary {
+  color: #7c93ff !important;
+}
+
+.dark-theme a.text-primary:hover {
+  color: #a3b4ff !important;
+}
+
+/* Ensure text on buttons remains readable in dark mode */
+.dark-theme .btn-outline-light:hover {
+  color: #0f172a !important;
+}
+
+/* Fix for file upload button text */
+.dark-theme .btn-outline-light i {
+  color: #f1f5f9 !important;
+}
+
+.dark-theme .btn-outline-light:hover i {
+  color: #0f172a !important;
+}
+
+/* Ensure placeholders are visible in dark mode */
+.dark-theme ::-webkit-input-placeholder {
+  color: #94a3b8 !important;
+}
+
+.dark-theme :-moz-placeholder {
+  color: #94a3b8 !important;
+}
+
+.dark-theme ::-moz-placeholder {
+  color: #94a3b8 !important;
+}
+
+.dark-theme :-ms-input-placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Fix for validation icons in dark mode */
+.dark-theme .form-control.is-invalid {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23f87171'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23f87171' stroke='none'/%3e%3c/svg%3e");
+}
+
+.dark-theme .form-control.is-valid {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2334d399' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+}
+
+/* Ensure badge text is readable */
+.dark-theme .badge.bg-dark {
+  color: #f1f5f9 !important;
+}
+
+/* Fix for borders in dark mode */
+.dark-theme .border {
+  border-color: #475569 !important;
+}
+
+.dark-theme .border-warning {
+  border-color: #f59e0b !important;
+}
+
+/* Ensure text in alerts is readable */
+.dark-theme .alert .text-muted,
+.dark-theme .alert .text-light {
+  color: #cbd5e1 !important;
+}
+
+.dark-theme .alert strong {
+  color: #f1f5f9 !important;
+}
+
+/* Fix for loading text */
+.dark-theme .text-center p {
+  color: #f1f5f9 !important;
+}
+
+/* Ensure success text is visible */
+.dark-theme .text-success {
+  color: #34d399 !important;
+}
+
+/* Fix for the notification toast in dark mode */
+.dark-theme .toast {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Ensure card titles are visible */
+.dark-theme .card-title {
+  color: #f1f5f9 !important;
+}
+
+.dark-theme .card-text {
+  color: #cbd5e1 !important;
+}
+
+/* Fix for support info icons */
+.dark-theme .fa-headset,
+.dark-theme .fa-shield-alt,
+.dark-theme .fa-truck-fast {
+  color: #cbd5e1 !important;
+}
+
+/* Ensure price display is readable */
+.dark-theme .price-main {
+  color: #34d399 !important;
+}
+
+.dark-theme .price-unit {
+  color: #94a3b8 !important;
+}
+
+/* Fix for total section */
+.dark-theme .total-section h5 {
+  color: #cbd5e1 !important;
+}
+
+.dark-theme .total-section h2 {
+  color: #34d399 !important;
+}
+
+.dark-theme .total-section small {
+  color: #94a3b8 !important;
+}
+
+/* Ensure amount breakdown is readable */
+.dark-theme .amount-breakdown span:not(.text-success) {
+  color: #cbd5e1 !important;
+}
+
+/* Fix for upload tips */
+.dark-theme .upload-tips .alert {
+  background-color: rgba(30, 41, 59, 0.8) !important;
+  border-color: #475569 !important;
+}
+
+.dark-theme .upload-tips .alert strong {
+  color: #f1f5f9 !important;
+}
+
+.dark-theme .upload-tips .alert ul li {
+  color: #cbd5e1 !important;
+}
+
+/* Ensure button text is readable */
+.dark-theme .btn-success {
+  color: white !important;
+}
+
+.dark-theme .btn-success:hover {
+  color: white !important;
+}
+
+/* Fix for checkbox label */
+.dark-theme .form-check-label strong {
+  color: #f1f5f9 !important;
+}
+
+/* Ensure file preview is visible */
+.dark-theme .upload-zone h5,
+.dark-theme .upload-zone h6 {
+  color: #f1f5f9 !important;
+}
+
+/* Fix for the "Browse Products" button */
+.dark-theme .btn-primary {
+  background-color: #667eea !important;
+  border-color: #667eea !important;
+  color: white !important;
+}
+
+.dark-theme .btn-primary:hover {
+  background-color: #7c93ff !important;
+  border-color: #7c93ff !important;
+  color: white !important;
+}
+
+/* Ensure all text inputs have proper contrast */
+.dark-theme input[type="text"],
+.dark-theme input[type="number"],
+.dark-theme textarea {
+  color: #f1f5f9 !important;
+}
+
+/* Fix for the copy button icon */
+.dark-theme .btn-outline-light .fa-copy {
+  color: #f1f5f9 !important;
+}
+
+.dark-theme .btn-outline-light:hover .fa-copy {
+  color: #0f172a !important;
 }
 </style>

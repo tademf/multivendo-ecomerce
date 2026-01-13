@@ -7,33 +7,81 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class CartController extends Controller
 {
+    // Helper method to clean expired items
+    private function cleanExpiredCartItems($userId)
+    {
+        Cart::where('user_id', $userId)
+            ->where('status', 'active')
+            ->where('expired_date', '<', Carbon::now())
+            ->delete();
+    }
+
     // Display cart page
     public function index()
     {
         $user = Auth::user();
         
+        // Clean up expired items
+        $this->cleanExpiredCartItems($user->id);
+        
+        // Clean up any items with status 'removed' (PERMANENT DELETE)
+        Cart::where('user_id', $user->id)
+            ->where('status', 'removed')
+            ->delete();
+        
+        // Now fetch only active AND non-expired items
         $cartItems = Cart::with(['product' => function($query) {
-            $query->select('product_id', 'name', 'image', 'stock', 'price');
-        }])
-        ->where('user_id', $user->id)
-        ->active()
-        ->get();
+                $query->select('product_id', 'name', 'image', 'stock', 'price', 'category_id');
+            }])
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->where(function($query) {
+                $query->where('expired_date', '>', Carbon::now())
+                      ->orWhereNull('expired_date');
+            })
+            ->get()
+            ->map(function ($item) {
+                $isExpired = $item->expired_date && Carbon::parse($item->expired_date)->isPast();
+                return [
+                    'id' => $item->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                    'price' => $item->price,
+                    'created_at' => $item->created_at,
+                    'updated_at' => $item->updated_at,
+                    'expired_date' => $item->expired_date,
+                    'is_expired' => $isExpired,
+                    'expires_in' => $isExpired ? null : Carbon::parse($item->expired_date)->diffForHumans(),
+                    'product' => $item->product ? [
+                        'product_id' => $item->product->product_id,
+                        'name' => $item->product->name,
+                        'image' => $item->product->image,
+                        'stock' => $item->product->stock,
+                        'price' => $item->product->price,
+                        'category_id' => $item->product->category_id,
+                    ] : null
+                ];
+            });
 
-        $cartTotal = $cartItems->sum(function ($item) {
-            return $item->price * $item->quantity;
+        // Calculate total for non-expired items only
+        $activeCartItems = $cartItems->where('is_expired', false);
+        $cartTotal = $activeCartItems->sum(function ($item) {
+            return $item['price'] * $item['quantity'];
         });
 
         return Inertia::render('CartPage', [
             'cartItems' => $cartItems,
             'cartTotal' => $cartTotal,
-            'itemCount' => $cartItems->count()
+            'itemCount' => $activeCartItems->count()
         ]);
     }
 
-    // Add item to cart - NEW route
+    // Add item to cart with 1 month expiration
     public function store(Request $request)
     {
         $request->validate([
@@ -45,74 +93,78 @@ class CartController extends Controller
         $product = Product::where('product_id', $request->product_id)->first();
 
         if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
+            return back()->with('error', 'Product not found');
         }
 
-        // Check if product is already in cart - FIXED: use product->product_id
-        $existingCartItem = Cart::where('user_id', $user->id)
-            ->where('product_id', $product->product_id) // Changed from $product->id
-            ->active()
-            ->first();
-
-        if ($existingCartItem) {
-            // Update quantity
-            $newQuantity = $existingCartItem->quantity + ($request->quantity ?? 1);
+        // Use DB transaction to handle unique constraint
+        DB::beginTransaction();
+        
+        try {
+            // First, check if there's a removed item for this product
+            $existingRemovedItem = Cart::where('user_id', $user->id)
+                ->where('product_id', $product->product_id)
+                ->where('status', 'removed')
+                ->first();
             
-            if ($newQuantity > $product->stock) {
-                return response()->json([
-                    'message' => 'Not enough stock available',
-                    'max_stock' => $product->stock
-                ], 422);
+            if ($existingRemovedItem) {
+                // DELETE the removed item first to avoid unique constraint violation
+                $existingRemovedItem->delete();
             }
+            
+            // Now check for active item
+            $existingCartItem = Cart::where('user_id', $user->id)
+                ->where('product_id', $product->product_id)
+                ->where('status', 'active')
+                ->first();
 
-            $existingCartItem->update([
-                'quantity' => $newQuantity
-            ]);
+            if ($existingCartItem) {
+                // Update quantity of existing active item
+                $newQuantity = $existingCartItem->quantity + ($request->quantity ?? 1);
+                
+                if ($newQuantity > $product->stock) {
+                    DB::rollBack();
+                    return back()->with('error', 'Not enough stock available. Max stock: ' . $product->stock);
+                }
 
-            $message = 'Cart item updated';
-            $cartItem = $existingCartItem;
-        } else {
-            // Add new item to cart
-            if (($request->quantity ?? 1) > $product->stock) {
-                return response()->json([
-                    'message' => 'Not enough stock available',
-                    'max_stock' => $product->stock
-                ], 422);
+                $existingCartItem->update([
+                    'quantity' => $newQuantity,
+                    'expired_date' => Carbon::now()->addMonth() // Reset to 1 month from now
+                ]);
+
+                $message = 'Cart item updated';
+            } else {
+                // Add new item to cart
+                if (($request->quantity ?? 1) > $product->stock) {
+                    DB::rollBack();
+                    return back()->with('error', 'Not enough stock available. Max stock: ' . $product->stock);
+                }
+
+                Cart::create([
+                    'user_id' => $user->id,
+                    'product_id' => $product->product_id,
+                    'quantity' => $request->quantity ?? 1,
+                    'price' => $product->price,
+                    'status' => 'active',
+                    'expired_date' => Carbon::now()->addMonth() // 1 month from now
+                ]);
+
+                $message = 'Product added to cart';
             }
-
-            $cartItem = Cart::create([
-                'user_id' => $user->id,
-                'product_id' => $product->product_id, // Changed from $product->id
-                'quantity' => $request->quantity ?? 1,
-                'price' => $product->price,
-                'status' => 'active'
-            ]);
-
-            $message = 'Product added to cart';
+            
+            DB::commit();
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to add item to cart: ' . $e->getMessage());
         }
 
-        // Get updated cart count
-        $cartCount = Cart::where('user_id', $user->id)->active()->count();
-
-        return response()->json([
-            'message' => $message,
-            'cartItem' => $cartItem->load('product'),
-            'cartCount' => $cartCount
+        return redirect()->route('cart.index')->with([
+            'success' => $message,
+            'cartCount' => Cart::where('user_id', $user->id)
+                            ->where('status', 'active')
+                            ->where('expired_date', '>', Carbon::now())
+                            ->count()
         ]);
-    }
-
-    // Add item to cart - OLD route for compatibility
-    public function add(Request $request)
-    {
-        // Simply call the store method for compatibility
-        return $this->store($request);
-    }
-
-    // Buy now method - OLD route
-    public function buyNow(Request $request)
-    {
-        // For now, just add to cart
-        return $this->store($request);
     }
 
     // Update cart item quantity
@@ -125,45 +177,30 @@ class CartController extends Controller
         $user = Auth::user();
         $cartItem = Cart::where('user_id', $user->id)
             ->where('id', $id)
-            ->active()
-            ->firstOrFail();
+            ->where('status', 'active')
+            ->first();
 
-        $product = $cartItem->product;
-
-        if ($request->quantity > $product->stock) {
-            return response()->json([
-                'message' => 'Not enough stock available',
-                'max_stock' => $product->stock
-            ], 422);
+        if (!$cartItem) {
+            return back()->with('error', 'Cart item not found');
         }
 
+        $product = Product::where('product_id', $cartItem->product_id)->first();
+
+        if (!$product) {
+            return back()->with('error', 'Product not found');
+        }
+
+        if ($request->quantity > $product->stock) {
+            return back()->with('error', 'Not enough stock available. Max stock: ' . $product->stock);
+        }
+
+        // Update quantity and reset expiration date
         $cartItem->update([
-            'quantity' => $request->quantity
+            'quantity' => $request->quantity,
+            'expired_date' => Carbon::now()->addMonth() // Reset to 1 month from now
         ]);
 
-        // Get updated totals
-        $cartItems = Cart::with('product')
-            ->where('user_id', $user->id)
-            ->active()
-            ->get();
-
-        $cartTotal = $cartItems->sum(function ($item) {
-            return $item->price * $item->quantity;
-        });
-
-        return response()->json([
-            'message' => 'Cart updated',
-            'cartItem' => $cartItem,
-            'itemTotal' => $cartItem->price * $cartItem->quantity,
-            'cartTotal' => $cartTotal,
-            'cartCount' => $cartItems->count()
-        ]);
-    }
-
-    // Remove item from cart - OLD route
-    public function remove($item)
-    {
-        return $this->destroy($item);
+        return back()->with('success', 'Quantity updated');
     }
 
     // Remove item from cart
@@ -172,25 +209,20 @@ class CartController extends Controller
         $user = Auth::user();
         $cartItem = Cart::where('user_id', $user->id)
             ->where('id', $id)
-            ->active()
-            ->firstOrFail();
+            ->first();
 
-        $cartItem->update(['status' => 'removed']);
+        if (!$cartItem) {
+            return back()->with('error', 'Cart item not found');
+        }
 
-        // Get updated totals
-        $cartItems = Cart::with('product')
-            ->where('user_id', $user->id)
-            ->active()
-            ->get();
+        $cartItem->delete();
 
-        $cartTotal = $cartItems->sum(function ($item) {
-            return $item->price * $item->quantity;
-        });
-
-        return response()->json([
-            'message' => 'Item removed from cart',
-            'cartTotal' => $cartTotal,
-            'cartCount' => $cartItems->count()
+        return back()->with([
+            'success' => 'Item removed from cart',
+            'cartCount' => Cart::where('user_id', $user->id)
+                            ->where('status', 'active')
+                            ->where('expired_date', '>', Carbon::now())
+                            ->count()
         ]);
     }
 
@@ -199,14 +231,11 @@ class CartController extends Controller
     {
         $user = Auth::user();
         
-        Cart::where('user_id', $user->id)
-            ->active()
-            ->update(['status' => 'removed']);
+        Cart::where('user_id', $user->id)->delete();
 
-        return response()->json([
-            'message' => 'Cart cleared',
-            'cartCount' => 0,
-            'cartTotal' => 0
+        return back()->with([
+            'success' => 'Cart cleared successfully',
+            'cartCount' => 0
         ]);
     }
 
@@ -214,8 +243,27 @@ class CartController extends Controller
     public function getCartCount()
     {
         $user = Auth::user();
-        $count = Cart::where('user_id', $user->id)->active()->count();
+        $count = Cart::where('user_id', $user->id)
+                    ->where('status', 'active')
+                    ->where('expired_date', '>', Carbon::now())
+                    ->count();
 
         return response()->json(['count' => $count]);
+    }
+
+    // Get cart total for navbar
+    public function getCartTotal()
+    {
+        $user = Auth::user();
+        $total = Cart::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->where('expired_date', '>', Carbon::now())
+            ->with('product')
+            ->get()
+            ->sum(function ($item) {
+                return $item->price * $item->quantity;
+            });
+
+        return response()->json(['total' => $total]);
     }
 }

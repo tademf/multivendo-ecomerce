@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -151,4 +152,57 @@ class AuthController extends Controller
             ] : null,
         ]);
     }
+
+
+
+
+    public function sendOtp(Request $request)
+{
+    $request->validate(['email' => 'required|email|exists:users,email']);
+    
+    $user = User::where('email', $request->email)->first();
+
+    // Check status before sending OTP
+    if ($user->status !== 'active') {
+        return back()->withErrors(['email' => 'Account is ' . $user->status . '. Cannot proceed.']);
+    }
+
+    $otp = rand(100000, 999999);
+    $user->update([
+        'otp' => $otp,
+        'otp_expires_at' => now()->addMinutes(3),
+    ]);
+
+    // Send the Email
+    Mail::raw("Your Login OTP code is: $otp. It expires in 3 minutes.", function ($message) use ($user) {
+        $message->to($user->email)->subject('Login OTP Code');
+    });
+
+    return back()->with(['otp_sent' => true, 'email' => $request->email]);
+}
+
+public function verifyOtp(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email',
+        'otp' => 'required|numeric',
+    ]);
+
+    $user = User::where('email', $request->email)
+                ->where('otp', $request->otp)
+                ->where('otp_expires_at', '>', now())
+                ->first();
+
+    if (!$user) {
+        return back()->withErrors(['otp' => 'Invalid or expired OTP code.']);
+    }
+
+    // Clear OTP and Login
+    $user->update(['otp' => null, 'otp_expires_at' => null]);
+    Auth::login($user);
+    $request->session()->put('is_otp_login', true);
+    $request->session()->regenerate();
+
+    return redirect('/')->with('success', 'Logged in successfully via OTP!');
+}
 }

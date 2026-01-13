@@ -11,11 +11,9 @@ class Wishlist extends Model
 
     protected $fillable = [
         'user_id',
-        'product_id'
+        'product_id',
+        'expired_date'
     ];
-
-    // No need to specify primary key as it's 'id' by default
-    // protected $primaryKey = 'id';
 
     public function user()
     {

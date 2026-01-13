@@ -269,4 +269,5 @@ class ProductController extends Controller
             'selectedImageId' => request()->query('selected_image_id')
         ]);
     }
+    
 }

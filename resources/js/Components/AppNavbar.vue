@@ -1,251 +1,209 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-white sticky-top shadow-sm">
-    <div class="container">
-      <!-- Brand/Logo -->
-      <a href="/" class="navbar-brand d-flex align-items-center">
-        <div class="brand-logo me-2">
-          <i class="fas fa-shopping-bag fa-lg text-white"></i>
+  <nav class="navbar navbar-expand-lg sticky-top premium-nav white-theme slim-nav">
+    <div class="container slim-container">
+      <!-- Brand Logo -->
+      <a href="/" class="navbar-brand d-flex align-items-center slim-brand">
+        <div class="brand-logo-box slim-logo">
+          <i class="fas fa-gem text-gold"></i>
         </div>
-        <div class="brand-text">
-          <span class="fw-bold fs-4 brand-title">E-SHOP</span>
-          <div class="brand-subtitle">Premium Marketplace</div>
+        <div class="brand-text-group slim-text">
+          <span class="brand-title slim-title">E-SHOP</span>
+          <div class="brand-subtitle slim-subtitle">PREMIUM</div>
         </div>
       </a>
 
-
       <!-- Mobile Toggle -->
-      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
-        <span class="navbar-toggler-icon"></span>
+      <button class="navbar-toggler custom-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+        <i class="fas fa-bars text-gold"></i>
       </button>
 
+      <!-- Main Content -->
       <div class="collapse navbar-collapse" id="navbarContent">
-        <!-- Center Navigation -->
-        <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-          <!-- Categories Dropdown with Pure CSS -->
-          <li class="nav-item dropdown-pure-css me-3">
+        <!-- Left Navigation -->
+        <ul class="navbar-nav mx-auto align-items-center slim-nav-items">
+          <!-- Categories Dropdown -->
+          <li class="nav-item dropdown-pure-css me-lg-3 slim-dropdown">
             <div class="dropdown-trigger">
-              <a href="#" class="nav-link dropdown-toggle-btn d-flex align-items-center">
-                <i class="fas fa-th-large me-2"></i>
-                <span class="category-label">{{ selectedCategory || 'Categories' }}</span>
-                <i class="fas fa-chevron-down ms-2"></i>
+              <a href="#" class="nav-link category-trigger slim-category" @click.prevent="toggleCategoryDropdown">
+                <i class="fas fa-th-large me-2 gold-icon"></i>
+                <span class="category-label slim-label">{{ selectedCategory || 'Categories' }}</span>
+                <i class="fas fa-chevron-down ms-2 small-icon" :class="{ 'rotate-180': showCategoryDropdown }"></i>
               </a>
-              <div class="dropdown-content">
-                <div class="dropdown-header">
-                  <h6 class="fw-bold text-primary mb-0">Browse Categories</h6>
-                </div>
-                <div class="dropdown-divider"></div>
-                <a href="#" @click.prevent="selectCategory('')" class="dropdown-item">
-                  <div class="d-flex align-items-center">
-                    <div class="category-icon me-3">
-                      <i class="fas fa-th-large text-primary"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                      <div class="fw-medium">All Categories</div>
-                    </div>
-                  </div>
+              <div v-if="showCategoryDropdown" class="dropdown-content luxury-drop" @click.stop>
+                <div class="drop-header">Browse Collections</div>
+                <a href="#" @click.prevent="selectCategory('')" class="dropdown-item slim-item">
+                   <i class="fas fa-border-all me-3"></i> All Categories
                 </a>
                 <div class="dropdown-divider"></div>
-                <a v-for="category in $page.props.categories" 
-                   :key="category.id || category.category_id"
-                   href="#" 
-                   @click.prevent="selectCategory(category.name)"
-                   class="dropdown-item">
-                  <div class="d-flex align-items-center">
-                    <div class="category-icon me-3">
-                      <i :class="getCategoryIcon(category.name)" class="text-primary"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                      <div class="fw-medium">{{ category.name }}</div>
-                      <small v-if="category.products_count" class="text-muted">{{ category.products_count }} products</small>
-                    </div>
-                  </div>
+                <a v-for="category in $page.props.categories" :key="category.id" 
+                   href="#" @click.prevent="selectCategory(category.name)" class="dropdown-item slim-item">
+                   <i :class="getCategoryIcon(category.name)" class="me-3"></i> {{ category.name }}
                 </a>
               </div>
             </div>
           </li>
 
           <!-- Search Bar -->
-          <li class="nav-item search-container">
-            <div class="input-group search-group">
-              <span class="input-group-text">
-                <i class="fas fa-search"></i>
-              </span>
-              <input
-                type="text"
-                v-model="searchQuery"
-                @keyup.enter="performSearch"
-                class="form-control search-input"
-                placeholder="Search for products..."
-              />
-              <button @click="performSearch" class="btn btn-primary search-btn px-3" type="button">
-                <i class="fas fa-search"></i>
+          <li class="nav-item slim-search-container">
+            <div class="premium-search-box slim-search">
+              <i class="fas fa-search search-icon"></i>
+              <input type="text" v-model="searchQuery" @keyup.enter="performSearch" 
+                     @focus="showSearchSuggestions = true" placeholder="Search...">
+              <button @click="performSearch" class="search-btn-gold slim-search-btn">
+                <i class="fas fa-arrow-right"></i>
               </button>
             </div>
           </li>
         </ul>
 
-              <!-- Right side: Theme toggle for logged out users and Login text -->
-      <div class="d-flex align-items-center ms-auto me-3">
-        <!-- Theme toggle when NOT logged in (moved to right) -->
-        <div v-if="!isLoggedIn" class="d-flex align-items-center gap-3">
-          <!-- Theme Toggle Button -->
-          <button 
-            @click="toggleTheme" 
-            class="theme-toggle-btn btn btn-outline-secondary btn-sm d-flex align-items-center"
-            :title="theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'"
-          >
-            <i :class="theme === 'light' ? 'fas fa-moon' : 'fas fa-sun'"></i>
-          </button>
-          
-          <!-- Login Text -->
-          <div class="login-text-container">
-            <a href="/login" class="login-text fw-bold text-decoration-none">
-               LOGIN
-            </a>
+        <!-- Right Actions -->
+        <div class="dashboard-wrapper ms-auto slim-dashboard">
+<!-- Quick Actions -->
+<div v-if="isLoggedIn" class="action-dock slim-dock">
+  <a href="/wishlist" class="dock-icon slim-icon" title="Wishlist">
+    <i class="far fa-heart fa-sm"></i> <!-- Added fa-sm class -->
+    <span v-if="wishlistCount > 0" class="notification-badge slim-badge">{{ wishlistCount }}</span>
+  </a>
+
+  <a :href="route('messages.conversations')" class="dock-icon slim-icon" title="Messages">
+    <i class="far fa-envelope fa-sm"></i> <!-- Added fa-sm class -->
+    <span v-if="unreadCount > 0" class="notification-badge slim-badge">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+  </a>
+
+  <a href="/cart" class="dock-icon slim-icon" title="Cart">
+    <i class="fas fa-shopping-cart fa-sm"></i> <!-- Added fa-sm class -->
+    <span v-if="cartCount > 0" class="notification-badge slim-badge">{{ cartCount }}</span>
+  </a>
+</div>
+          <!-- User Profile -->
+          <div class="profile-section slim-profile">
+            <div v-if="!isLoggedIn" class="auth-buttons slim-auth">
+              <button @click="toggleGlobalTheme" class="theme-switch slim-theme" title="Toggle Theme">
+                <i :class="theme === 'light' ? 'fas fa-moon' : 'fas fa-sun'"></i>
+              </button>
+              <a href="/login" class="btn-login slim-login">
+                <i class="fas fa-sign-in-alt me-2"></i>LOGIN
+              </a>
+            </div>
+
+            <div v-else class="dropdown-pure-css profile-dropdown">
+              <div class="dropdown-trigger">
+                <div class="profile-trigger slim-profile-trigger" @click.prevent="toggleProfileDropdown">
+                  <div class="user-avatar slim-avatar">
+                    <img v-if="userProfilePicture" :src="userProfilePicture" :alt="userName">
+                    <div v-else class="avatar-initials slim-initials">{{ userName.charAt(0).toUpperCase() }}</div>
+                  </div>
+                  <div class="user-info slim-user-info">
+                    <span class="user-name slim-username">{{ userName.split(' ')[0] }}</span>
+                  </div>
+                  <i class="fas fa-chevron-down dropdown-arrow slim-arrow" 
+                     :class="{ 'rotate-180': showProfileDropdown }"></i>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div v-if="showProfileDropdown" class="dropdown-content user-menu slim-menu" @click.stop>
+                  <!-- User Info Header -->
+                  <!-- <div class="user-profile-header slim-header"> -->
+                    <!-- <div class="user-avatar-large slim-avatar-large"> -->
+                      <!-- <img v-if="userProfilePicture" :src="userProfilePicture" :alt="userName">
+                      <div v-else class="avatar-initials-large slim-initials-large">{{ userName.charAt(0).toUpperCase() }}</div> -->
+                    <!-- </div> -->
+                    <div class="user-details slim-details">
+                      <!-- <h6>{{ userName }}</h6>
+                      <span class="email-text slim-email">{{ user.email }}</span> -->
+                      <div class="verification-badge" :class="{ verified: isVerified }">
+                        <i :class="isVerified ? 'fas fa-check-circle' : 'fas square'"></i>
+                        {{ isVerified ? 'vendor' : 'customer' }}
+                      </div>
+                    </div>
+                  <!-- </div> -->
+
+                  <!-- Menu Items -->
+                  <div class="menu-section slim-menu-section">
+                    <div class="section-title slim-section-title">Shopping</div>
+                    <a :href="route('orders.customer')" class="dropdown-item slim-menu-item" @click="closeDropdowns">
+                      <i class="fas fa-shopping-bag me-3"></i>
+                      <div class="menu-item-content slim-menu-content">
+                        <span class="item-title slim-menu-title">My Orders</span>
+                      </div>
+                    </a>
+                  </div>
+
+                  <div class="menu-section slim-menu-section" v-if="isVerified">
+                    <div class="section-title slim-section-title">Seller</div>
+                    <a :href="route('orders.vendor')" class="dropdown-item slim-menu-item" @click="closeDropdowns">
+                      <i class="fas fa-clipboard-list me-3"></i>
+                      <div class="menu-item-content slim-menu-content">
+                        <span class="item-title slim-menu-title">Manage Orders</span>
+                      </div>
+                    </a>
+                    <a :href="route('products.index')" class="dropdown-item slim-menu-item" @click="closeDropdowns">
+                      <i class="fas fa-box me-3"></i>
+                      <div class="menu-item-content slim-menu-content">
+                        <span class="item-title slim-menu-title">My Products</span>
+                      </div>
+                    </a>
+                    <a :href="route('discounts.index')" class="dropdown-item slim-menu-item" @click="closeDropdowns">
+    <i class="fas fa-tag me-3"></i> 
+    <div class="menu-item-content slim-menu-content">
+        <span class="item-title slim-menu-title">Discounts</span> 
+    </div>
+</a>
+                  </div>
+
+                  <div class="menu-section slim-menu-section">
+                    <div class="section-title slim-section-title">Account</div>
+                    <button @click="toggleGlobalTheme" class="dropdown-item slim-menu-item">
+                      <i :class="theme === 'light' ? 'fas fa-moon me-3' : 'fas fa-sun me-3'"></i>
+                      <div class="menu-item-content slim-menu-content">
+                        <span class="item-title slim-menu-title">{{ theme === 'light' ? 'Dark Mode' : 'Light Mode' }}</span>
+                      </div>
+                    </button>
+                    <a :href="route('settings.page')" class="dropdown-item slim-menu-item" @click="closeDropdowns">
+                      <i class="fas fa-cog me-3"></i>
+                      <div class="menu-item-content slim-menu-content">
+                        <span class="item-title slim-menu-title">Settings</span>
+                      </div>
+                    </a>
+                  </div>
+
+                  <div class="menu-section slim-menu-section" v-if="!isVerified">
+                    <a :href="route('verification.request')" class="dropdown-item highlight-item slim-menu-item" @click="closeDropdowns">
+                      <i class="fas fa-user-check me-3"></i>
+                      <div class="menu-item-content slim-menu-content">
+                        <span class="item-title slim-menu-title">Get Verified</span>
+                      </div>
+                    </a>
+                  </div>
+
+                  <!-- Logout -->
+                  <div class="menu-section slim-menu-section">
+                    <a href="#" @click.prevent="logout" class="dropdown-item logout-item slim-menu-item">
+                      <i class="fas fa-sign-out-alt me-3"></i>
+                      <div class="menu-item-content slim-menu-content">
+                        <span class="item-title slim-menu-title">Logout</span>
+                      </div>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
 
-
-        <!-- Right Navigation for logged in users -->
-        <div v-if="isLoggedIn" class="d-flex align-items-center">
-
-
-<!-- Wishlist Link -->
-<a href="/wishlist" class="nav-link position-relative">
-  <i class="fas fa-heart"></i>
-  <span v-if="wishlistCount > 0" 
-        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-    {{ wishlistCount }}
-  </span>
-</a>
-
-<!-- Cart Link -->
-<a href="/cart" class="nav-link position-relative">
-  <i class="fas fa-shopping-cart"></i>
-  <span v-if="cartCount > 0" 
-        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
-    {{ cartCount }}
-  </span>
-</a>          <!-- Messages Icon with Notification Badge -->
-          <div class="position-relative me-3">
-            <a :href="route('messages.conversations')" class="nav-icon border-0 bg-transparent position-relative text-decoration-none">
-              <i class="fas fa-envelope"></i>
-              <!-- Unread Message Badge -->
-              <span v-if="unreadCount > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                {{ unreadCount > 9 ? '9+' : unreadCount }}
-                <span class="visually-hidden">unread messages</span>
-              </span>
-            </a>
-          </div>
-
-          <!-- User Profile Dropdown with Pure CSS -->
-          <div class="dropdown-pure-css user-dropdown ms-2">
-            <div class="dropdown-trigger">
-              <a href="#" class="user-dropdown-btn d-flex align-items-center text-decoration-none">
-                <div class="position-relative me-2">
-                  <div class="user-avatar">
-                    <img v-if="userProfilePicture" :src="userProfilePicture" :alt="userName" class="rounded-circle">
-                    <div v-else class="rounded-circle avatar-placeholder d-flex align-items-center justify-content-center">
-                      {{ userName.charAt(0).toUpperCase() }}
-                    </div>
-                  </div>
-                  <div class="online-indicator"></div>
-                </div>
-                <!-- <span class="fw-medium">{{ userName }}</span> -->
-                <i class="fas fa-chevron-down ms-2"></i>
-              </a>
-              <div class="dropdown-content user-dropdown-content">
-                <!-- Header with Profile Picture -->
-                <div class="dropdown-header-user">
-                  <div class="d-flex align-items-center">
-                    <div class="position-relative me-3">
-                      <div class="user-avatar-lg">
-                        <img v-if="userProfilePicture" :src="userProfilePicture" :alt="userName" class="rounded-circle">
-                        <div v-else class="rounded-circle avatar-placeholder-lg d-flex align-items-center justify-content-center">
-                          {{ userName.charAt(0).toUpperCase() }}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="flex-grow-1">
-                      <h6 class="mb-1 fw-bold">{{ userName }}</h6>
-                      <div class="mt-1">
-                        <span v-if="isVerified" class="badge bg-success text-white">
-                          <i class="fas fa-check-circle me-1"></i>Verified
-                        </span>
-                        <span v-else class="badge bg-warning text-dark">
-                          <i class="fas fa-clock me-1"></i>Not Verified
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="dropdown-divider"></div>
-                
-                <!-- My Orders (Always visible) -->
-                <a :href="route('orders.customer')" class="dropdown-item">
-                  <i class="fas fa-shopping-bag me-3 text-primary"></i>
-                  <div class="fw-medium">My Orders</div>
-                </a>
-
-                <!-- Vendor features - only shown if verified -->
-                <template v-if="isVerified">
-                  <!-- Manage Orders -->
-                  <a :href="route('orders.vendor')" class="dropdown-item">
-                    <i class="fas fa-clipboard-list me-3 text-primary"></i>
-                    <div class="fw-medium">Manage Orders</div>
-                  </a>
-
-                  <!-- My Products -->
-                  <a :href="route('products.index')" class="dropdown-item">
-                    <i class="fas fa-box me-3 text-primary"></i>
-                    <div class="fw-medium">My Products</div>
-                  </a>
-                  
-                  <!-- Discounts -->
-                  <a :href="route('discounts.index')" class="dropdown-item">
-                    <i class="fas fa-percent me-3 text-primary"></i>
-                    <div class="fw-medium">Discounts</div>
-                  </a>
-                </template>
-                
-                <!-- Verification link - only shown if NOT verified -->
-                <a v-if="!isVerified" :href="route('verification.request')" class="dropdown-item">
-                  <i class="fas fa-user-check me-3 text-primary"></i>
-                  <div class="fw-medium">Get Verified</div>
-                </a>
-                
-                <!-- Messages/Conversations Link -->
-                <!-- <a :href="route('messages.conversations')" class="dropdown-item position-relative">
-                  <i class="fas fa-envelope me-3 text-primary"></i>
-                  <div class="fw-medium">Messages</div> -->
-                  <!-- Unread badge in dropdown -->
-                  <!-- <span v-if="unreadCount > 0" class="position-absolute top-50 end-0 translate-middle-y badge rounded-pill bg-danger me-3">
-                    {{ unreadCount > 9 ? '9+' : unreadCount }}
-                  </span>
-                </a> -->
-                
-                <!-- Dark/Light Mode Toggle - Moved to top of dropdown -->
-                <button @click="toggleTheme" class="dropdown-item theme-toggle-item w-100 text-start">
-                  <i :class="theme === 'light' ? 'fas fa-moon me-3 text-primary' : 'fas fa-sun me-3 text-warning'"></i>
-                  <div class="fw-medium">{{ theme === 'light' ? 'Dark Mode' : 'Light Mode' }}</div>
-                </button>
-
-                <!-- Settings -->
-                <a :href="route('settings.page')" class="dropdown-item">
-                  <i class="fas fa-cog me-3 text-primary"></i>
-                  <div class="fw-medium">Settings</div>
-                </a>
-                
-                <div class="dropdown-divider"></div>
-                
-                <!-- Logout -->
-                <a href="#" @click.prevent="logout" class="dropdown-item text-danger">
-                  <i class="fas fa-sign-out-alt me-3"></i>
-                  <div class="fw-medium">Logout</div>
-                </a>
-              </div>
+    <!-- Search Suggestions -->
+    <div v-if="searchQuery && searchSuggestions.length > 0 && showSearchSuggestions" 
+         class="search-suggestions slim-suggestions" @click.stop>
+      <div class="container slim-container">
+        <div class="suggestions-box slim-suggestions-box">
+          <div v-for="suggestion in searchSuggestions" :key="suggestion.id" 
+               class="suggestion-item slim-suggestion" @click="selectSuggestion(suggestion)">
+            <i :class="suggestion.icon" class="me-3"></i>
+            <div class="suggestion-content">
+              <div class="suggestion-title slim-suggestion-title">{{ suggestion.name }}</div>
+              <div class="suggestion-category slim-suggestion-category">{{ suggestion.category }}</div>
             </div>
           </div>
         </div>
@@ -255,26 +213,177 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
-import { useTheme } from '@/Composables/useTheme'
 import axios from 'axios'
 
 const page = usePage()
-const { theme, toggleTheme } = useTheme()
 
 const searchQuery = ref('')
 const selectedCategory = ref('')
+const searchSuggestions = ref([])
 const csrfToken = ref(document.querySelector('meta[name="csrf-token"]')?.content || '')
 const unreadCount = ref(page.props.auth?.unread_messages || 0)
-const wishlistCount = ref(0) // ADDED
-const cartCount = ref(0) // ADDED
+const wishlistCount = ref(0)
+const cartCount = ref(0)
+
+// Dropdown states
+const showCategoryDropdown = ref(false)
+const showProfileDropdown = ref(false)
+const showSearchSuggestions = ref(false)
+
+let searchTimeout = null
 let pollInterval = null
+
+// Theme management
+const theme = ref(localStorage.getItem('theme') || 'light')
+
+// Initialize theme
+const initTheme = () => {
+  const savedTheme = localStorage.getItem('theme') || 'light'
+  theme.value = savedTheme
+  applyTheme(savedTheme)
+}
+
+// Apply theme to entire page
+const applyTheme = (themeMode) => {
+  // Apply to html element
+  const html = document.documentElement
+  html.setAttribute('data-theme', themeMode)
+  
+  // Apply to body
+  document.body.classList.remove('light-theme', 'dark-theme')
+  document.body.classList.add(`${themeMode}-theme`)
+  
+  // Set CSS variables for entire page
+  if (themeMode === 'dark') {
+    document.documentElement.style.setProperty('--page-bg-color', '#0f172a')
+    document.documentElement.style.setProperty('--page-text-color', '#f1f5f9')
+    document.documentElement.style.setProperty('--page-card-bg', '#1e293b')
+    document.documentElement.style.setProperty('--page-border-color', '#334155')
+    document.documentElement.style.setProperty('--page-shadow-color', 'rgba(0, 0, 0, 0.3)')
+  } else {
+    document.documentElement.style.setProperty('--page-bg-color', '#ffffff')
+    document.documentElement.style.setProperty('--page-text-color', '#1e293b')
+    document.documentElement.style.setProperty('--page-card-bg', '#ffffff')
+    document.documentElement.style.setProperty('--page-border-color', '#e2e8f0')
+    document.documentElement.style.setProperty('--page-shadow-color', 'rgba(0, 0, 0, 0.1)')
+  }
+}
+
+// Toggle global theme
+const toggleGlobalTheme = () => {
+  const newTheme = theme.value === 'light' ? 'dark' : 'light'
+  theme.value = newTheme
+  localStorage.setItem('theme', newTheme)
+  applyTheme(newTheme)
+  
+  // Dispatch event for other components to listen
+  window.dispatchEvent(new CustomEvent('theme-changed', {
+    detail: { theme: newTheme }
+  }))
+}
+
+// Session management
+const sessionKey = 'user_session'
+const sessionTimeout = 24 * 60 * 60 * 1000 // 24 hours
 
 const user = computed(() => page.props.auth?.user || null)
 const categories = computed(() => page.props.categories || [])
 
-const isLoggedIn = computed(() => user.value && user.value.id !== undefined && user.value.id !== null)
+const isLoggedIn = computed(() => {
+  if (!user.value || user.value.id === undefined || user.value.id === null) {
+    return false
+  }
+  
+  const sessionData = localStorage.getItem(sessionKey)
+  if (!sessionData) {
+    redirectToLogin('Session expired')
+    return false
+  }
+  
+  try {
+    const session = JSON.parse(sessionData)
+    const now = Date.now()
+    
+    if (now - session.timestamp > sessionTimeout) {
+      localStorage.removeItem(sessionKey)
+      redirectToLogin('Session expired')
+      return false
+    }
+    
+    if (now - session.timestamp > 30 * 60 * 1000) {
+      updateSession()
+    }
+    
+    return true
+  } catch (error) {
+    localStorage.removeItem(sessionKey)
+    redirectToLogin('Invalid session')
+    return false
+  }
+})
+
+function redirectToLogin(reason = '') {
+  if (window.location.pathname === '/login') return
+  
+  const currentPath = window.location.pathname + window.location.search
+  if (currentPath !== '/' && currentPath !== '/login') {
+    localStorage.setItem('redirect_after_login', currentPath)
+  }
+  
+  if (typeof router !== 'undefined') {
+    router.get('/login')
+  } else {
+    window.location.href = `/login${reason ? `?reason=${encodeURIComponent(reason)}` : ''}`
+  }
+}
+
+function initSession() {
+  if (user.value && user.value.id) {
+    const sessionData = {
+      userId: user.value.id,
+      timestamp: Date.now(),
+      userName: user.value.name || user.value.email
+    }
+    localStorage.setItem(sessionKey, JSON.stringify(sessionData))
+  }
+}
+
+function updateSession() {
+  if (user.value && user.value.id) {
+    const sessionData = {
+      userId: user.value.id,
+      timestamp: Date.now(),
+      userName: user.value.name || user.value.email
+    }
+    localStorage.setItem(sessionKey, JSON.stringify(sessionData))
+  }
+}
+
+function clearSession() {
+  localStorage.removeItem(sessionKey)
+  localStorage.removeItem('redirect_after_login')
+}
+
+// Toggle dropdowns
+function toggleCategoryDropdown() {
+  showCategoryDropdown.value = !showCategoryDropdown.value
+  showProfileDropdown.value = false
+  showSearchSuggestions.value = false
+}
+
+function toggleProfileDropdown() {
+  showProfileDropdown.value = !showProfileDropdown.value
+  showCategoryDropdown.value = false
+  showSearchSuggestions.value = false
+}
+
+function closeDropdowns() {
+  showCategoryDropdown.value = false
+  showProfileDropdown.value = false
+  showSearchSuggestions.value = false
+}
 
 const userName = computed(() => {
   if (!user.value) return 'User'
@@ -310,63 +419,15 @@ function getCategoryIcon(categoryName) {
     'Clothing': 'fas fa-tshirt',
     'Books': 'fas fa-book',
     'Home & Garden': 'fas fa-home',
-    'Home & Kitchen': 'fas fa-home',
     'Sports': 'fas fa-futbol',
-    'Art': 'fas fa-palette',
-    'Furniture': 'fas fa-couch',
     'Beauty': 'fas fa-spa',
     'Fashion': 'fas fa-tshirt',
-    'Accessories': 'fas fa-glasses',
-    'Health': 'fas fa-heartbeat',
-    'Toys': 'fas fa-gamepad',
-    'Automotive': 'fas fa-car',
-    'Garden': 'fas fa-seedling',
-    'Office': 'fas fa-briefcase',
-    'Pet Supplies': 'fas fa-paw',
-    'Food': 'fas fa-utensils',
-    'Drinks': 'fas fa-wine-glass',
     'Jewelry': 'fas fa-gem',
     'Shoes': 'fas fa-shoe-prints',
-    'Bags': 'fas fa-shopping-bag',
     'Watches': 'fas fa-clock',
-    'Music': 'fas fa-music',
-    'Movies': 'fas fa-film',
-    'Games': 'fas fa-gamepad',
     'Phones': 'fas fa-mobile-alt',
     'Computers': 'fas fa-desktop',
-    'Tablets': 'fas fa-tablet-alt',
-    'Cameras': 'fas fa-camera',
-    'TV': 'fas fa-tv',
     'Audio': 'fas fa-headphones',
-    'Appliances': 'fas fa-plug',
-    'Tools': 'fas fa-tools',
-    'Building': 'fas fa-hammer',
-    'Lighting': 'fas fa-lightbulb',
-    'Bedding': 'fas fa-bed',
-    'Bath': 'fas fa-bath',
-    'Storage': 'fas fa-archive',
-    'Decor': 'fas fa-palette',
-    'Outdoor': 'fas fa-umbrella-beach',
-    'Exercise': 'fas fa-dumbbell',
-    'Cycling': 'fas fa-bicycle',
-    'Fishing': 'fas fa-fish',
-    'Camping': 'fas fa-campground',
-    'Hiking': 'fas fa-hiking',
-    'Swimming': 'fas fa-swimming-pool',
-    'Yoga': 'fas fa-spa',
-    'Golf': 'fas fa-golf-ball',
-    'Tennis': 'fas fa-baseball-ball',
-    'Basketball': 'fas fa-basketball-ball',
-    'Football': 'fas fa-football-ball',
-    'Soccer': 'fas fa-futbol',
-    'Baseball': 'fas fa-baseball-ball',
-    'Hockey': 'fas fa-hockey-puck',
-    'Boxing': 'fas fa-boxing-glove',
-    'Martial Arts': 'fas fa-user-ninja',
-    'Skateboarding': 'fas fa-skating',
-    'Snow Sports': 'fas fa-snowflake',
-    'Water Sports': 'fas fa-water',
-    'Winter Sports': 'fas fa-snowman',
   }
   
   for (const [key, icon] of Object.entries(iconMap)) {
@@ -387,8 +448,39 @@ function readCategoryFromURL() {
   if (searchParam) searchQuery.value = decodeURIComponent(searchParam)
 }
 
+// Watch search query for suggestions
+watch(searchQuery, (newValue) => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  
+  if (newValue.trim().length >= 2) {
+    searchTimeout = setTimeout(async () => {
+      await fetchSearchSuggestions(newValue)
+    }, 300)
+  } else {
+    searchSuggestions.value = []
+  }
+})
+
+async function fetchSearchSuggestions(query) {
+  try {
+    const response = await axios.get(`/api/search/suggestions?q=${encodeURIComponent(query)}`)
+    searchSuggestions.value = response.data.suggestions || []
+  } catch (error) {
+    console.error('Error fetching search suggestions:', error)
+    searchSuggestions.value = []
+  }
+}
+
+function selectSuggestion(suggestion) {
+  searchQuery.value = suggestion.name
+  searchSuggestions.value = []
+  showSearchSuggestions.value = false
+  performSearch()
+}
+
 function selectCategory(categoryName) {
   selectedCategory.value = categoryName
+  showCategoryDropdown.value = false
   
   window.dispatchEvent(new CustomEvent('navbar-category-select', {
     detail: { categoryName }
@@ -409,6 +501,9 @@ function selectCategory(categoryName) {
 
 function performSearch() {
   if (searchQuery.value.trim()) {
+    searchSuggestions.value = []
+    showSearchSuggestions.value = false
+    
     window.dispatchEvent(new CustomEvent('navbar-search', {
       detail: { searchTerm: searchQuery.value.trim() }
     }))
@@ -455,19 +550,10 @@ const loadCartCount = async () => {
   }
 }
 
-// Listen for cart and wishlist updates
-const setupEventListeners = () => {
-  window.addEventListener('wishlist-updated', (event) => {
-    wishlistCount.value = event.detail?.wishlistCount || 0
-  })
-  
-  window.addEventListener('cart-updated', (event) => {
-    cartCount.value = event.detail?.cartCount || 0
-  })
-}
-
 // Fetch unread message count
 async function fetchUnreadCount() {
+  if (!isLoggedIn.value) return
+  
   try {
     const response = await axios.get(route('messages.unread-count'))
     if (response.data && typeof response.data.count === 'number') {
@@ -478,23 +564,13 @@ async function fetchUnreadCount() {
   }
 }
 
-// Start polling for unread messages
-function startPollingUnreadMessages() {
-  if (!isLoggedIn.value) return
-  
-  // Initial fetch
-  fetchUnreadCount()
-  
-  // Poll every 30 seconds
-  pollInterval = setInterval(fetchUnreadCount, 30000)
-}
-
 function logout() {
-  // Stop polling before logout
   if (pollInterval) {
     clearInterval(pollInterval)
     pollInterval = null
   }
+  
+  clearSession()
   
   const form = document.createElement('form')
   form.method = 'POST'
@@ -519,358 +595,772 @@ function logout() {
   form.submit()
 }
 
-function showComingSoon(feature) {
-  showNotification(`${feature} feature coming soon!`, 'info')
-}
-
-function showNotification(message, type = 'success') {
-  const toastContainer = document.createElement('div')
-  toastContainer.className = 'position-fixed bottom-0 end-0 p-3'
-  toastContainer.style.zIndex = '1055'
-  
-  const toast = document.createElement('div')
-  toast.className = `toast align-items-center text-white bg-${type} border-0`
-  toast.setAttribute('role', 'alert')
-  toast.setAttribute('aria-live', 'assertive')
-  toast.setAttribute('aria-atomic', 'true')
-  
-  const icon = type === 'success' ? 'fa-check-circle' : 
-              type === 'error' ? 'fa-exclamation-triangle' : 
-              'fa-info-circle'
-  
-  toast.innerHTML = `
-    <div class="d-flex">
-      <div class="toast-body">
-        <i class="fas ${icon} me-2"></i>
-        ${message}
-      </div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-    </div>
-  `
-  
-  toastContainer.appendChild(toast)
-  document.body.appendChild(toastContainer)
-  
-  if (window.bootstrap) {
-    const bsToast = new window.bootstrap.Toast(toast, { delay: 3000 })
-    bsToast.show()
-    
-    toast.addEventListener('hidden.bs.toast', () => {
-      document.body.removeChild(toastContainer)
-    })
-  }
-}
-
 onMounted(() => {
-  readCategoryFromURL()
-  window.addEventListener('navbar-category-select', handleExternalCategorySelect)
-  window.addEventListener('popstate', readCategoryFromURL)
+  // Initialize theme
+  initTheme()
   
-  if (!document.querySelector('link[href*="font-awesome"]')) {
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
-    document.head.appendChild(link)
+  readCategoryFromURL()
+  
+  // Initialize session
+  if (user.value && user.value.id) {
+    initSession()
   }
   
-  // Load cart and wishlist counts
+  // Load counts
   loadWishlistCount()
   loadCartCount()
-  setupEventListeners()
   
-  // Start polling for unread messages if user is logged in
+  // Start polling for unread messages
   if (isLoggedIn.value) {
-    startPollingUnreadMessages()
-  }
-})
-
-onUnmounted(() => {
-  // Clean up polling interval
-  if (pollInterval) {
-    clearInterval(pollInterval)
-    pollInterval = null
+    fetchUnreadCount()
+    pollInterval = setInterval(fetchUnreadCount, 30000)
   }
   
-  // Remove event listeners
-  window.removeEventListener('wishlist-updated', () => {})
-  window.removeEventListener('cart-updated', () => {})
-})
-
-function handleExternalCategorySelect(event) {
-  selectedCategory.value = event.detail.categoryName
-}
-
-if (typeof router !== 'undefined') {
-  router.on('success', () => {
-    setTimeout(readCategoryFromURL, 100)
+  // Listen for theme changes from other components
+  window.addEventListener('theme-changed', (event) => {
+    const newTheme = event.detail.theme
+    theme.value = newTheme
+    applyTheme(newTheme)
   })
-}
+  
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.dropdown-trigger') && 
+        !e.target.closest('.search-suggestions') &&
+        !e.target.closest('.premium-search-box')) {
+      closeDropdowns()
+    }
+  })
+  
+  // Close search suggestions when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.premium-search-box') && !e.target.closest('.search-suggestions')) {
+      showSearchSuggestions.value = false
+    }
+  })
+  
+  // Cleanup
+  onUnmounted(() => {
+    if (pollInterval) clearInterval(pollInterval)
+    window.removeEventListener('theme-changed', () => {})
+    document.removeEventListener('click', closeDropdowns)
+  })
+})
 </script>
 <style scoped>
-/* Navbar Base */
-.navbar-white {
-  background: var(--navbar-bg);
-  border-bottom: 1px solid var(--card-border);
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
+/* ===== GLOBAL THEME VARIABLES ===== */
+:root {
+  --page-bg-color: #ffffff;
+  --page-text-color: #1e293b;
+  --page-card-bg: #ffffff;
+  --page-border-color: #e2e8f0;
+  --page-shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+  --page-bg-color: #0f172a;
+  --page-text-color: #f1f5f9;
+  --page-card-bg: #1e293b;
+  --page-border-color: #334155;
+  --page-shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Apply theme to body */
+body.light-theme {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+}
+
+body.dark-theme {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+
+/* ===== SLIM NAVBAR STYLES ===== */
+.premium-nav.slim-nav {
+  min-height: 60px !important;
+  height: 80px !important;
+  padding: 0.25rem 0 !important;
+  /* CRITICAL FIX: Allow dropdowns to overflow */
+  overflow: visible !important;
+}
+
+/* CRITICAL FIX: Ensure navbar container doesn't clip dropdowns */
+.navbar {
+  overflow: visible !important;
+}
+
+.navbar-collapse {
+  overflow: visible !important;
+}
+
+.container {
+  position: relative !important;
+}
+
+.slim-container {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* Brand Logo - Slim */
+.slim-brand {
+  padding: 0 !important;
+}
+
+.slim-logo {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+}
+
+.slim-text {
+  margin-left: 0.5rem !important;
+}
+
+.slim-title {
+  font-size: 1.3rem !important;
+  letter-spacing: 1px !important;
+}
+
+.slim-subtitle {
+  font-size: 0.55rem !important;
+  letter-spacing: 2px !important;
+}
+
+/* Navigation Items - Slim */
+.slim-nav-items {
+  min-height: 40px !important;
+}
+
+/* Categories Dropdown - Slim */
+.slim-dropdown {
+  margin-right: 1rem !important;
+  position: relative !important;
+}
+
+/* CRITICAL FIX: Dropdown trigger container */
+.dropdown-pure-css {
+  position: relative !important;
+}
+
+.dropdown-trigger {
+  position: relative !important;
+}
+
+.slim-category {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.85rem !important;
+  min-height: 38px !important;
+  position: relative !important;
+}
+
+.slim-label {
+  font-size: 0.85rem !important;
+}
+
+.slim-item {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.85rem !important;
+}
+
+/* Search Box - Slim */
+.slim-search-container {
+  min-height: 40px !important;
+  position: relative !important;
+}
+
+.slim-search {
+  padding: 0.25rem 1rem !important;
+  min-height: 38px !important;
+  width: 300px !important;
+  position: relative !important;
+}
+
+.slim-search input {
+  font-size: 0.85rem !important;
+}
+
+.slim-search-btn {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+/* Dashboard - Slim */
+.slim-dashboard {
+  min-height: 40px !important;
+  position: relative !important;
+}
+
+.slim-dock {
+  gap: 1rem !important;
+  margin-right: 1rem !important;
+}
+
+.slim-icon {
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 1rem !important;
+}
+
+.slim-badge {
+  font-size: 0.65rem !important;
+  min-width: 16px !important;
+  height: 16px !important;
+  top: -4px !important;
+  right: -4px !important;
+}
+
+/* Auth Buttons - Slim */
+.slim-auth {
+  gap: 0.75rem !important;
+}
+
+.slim-theme {
+  width: 34px !important;
+  height: 34px !important;
+}
+
+.slim-login {
+  padding: 0.5rem 1.25rem !important;
+  font-size: 0.8rem !important;
+}
+
+/* Profile - Slim */
+.slim-profile {
+  position: relative !important;
+}
+
+.slim-profile-trigger {
+  padding: 0.25rem 0.5rem !important;
+  min-height: 38px !important;
+  position: relative !important;
+}
+
+.slim-avatar {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.slim-initials {
+  font-size: 1rem !important;
+}
+
+.slim-user-info {
+  margin-right: 0.5rem !important;
+}
+
+.slim-username {
+  font-size: 0.85rem !important;
+}
+
+.slim-arrow {
+  font-size: 0.7rem !important;
+}
+
+/* ========== DROPDOWN FIXES ========== */
+/* User Menu Dropdown - FIXED */
+.slim-menu {
+  min-width: 260px !important;
+  padding: 1rem !important;
+  /* CRITICAL FIX: Position absolutely from the profile dropdown */
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  left: auto !important;
+  margin-top: 8px !important;
+  z-index: 1100 !important; /* Higher than navbar */
+  /* Add scroll if needed */
+  max-height: 500px !important;
+  overflow-y: auto !important;
+}
+
+/* Categories Dropdown - FIXED */
+.luxury-drop {
+  min-width: 220px !important;
+  padding: 0.75rem !important;
+  /* CRITICAL FIX: Position absolutely from categories dropdown */
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  margin-top: 8px !important;
+  z-index: 1100 !important; /* Higher than navbar */
+  /* Add scroll if needed */
+  max-height: 400px !important;
+  overflow-y: auto !important;
+}
+
+/* Search Suggestions - FIXED */
+.slim-suggestions {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  margin-top: 8px !important;
+  z-index: 1100 !important;
+}
+
+.slim-suggestions-box {
+  max-width: 300px !important;
+  padding: 0.5rem 0 !important;
+  margin: 0 auto !important;
+}
+
+.slim-suggestion {
+  padding: 0.5rem 0.75rem !important;
+}
+
+.slim-suggestion-title {
+  font-size: 0.85rem !important;
+}
+
+.slim-suggestion-category {
+  font-size: 0.7rem !important;
+}
+
+/* Dropdown headers */
+.drop-header {
+  font-size: 0.9rem !important;
+  padding: 0.5rem 0.75rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.slim-header {
+  padding-bottom: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.slim-avatar-large {
+  width: 48px !important;
+  height: 48px !important;
+}
+
+.slim-initials-large {
+  font-size: 1.4rem !important;
+}
+
+.slim-details h6 {
+  font-size: 1rem !important;
+}
+
+.slim-email {
+  font-size: 0.75rem !important;
+}
+
+.slim-menu-section {
+  margin-bottom: 0.75rem !important;
+}
+
+.slim-section-title {
+  font-size: 0.7rem !important;
+  padding-left: 0.75rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.slim-menu-item {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.85rem !important;
+  margin-bottom: 0.125rem !important;
+}
+
+.slim-menu-item i {
+  font-size: 1rem !important;
+  width: 20px !important;
+}
+
+.slim-menu-title {
+  font-size: 0.85rem !important;
+}
+
+/* Rotate animation for dropdown arrows */
+.rotate-180 {
+  transform: rotate(180deg) !important;
+  transition: transform 0.2s ease !important;
+}
+
+/* ===== THEME-AWARE NAVBAR STYLES ===== */
+.premium-nav.white-theme {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
   z-index: 1030;
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* Dark theme navbar */
+[data-theme="dark"] .premium-nav.white-theme {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 /* Brand Logo */
-.brand-logo {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
+.brand-logo-box {
+  background: linear-gradient(135deg, #c5a059 0%, #a67c00 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(197, 160, 89, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.brand-logo:hover {
-  transform: rotate(8deg) scale(1.05);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25);
+.brand-logo-box:hover {
+  transform: rotate(-5deg) scale(1.05);
+  box-shadow: 0 8px 25px rgba(197, 160, 89, 0.3);
+}
+
+.text-gold {
+  color: white;
 }
 
 .brand-title {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #1e293b;
+  font-weight: 900;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  font-weight: 700;
-  font-size: 1.75rem;
-  letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] .brand-title {
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .brand-subtitle {
-  font-size: 0.7rem;
-  color: var(--secondary-color);
-  font-weight: 500;
-  letter-spacing: 0.3px;
-  margin-top: -2px;
+  color: #c5a059;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
-/* Theme toggle button for logged out users */
-.theme-toggle-btn {
-  background: var(--card-bg) !important;
-  border-color: var(--card-border) !important;
-  color: var(--body-color) !important;
-  padding: 0.25rem 0.5rem !important;
-  border-radius: 6px !important;
+/* Categories Dropdown */
+.category-trigger {
+  color: #475569 !important;
+  font-weight: 600;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
-}
-
-.theme-toggle-btn:hover {
-  background: var(--primary-color) !important;
-  border-color: var(--primary-color) !important;
-  color: white !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-}
-
-/* Login Text - Bold Only */
-.login-text-container {
-  margin-left: 0.5rem;
-}
-
-.login-text {
-  color: var(--body-color);
-  font-size: 0.95rem;
-  letter-spacing: 0.5px;
-  transition: all 0.3s ease;
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-}
-
-.login-text:hover {
-  background: var(--primary-color);
-  color: white !important;
-  text-decoration: none;
-  border-color: var(--primary-color);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-}
-
-/* Pure CSS Dropdown Container */
-.dropdown-pure-css {
-  position: relative;
-  display: inline-block;
-}
-
-/* Dropdown Trigger */
-.dropdown-trigger {
-  position: relative;
-}
-
-/* Category Dropdown Button */
-.dropdown-toggle-btn {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 10px;
-  padding: 0.5rem 1rem;
-  color: var(--body-color) !important;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  min-width: 160px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   text-decoration: none !important;
 }
 
-.dropdown-toggle-btn:hover {
-  background: var(--card-bg);
-  border-color: var(--primary-color);
-  color: var(--primary-color) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+[data-theme="dark"] .category-trigger {
+  color: #cbd5e1 !important;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
 }
 
-.category-label {
-  flex-grow: 1;
-  text-align: left;
-  font-weight: 500;
+.category-trigger:hover {
+  background: white;
+  border-color: #c5a059;
+  color: #c5a059 !important;
+  box-shadow: 0 3px 15px rgba(197, 160, 89, 0.15);
 }
 
-/* Dropdown Content */
-.dropdown-content {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: var(--dropdown-bg);
-  border: 1px solid var(--dropdown-border);
-  border-radius: 12px;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-  min-width: 250px;
-  padding: 0.5rem;
-  z-index: 1000;
-  margin-top: 5px;
+[data-theme="dark"] .category-trigger:hover {
+  background: #1e293b;
+  border-color: #c5a059;
+  color: #c5a059 !important;
+  box-shadow: 0 3px 15px rgba(197, 160, 89, 0.15);
 }
 
-.dropdown-trigger:hover .dropdown-content {
-  display: block;
+.gold-icon {
+  color: #c5a059;
 }
 
-.dropdown-header {
-  padding: 0.5rem 0.75rem;
-}
-
-.dropdown-divider {
-  height: 1px;
-  background-color: var(--card-border);
-  margin: 0.5rem 0;
-}
-
-.dropdown-item {
+/* Premium Search Box */
+.premium-search-box {
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 50px;
   display: flex;
   align-items: center;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  color: var(--body-color) !important;
-  text-decoration: none !important;
-  transition: all 0.2s ease;
-  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 
-.dropdown-item:hover {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
-  transform: translateX(5px);
-  color: var(--primary-color) !important;
+[data-theme="dark"] .premium-search-box {
+  background: #1e293b;
+  border: 1.5px solid #334155;
 }
 
-.category-icon {
-  width: 32px;
-  height: 32px;
-  background: rgba(102, 126, 234, 0.1);
-  border-radius: 8px;
+.premium-search-box:focus-within {
+  border-color: #c5a059;
+  box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.1);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .premium-search-box:focus-within {
+  box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.2);
+}
+
+.search-icon {
+  color: #94a3b8;
+  margin-right: 0.75rem;
+}
+
+[data-theme="dark"] .search-icon {
+  color: #94a3b8;
+}
+
+.premium-search-box input {
+  background: transparent;
+  border: none;
+  color: #1e293b;
+  width: 100%;
+  outline: none;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .premium-search-box input {
+  color: #f1f5f9;
+}
+
+.premium-search-box input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.search-btn-gold {
+  background: linear-gradient(135deg, #c5a059 0%, #a67c00 100%);
+  border: none;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: white;
+  margin-left: 0.5rem;
 }
 
-.category-icon i {
-  font-size: 1rem;
-  transition: all 0.2s ease;
+.search-btn-gold:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 3px 10px rgba(197, 160, 89, 0.3);
 }
 
-.dropdown-item:hover .category-icon i {
-  transform: scale(1.2);
+/* Search Suggestions */
+.search-suggestions {
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  animation: slideDown 0.2s ease;
 }
 
-/* Search Bar */
-.search-container {
-  width: 400px;
+[data-theme="dark"] .search-suggestions {
+  background: #1e293b;
+  border-top: 1px solid #334155;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.suggestions-box {
   margin: 0 auto;
 }
 
-.search-group {
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  border: 1px solid var(--card-border);
-  height: 46px;
-}
-
-.input-group-text {
-  background-color: var(--card-bg);
-  border-color: var(--card-border);
-  color: var(--body-color);
-}
-
-.search-input {
-  border: none;
-  padding: 0.5rem 1rem;
-  font-size: 0.95rem;
-  background: var(--card-bg);
-  color: var(--body-color);
-}
-
-.search-input:focus {
-  box-shadow: none;
-  background: var(--card-bg);
-}
-
-.search-btn {
-  border: none;
-  padding: 0 1.25rem;
-  transition: all 0.3s ease;
-}
-
-.search-btn:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-  transform: scale(1.05);
-}
-
-/* User Dropdown */
-.user-dropdown-btn {
+.suggestion-item {
+  padding: 0.75rem 1.25rem;
   display: flex;
   align-items: center;
-  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
   border-radius: 8px;
-  color: var(--body-color) !important;
+  margin: 0.125rem 0;
+}
+
+[data-theme="dark"] .suggestion-item {
+  color: #f1f5f9;
+}
+
+.suggestion-item:hover {
+  background: #f8fafc;
+}
+
+[data-theme="dark"] .suggestion-item:hover {
+  background: #0f172a;
+}
+
+.suggestion-item i {
+  color: #c5a059;
+}
+
+/* Action Dock */
+.action-dock {
+  display: flex;
+}
+
+.dock-icon {
+  position: relative;
+  color: #64748b;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #050505; */
+   /* background: transparent !important;
+  border: none !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0.25rem !important; */
+}
+
+[data-theme="dark"] .dock-icon {
+  color: #cbd5e1;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+}
+
+.dock-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .dock-icon:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.dock-icon:nth-child(1):hover {
+  color: #ef4444;
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.dock-icon:nth-child(2):hover {
+  color: #3b82f6;
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.dock-icon:nth-child(3):hover {
+  color: #10b981;
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.notification-badge {
+  position: absolute;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  font-weight: 700;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+}
+
+[data-theme="dark"] .notification-badge {
+  border: 2px solid #1e293b;
+}
+
+/* Auth Buttons */
+.auth-buttons {
+  display: flex;
+  align-items: center;
+}
+
+.theme-switch {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
   transition: all 0.3s ease;
 }
 
-.user-dropdown-btn:hover {
-  background-color: rgba(102, 126, 234, 0.1);
+[data-theme="dark"] .theme-switch {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+}
+
+.theme-switch:hover {
+  color: #c5a059;
+  border-color: #c5a059;
+  transform: rotate(15deg);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .theme-switch:hover {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.btn-login {
+  background: linear-gradient(135deg, #c5a059 0%, #a67c00 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-weight: 700;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(197, 160, 89, 0.2);
+}
+
+.btn-login:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(197, 160, 89, 0.3);
+  color: white;
+}
+
+/* Profile Dropdown */
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  /* border-radius: 0px; */
+  transition: all 0.3s ease;
+  background: white;
+  /* border: 1px solid #e2e8f0; */
+}
+
+[data-theme="dark"] .profile-trigger {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+.profile-trigger:hover {
+  border-color: #c5a059;
+  box-shadow: 0 3px 15px rgba(197, 160, 89, 0.15);
 }
 
 .user-avatar {
-  width: 40px;
-  height: 40px;
+  position: relative;
   border-radius: 50%;
   overflow: hidden;
-  position: relative;
-  border: 2px solid rgba(102, 126, 234, 0.2);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin-right: 0.75rem;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .user-avatar {
+  border: 2px solid #1e293b;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .user-avatar img {
@@ -879,243 +1369,443 @@ if (typeof router !== 'undefined') {
   object-fit: cover;
 }
 
-.avatar-placeholder {
+.avatar-initials {
   width: 100%;
   height: 100%;
+  background: linear-gradient(135deg, #c5a059 0%, #a67c00 100%);
   color: white;
-  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  margin-right: 0.75rem;
+}
+
+.user-name {
+  color: #1e293b;
   font-weight: 600;
 }
 
-.online-indicator {
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
-  width: 8px;
-  height: 8px;
-  background: #4ade80;
-  border: 2px solid white;
-  border-radius: 50%;
-  z-index: 2;
+[data-theme="dark"] .user-name {
+  color: #f1f5f9;
 }
 
-/* User Dropdown Content */
-.user-dropdown-content {
-  right: 0;
-  left: auto;
-  min-width: 280px;
+.user-status {
+  color: #64748b;
+  font-weight: 500;
 }
 
-.dropdown-header-user {
-  padding: 1rem;
+[data-theme="dark"] .user-status {
+  color: #94a3b8;
 }
 
-.user-avatar-lg {
-  width: 48px;
-  height: 48px;
+.dropdown-arrow {
+  color: #94a3b8;
+  transition: transform 0.3s ease;
+}
+
+/* User Menu Dropdown */
+.user-menu {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2) !important;
+  animation: fadeInUp 0.2s ease;
+}
+
+[data-theme="dark"] .user-menu {
+  background: #1e293b;
+  border: 1px solid #334155;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4) !important;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-profile-header {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+[data-theme="dark"] .user-profile-header {
+  border-bottom: 1px solid #334155;
+}
+
+.user-avatar-large {
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid #667eea;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin-right: 1rem;
+  border: 3px solid white;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
 }
 
-.user-avatar-lg img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+[data-theme="dark"] .user-avatar-large {
+  border: 3px solid #1e293b;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.3);
 }
 
-.avatar-placeholder-lg {
+.avatar-initials-large {
   width: 100%;
   height: 100%;
+  background: linear-gradient(135deg, #c5a059 0%, #a67c00 100%);
   color: white;
-  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.user-details h6 {
+  color: #1e293b;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+[data-theme="dark"] .user-details h6 {
+  color: #f1f5f9;
+}
+
+.email-text {
+  color: #64748b;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+[data-theme="dark"] .email-text {
+  color: #94a3b8;
+}
+
+.verification-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
   font-weight: 600;
+  gap: 0.25rem;
 }
 
-/* Theme toggle item in dropdown (now at the top) */
-.theme-toggle-item {
-  border: none;
-  background: none;
-  text-align: left;
-  padding: 0.75rem 1rem !important;
-  margin-top: 0.25rem;
+.verification-badge.verified {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
 }
 
-.theme-toggle-item:hover {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%) !important;
-  transform: translateX(5px) !important;
-  color: var(--primary-color) !important;
+[data-theme="dark"] .verification-badge.verified {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
 }
 
-/* Nav Icon - Updated for Messages */
-.nav-icon {
-  width: 36px;
-  height: 36px;
+.verification-badge:not(.verified) {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+[data-theme="dark"] .verification-badge:not(.verified) {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+/* Menu Sections */
+.menu-section {
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+[data-theme="dark"] .section-title {
+  color: #64748b;
+}
+
+.dropdown-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: var(--card-bg);
-  border-radius: 50%;
-  color: var(--body-color);
+  color: #475569;
   text-decoration: none;
-  transition: all 0.3s ease;
-  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
   cursor: pointer;
-  position: relative;
 }
 
-.nav-icon:hover {
-  background: var(--primary-color);
-  color: white !important;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-  border-color: var(--primary-color);
+[data-theme="dark"] .dropdown-item {
+  color: #cbd5e1;
 }
 
-/* Message Notification Badge */
-.badge {
-  font-size: 0.65rem;
-  padding: 0.25em 0.5em;
-  min-width: 18px;
-  height: 18px;
+.dropdown-item:hover {
+  background: #f8fafc;
+  color: #c5a059;
+  transform: translateX(3px);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+  background: #0f172a;
+  color: #c5a059;
+}
+
+.dropdown-item i {
+  width: 20px;
+}
+
+.menu-item-content {
+  flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .search-container {
-    width: 350px;
-  }
+.item-title {
+  font-weight: 600;
+  color: #1e293b;
 }
 
-@media (max-width: 992px) {
-  .navbar-collapse {
-    background: var(--navbar-bg);
-    padding: 1.5rem;
-    border-radius: 0 0 12px 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    margin-top: 0.5rem;
+[data-theme="dark"] .item-title {
+  color: #f1f5f9;
+}
+
+.item-subtitle {
+  color: #64748b;
+  margin-top: 0.125rem;
+}
+
+[data-theme="dark"] .item-subtitle {
+  color: #94a3b8;
+}
+
+.highlight-item {
+  background: linear-gradient(135deg, rgba(197, 160, 89, 0.1) 0%, rgba(197, 160, 89, 0.05) 100%);
+  border: 1px solid rgba(197, 160, 89, 0.2);
+  color: #c5a059;
+}
+
+[data-theme="dark"] .highlight-item {
+  background: linear-gradient(135deg, rgba(197, 160, 89, 0.2) 0%, rgba(197, 160, 89, 0.1) 100%);
+  border: 1px solid rgba(197, 160, 89, 0.3);
+}
+
+.highlight-item:hover {
+  background: linear-gradient(135deg, rgba(197, 160, 89, 0.2) 0%, rgba(197, 160, 89, 0.1) 100%);
+  border-color: #c5a059;
+}
+
+[data-theme="dark"] .highlight-item:hover {
+  background: linear-gradient(135deg, rgba(197, 160, 89, 0.3) 0%, rgba(197, 160, 89, 0.2) 100%);
+}
+
+.logout-item {
+  color: #ef4444 !important;
+}
+
+.logout-item:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444 !important;
+}
+
+[data-theme="dark"] .logout-item:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* Categories Dropdown */
+.luxury-drop {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-theme="dark"] .luxury-drop {
+  background: #1e293b;
+  border: 1px solid #334155;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4) !important;
+}
+
+.drop-header {
+  color: #1e293b;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+[data-theme="dark"] .drop-header {
+  color: #f1f5f9;
+  border-bottom: 1px solid #334155;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 0.5rem 0;
+}
+
+[data-theme="dark"] .dropdown-divider {
+  background: #334155;
+}
+
+/* Mobile Toggle */
+.custom-toggler {
+  border: none;
+  background: transparent;
+  color: #c5a059;
+}
+
+/* ========== RESPONSIVE FIXES ========== */
+@media (max-width: 991px) {
+  .premium-nav.slim-nav {
+    min-height: 70px !important;
+    padding: 0.5rem 0 !important;
   }
   
-  .search-container {
-    width: 100%;
-    margin: 1rem 0;
+  .slim-search {
+    width: 100% !important;
+    margin: 0.5rem 0 !important;
   }
   
-  .dropdown-toggle-btn {
-    width: 100%;
-    margin: 0.5rem 0;
+  .action-dock {
+    margin: 0.5rem 0 !important;
+    justify-content: center !important;
   }
   
-  .login-text-container {
-    margin: 0.5rem 0;
-    text-align: center;
-    width: 100%;
-  }
-  
-  .theme-toggle-btn {
-    margin-bottom: 0.5rem;
-  }
-  
-  .brand-title {
-    font-size: 1.5rem;
-  }
-  
-  .brand-logo {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .user-dropdown-content {
-    right: auto;
-    left: 0;
-  }
-  
-  /* Stack theme toggle and login vertically on mobile */
-  .d-flex.align-items-center.gap-3 {
+  .dashboard-wrapper {
     flex-direction: column;
-    gap: 0.5rem !important;
+    align-items: stretch;
   }
   
-  .login-text-container {
-    margin-left: 0 !important;
+  .profile-trigger {
+    justify-content: center;
+    margin-top: 0.5rem !important;
+  }
+  
+  /* Fixed positioning for mobile dropdowns */
+  .user-menu, .luxury-drop, .search-suggestions {
+    position: fixed !important;
+    top: 70px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 90% !important;
+    max-width: 320px !important;
+    max-height: 70vh !important;
+    overflow-y: auto !important;
+    margin-top: 0 !important;
+  }
+  
+  .user-menu {
+    max-width: 280px !important;
+  }
+  
+  .luxury-drop {
+    max-width: 250px !important;
+  }
+  
+  .search-suggestions {
+    max-width: 350px !important;
   }
 }
 
 @media (max-width: 768px) {
-  .brand-title {
-    font-size: 1.3rem;
+  .slim-title {
+    font-size: 1.2rem !important;
   }
   
-  .brand-subtitle {
-    font-size: 0.65rem;
+  .slim-subtitle {
+    font-size: 0.5rem !important;
   }
   
-  .login-text {
-    font-size: 0.9rem;
-    padding: 0.35rem 0.7rem;
+  .category-trigger .category-label {
+    display: none !important;
   }
   
-  .theme-toggle-btn {
-    font-size: 0.8rem;
-    padding: 0.2rem 0.4rem !important;
+  .category-trigger i:first-child {
+    margin-right: 0 !important;
   }
   
-  .badge {
-    font-size: 0.6rem;
-    padding: 0.2em 0.4em;
-    min-width: 16px;
-    height: 16px;
+  .slim-username {
+    display: none !important;
+  }
+  
+  .slim-user-info {
+    display: none !important;
+  }
+  
+  .slim-search {
+    width: 250px !important;
   }
 }
 
 @media (max-width: 576px) {
-  .navbar-white {
-    padding: 0.5rem;
+  .container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
   }
   
-  .brand-logo {
-    width: 36px;
-    height: 36px;
+  .brand-text-group {
+    display: none !important;
   }
   
-  .brand-title {
-    font-size: 1.2rem;
+  .slim-dock {
+    gap: 0.75rem !important;
+    margin-right: 0.75rem !important;
   }
   
-  .search-group {
-    height: 44px;
+  .slim-auth {
+    gap: 0.5rem !important;
   }
   
-  .user-avatar {
-    width: 36px;
-    height: 36px;
+  .slim-login {
+    padding: 0.4rem 1rem !important;
+    font-size: 0.75rem !important;
   }
   
-  .nav-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 0.9rem;
+  .slim-search {
+    width: 200px !important;
   }
-  
-  .login-text {
-    font-size: 0.85rem;
-    padding: 0.3rem 0.6rem;
-  }
-  
-  .theme-toggle-btn {
-    font-size: 0.75rem;
-    padding: 0.15rem 0.35rem !important;
-  }
-  
-  .badge {
-    font-size: 0.55rem;
-    padding: 0.15em 0.35em;
-    min-width: 14px;
-    height: 14px;
-  }
+}
+
+/* Custom scrollbar for dropdowns */
+.luxury-drop::-webkit-scrollbar,
+.user-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.luxury-drop::-webkit-scrollbar-track,
+.user-menu::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+[data-theme="dark"] .luxury-drop::-webkit-scrollbar-track,
+[data-theme="dark"] .user-menu::-webkit-scrollbar-track {
+  background: #334155;
+}
+
+.luxury-drop::-webkit-scrollbar-thumb,
+.user-menu::-webkit-scrollbar-thumb {
+  background: #c5a059;
+  border-radius: 3px;
+}
+
+.luxury-drop::-webkit-scrollbar-thumb:hover,
+.user-menu::-webkit-scrollbar-thumb:hover {
+  background: #a67c00;
 }
 </style>

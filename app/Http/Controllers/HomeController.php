@@ -64,15 +64,13 @@ class HomeController extends Controller
                     $originalPrice = floatval($product->price);
                     $discountedPrice = $originalPrice - ($originalPrice * $discountAmount / 100);
                     
-                    $productData['discount'] = [
-                        'discount_id' => $product->discount->discount_id,
-                        'discount_name' => $product->discount->discount_name,
-                        'discount_amount' => $discountAmount,
-                        'status' => $product->discount->status,
-                        'start_date' => $product->discount->start_date,
-                        'end_date' => $product->discount->end_date,
-                        'discounted_price' => $discountedPrice,
-                    ];
+                    // Add discount data directly to product array (not nested in 'discount')
+                    $productData['discount_percent'] = $discountAmount;
+                    $productData['discount_name'] = $product->discount->discount_name;
+                    $productData['discounted_price'] = $discountedPrice;
+                    $productData['discount_status'] = $product->discount->status;
+                    $productData['discount_start_date'] = $product->discount->start_date;
+                    $productData['discount_end_date'] = $product->discount->end_date;
                 }
                 
                 return $productData;
@@ -89,97 +87,48 @@ class HomeController extends Controller
             ];
         });
         
-        // Get wishlist IDs for authenticated users
-        // $wishlistIds = [];
-        // if (Auth::check()) {
-        //     $wishlistIds = Wishlist::where('user_id', Auth::id())
-        //         ->pluck('product_id')
-        //         ->toArray();
-        // }
-        
-        // Get featured products WITH DISCOUNT
-        $featuredProducts = Product::with(['category', 'discount'])
-            ->where('stock', '>', 0)
-            ->limit(8)
-            ->get()
-            ->map(function ($product) {
-                $productData = [
-                    'product_id' => $product->product_id,
-                    'name' => $product->name,
-                    'price' => floatval($product->price),
-                    'image' => $product->image ? asset('storage/' . $product->image) : 'https://placehold.co/400x300/e0f2f1/065f46?text=Product',
-                    'stock' => $product->stock,
-                ];
-                
-                // Add discount data if exists
-                if ($product->discount && $product->discount->status === 'active') {
-                    $discountAmount = floatval($product->discount->discount_amount);
-                    $originalPrice = floatval($product->price);
-                    $discountedPrice = $originalPrice - ($originalPrice * $discountAmount / 100);
-                    
-                    $productData['discount'] = [
-                        'discount_id' => $product->discount->discount_id,
-                        'discount_name' => $product->discount->discount_name,
-                        'discount_amount' => $discountAmount,
-                        'status' => $product->discount->status,
-                        'discounted_price' => $discountedPrice,
-                    ];
-                }
-                
-                return $productData;
-            });
-        
-        // Get best sellers WITH DISCOUNT
-        $bestSellers = Product::with(['category', 'discount'])
-            ->where('stock', '>', 0)
-            ->orderBy('created_at', 'desc')
-            ->limit(6)
-            ->get()
-            ->map(function ($product) {
-                $productData = [
-                    'product_id' => $product->product_id,
-                    'name' => $product->name,
-                    'price' => floatval($product->price),
-                    'image' => $product->image ? asset('storage/' . $product->image) : 'https://placehold.co/400x300/e0f2f1/065f46?text=Product',
-                    'stock' => $product->stock,
-                ];
-                
-                // Add discount data if exists
-                if ($product->discount && $product->discount->status === 'active') {
-                    $discountAmount = floatval($product->discount->discount_amount);
-                    $originalPrice = floatval($product->price);
-                    $discountedPrice = $originalPrice - ($originalPrice * $discountAmount / 100);
-                    
-                    $productData['discount'] = [
-                        'discount_id' => $product->discount->discount_id,
-                        'discount_name' => $product->discount->discount_name,
-                        'discount_amount' => $discountAmount,
-                        'status' => $product->discount->status,
-                        'discounted_price' => $discountedPrice,
-                    ];
-                }
-                
-                return $productData;
-            });
-        
-        // Calculate discount stats
-        $activeDiscounts = Discount::where('status', 'active')
-            ->where('end_date', '>', now())
-            ->count();
-            
-        $discountedProducts = Product::whereHas('discount', function($query) {
+        // Get discounted products for the dedicated section
+        $discountedProducts = Product::with(['category', 'discount'])
+            ->whereHas('discount', function($query) {
                 $query->where('status', 'active')
                       ->where('end_date', '>', now());
             })
             ->where('stock', '>', 0)
-            ->count();
+            ->limit(12)
+            ->get()
+            ->map(function ($product) {
+                $productData = [
+                    'product_id' => $product->product_id,
+                    'name' => $product->name,
+                    'price' => floatval($product->price),
+                    'image' => $product->image ? asset('storage/' . $product->image) : 'https://placehold.co/400x300/e0f2f1/065f46?text=Product',
+                    'category_id' => $product->category_id,
+                    'stock' => $product->stock,
+                    'description' => $product->description,
+                    'reference' => $product->reference,
+                    'created_at' => $product->created_at,
+                    'user_id' => $product->user_id,
+                ];
+                
+                if ($product->discount && $product->discount->status === 'active') {
+                    $discountAmount = floatval($product->discount->discount_amount);
+                    $originalPrice = floatval($product->price);
+                    $discountedPrice = $originalPrice - ($originalPrice * $discountAmount / 100);
+                    
+                    // Add discount data directly to product array
+                    $productData['discount_percent'] = $discountAmount;
+                    $productData['discount_name'] = $product->discount->discount_name;
+                    $productData['discounted_price'] = $discountedPrice;
+                }
+                
+                return $productData;
+            });
         
         return Inertia::render('HomePage', [
             'products' => $products,
             'categories' => $categories,
-            'featuredProducts' => $featuredProducts,
-            'bestSellers' => $bestSellers,
-            // 'initialWishlistIds' => $wishlistIds,
+            // PASS DISCOUNTED PRODUCTS SEPARATELY
+            'discounted_products' => $discountedProducts,
             // PASS SEARCH AND CATEGORY TO THE FRONTEND
             'search' => $searchTerm,
             'category' => $categoryName,
@@ -187,15 +136,61 @@ class HomeController extends Controller
                 'total_products' => Product::count(),
                 'in_stock' => Product::where('stock', '>', 0)->count(),
                 'total_categories' => Category::count(),
-                'discounted_products' => $discountedProducts, // ADDED: Count of products with active discounts
-                'active_discounts' => $activeDiscounts, // ADDED: Count of active discounts
-                'on_sale' => Product::where('stock', '<', 10)->count(), // Low stock items
+                'discounted_products' => $discountedProducts->count(),
+                'active_discounts' => Discount::where('status', 'active')
+                    ->where('end_date', '>', now())
+                    ->count(),
             ],
             'flash' => [
                 'success' => session('success'),
                 'error' => session('error'),
             ]
         ]);
+    }
+    
+    // Add this new method for recently viewed API
+    public function getRecentlyViewed(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json([]);
+        }
+        
+        // Get recently viewed from session or database
+        $recentlyViewed = session()->get('recently_viewed', []);
+        
+        if (empty($recentlyViewed)) {
+            return response()->json([]);
+        }
+        
+        // Get products from the recently viewed IDs
+        $productIds = array_slice($recentlyViewed, 0, 10); // Limit to 10
+        
+        $products = Product::with(['category'])
+            ->whereIn('product_id', $productIds)
+            ->where('stock', '>', 0)
+            ->get()
+            ->map(function ($product) use ($recentlyViewed) {
+                // Find the timestamp for this product
+                $viewedAt = null;
+                foreach ($recentlyViewed as $item) {
+                    if ($item['product_id'] == $product->product_id) {
+                        $viewedAt = $item['viewed_at'] ?? now();
+                        break;
+                    }
+                }
+                
+                return [
+                    'product_id' => $product->product_id,
+                    'name' => $product->name,
+                    'price' => floatval($product->price),
+                    'image' => $product->image ? asset('storage/' . $product->image) : 'https://placehold.co/400x300/e0f2f1/065f46?text=Product',
+                    'category_id' => $product->category_id,
+                    'stock' => $product->stock,
+                    'viewed_at' => $viewedAt,
+                ];
+            });
+        
+        return response()->json($products);
     }
     
     public function search(Request $request)

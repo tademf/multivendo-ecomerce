@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="container-fluid py-4" style="background: #f8f9fa; min-height: 100vh;">
+    <div class="container-fluid py-4" :class="themeClasses">
       <!-- Simple Header -->
       <div class="row mb-4">
         <div class="col-12">
@@ -17,15 +17,16 @@
             
             <!-- Simple Search Bar -->
             <div class="search-bar">
-              <div class="input-group" style="width: 300px;">
-                <span class="input-group-text bg-white border-end-0">
+              <div class="input-group" style="width: 300px;" :class="searchBarTheme">
+                <span class="input-group-text" :class="searchIconTheme">
                   <i class="fas fa-search text-muted"></i>
                 </span>
                 <input 
                   v-model="searchQuery"
                   type="text" 
-                  class="form-control border-start-0"
+                  class="form-control"
                   placeholder="Search conversations..."
+                  :class="searchInputTheme"
                 >
               </div>
             </div>
@@ -59,7 +60,7 @@
         <!-- Conversations List - Simple Cards -->
         <div v-else class="row g-3">
           <div v-for="conversation in filteredConversations" :key="conversation.id" class="col-12">
-            <div class="conversation-card card shadow-sm border-0" @click="openConversation(conversation)">
+            <div class="conversation-card card shadow-sm" :class="cardTheme" @click="openConversation(conversation)">
               <div class="card-body">
                 <div class="row align-items-center">
                   <!-- Profile Picture Column -->
@@ -93,7 +94,7 @@
                           </span>
                         </h6>
                         <div class="d-flex align-items-center gap-2">
-                          <span class="badge bg-light text-dark">
+                          <span class="badge" :class="userTypeBadgeTheme">
                             {{ conversation.other_user?.is_verified ? 'Vendor' : 'Customer' }}
                           </span>
                           <span class="text-muted small">Order #{{ conversation.order_number }}</span>
@@ -135,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watchEffect } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 
@@ -151,6 +152,50 @@ const props = defineProps({
 })
 
 const searchQuery = ref('')
+
+// Dark mode
+const currentTheme = ref(localStorage.getItem('theme') || 'light')
+
+// Theme computed properties
+const themeClasses = computed(() => {
+  return {
+    'light-theme': currentTheme.value === 'light',
+    'dark-theme': currentTheme.value === 'dark',
+    'bg-light': currentTheme.value === 'light',
+    'bg-dark text-light': currentTheme.value === 'dark'
+  }
+})
+
+const searchBarTheme = computed(() => {
+  return currentTheme.value === 'dark' ? 'dark-search-bar' : 'light-search-bar'
+})
+
+const searchIconTheme = computed(() => {
+  return currentTheme.value === 'dark' ? 'bg-dark border-secondary' : 'bg-white border-light'
+})
+
+const searchInputTheme = computed(() => {
+  return currentTheme.value === 'dark' ? 'bg-dark text-light border-secondary' : 'bg-white text-dark border-light'
+})
+
+const cardTheme = computed(() => {
+  return currentTheme.value === 'dark' ? 'bg-dark text-light border-secondary' : 'bg-white text-dark border-light'
+})
+
+const userTypeBadgeTheme = computed(() => {
+  return currentTheme.value === 'dark' ? 'bg-secondary text-light' : 'bg-light text-dark'
+})
+
+// Watch for theme changes
+watchEffect(() => {
+  const html = document.documentElement
+  html.setAttribute('data-theme', currentTheme.value)
+  
+  // Listen for theme changes from navbar
+  window.addEventListener('theme-changed', (event) => {
+    currentTheme.value = event.detail.theme
+  })
+})
 
 // Computed properties
 const totalUnread = computed(() => {
@@ -224,9 +269,24 @@ const openConversation = (conversation) => {
 </script>
 
 <style scoped>
-/* Simple White Background */
-.conversations-page {
-  background: #ffffff;
+/* Light Theme */
+.light-theme {
+  background: #f8f9fa !important;
+  color: #212529 !important;
+}
+
+.light-theme .text-muted {
+  color: #6c757d !important;
+}
+
+/* Dark Theme */
+.dark-theme {
+  background: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+
+.dark-theme .text-muted {
+  color: #94a3b8 !important;
 }
 
 /* Profile Picture - VISIBLE AND CLEAR */
@@ -239,22 +299,38 @@ const openConversation = (conversation) => {
   height: 60px;
   border-radius: 12px;
   object-fit: cover;
+}
+
+.light-theme .profile-picture {
   border: 2px solid #e9ecef;
   background: #f8f9fa;
+}
+
+.dark-theme .profile-picture {
+  border: 2px solid #475569;
+  background: #1e293b;
 }
 
 .profile-picture-placeholder {
   width: 60px;
   height: 60px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: bold;
   font-size: 1.2rem;
+}
+
+.light-theme .profile-picture-placeholder {
+  background: linear-gradient(135deg, #667eea, #764ba2);
   border: 2px solid #e9ecef;
+}
+
+.dark-theme .profile-picture-placeholder {
+  background: linear-gradient(135deg, #475569, #334155);
+  border: 2px solid #475569;
 }
 
 /* Conversation Card */
@@ -262,13 +338,26 @@ const openConversation = (conversation) => {
   border-radius: 12px;
   transition: all 0.2s ease;
   cursor: pointer;
+}
+
+.light-theme .conversation-card {
   border: 1px solid #e9ecef;
+  background: white;
+}
+
+.dark-theme .conversation-card {
+  border: 1px solid #334155;
+  background: #1e293b;
 }
 
 .conversation-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border-color: #dee2e6;
+}
+
+.dark-theme .conversation-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-color: #475569;
 }
 
 .card-body {
@@ -311,12 +400,23 @@ const openConversation = (conversation) => {
 /* Search Bar */
 .search-bar .input-group {
   border-radius: 8px;
+}
+
+.light-search-bar {
   border: 1px solid #dee2e6;
+}
+
+.dark-search-bar {
+  border: 1px solid #475569;
 }
 
 .search-bar .input-group:focus-within {
   border-color: #0d6efd;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+.dark-theme .search-bar .input-group:focus-within {
+  box-shadow: 0 0 0 0.25rem rgba(30, 64, 175, 0.15);
 }
 
 .search-bar .form-control {

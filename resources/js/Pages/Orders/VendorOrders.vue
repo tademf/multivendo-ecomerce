@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4" :class="themeClass">
       <!-- Flash Messages -->
       <div class="row mb-3">
         <div class="col-12">
@@ -36,7 +36,7 @@
           <div class="row g-3">
             <div class="col-md-2 col-6" @click="filterOrders('')">
               <div class="stat-card-medium">
-                <div class="stat-icon-medium bg-primary-subtle">
+                <div class="stat-icon-medium" :class="theme === 'dark' ? 'bg-primary-dark' : 'bg-primary-subtle'">
                   <i class="fas fa-shopping-bag text-primary"></i>
                 </div>
                 <div class="stat-content-medium">
@@ -48,7 +48,7 @@
             
             <div class="col-md-2 col-6" @click="filterOrders('pending')">
               <div class="stat-card-medium">
-                <div class="stat-icon-medium bg-warning-subtle">
+                <div class="stat-icon-medium" :class="theme === 'dark' ? 'bg-warning-dark' : 'bg-warning-subtle'">
                   <i class="fas fa-clock text-warning"></i>
                 </div>
                 <div class="stat-content-medium">
@@ -60,7 +60,7 @@
             
             <div class="col-md-2 col-6" @click="filterOrders('processing')">
               <div class="stat-card-medium">
-                <div class="stat-icon-medium bg-info-subtle">
+                <div class="stat-icon-medium" :class="theme === 'dark' ? 'bg-info-dark' : 'bg-info-subtle'">
                   <i class="fas fa-cog text-info"></i>
                 </div>
                 <div class="stat-content-medium">
@@ -69,10 +69,22 @@
                 </div>
               </div>
             </div>
+
+            <div class="col-md-2 col-6" @click="filterOrders('shipped')">
+              <div class="stat-card-medium">
+                <div class="stat-icon-medium" :class="theme === 'dark' ? 'bg-primary-dark' : 'bg-primary-subtle'">
+                  <i class="fas fa-truck text-primary"></i>
+                </div>
+                <div class="stat-content-medium">
+                  <div class="stat-number-medium">{{ getStatusCount('shipped') }}</div>
+                  <div class="stat-label-medium">Shipped</div>
+                </div>
+              </div>
+            </div>
             
             <div class="col-md-2 col-6" @click="filterOrders('delivered')">
               <div class="stat-card-medium">
-                <div class="stat-icon-medium bg-success-subtle">
+                <div class="stat-icon-medium" :class="theme === 'dark' ? 'bg-success-dark' : 'bg-success-subtle'">
                   <i class="fas fa-check-circle text-success"></i>
                 </div>
                 <div class="stat-content-medium">
@@ -84,7 +96,7 @@
             
             <div class="col-md-2 col-6" @click="filterOrders('cancelled')">
               <div class="stat-card-medium">
-                <div class="stat-icon-medium bg-danger-subtle">
+                <div class="stat-icon-medium" :class="theme === 'dark' ? 'bg-danger-dark' : 'bg-danger-subtle'">
                   <i class="fas fa-times-circle text-danger"></i>
                 </div>
                 <div class="stat-content-medium">
@@ -93,61 +105,77 @@
                 </div>
               </div>
             </div>
-
-            <div class="col-md-2 col-6" @click="filterOrders('shipped')">
-              <div class="stat-card-medium">
-                <div class="stat-icon-medium bg-primary-subtle">
-                  <i class="fas fa-truck text-primary"></i>
-                </div>
-                <div class="stat-content-medium">
-                  <div class="stat-number-medium">{{ getStatusCount('shipped') }}</div>
-                  <div class="stat-label-medium">Shipped</div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
-      <!-- Filter Dropdown -->
+      <!-- Search Bar and Filter -->
       <div class="row mb-3">
         <div class="col-12">
-          <div class="d-flex justify-content-between align-items-center">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <h5 class="fw-bold mb-0">All Orders</h5>
+            
+            <!-- Search Bar -->
+            <div class="search-container">
+              <div class="input-group search-group" :class="theme === 'dark' ? 'bg-dark border-secondary' : 'bg-white'">
+                <span class="input-group-text border-end-0" :class="theme === 'dark' ? 'bg-dark border-secondary text-light' : 'bg-white'">
+                  <i class="fas fa-search" :class="theme === 'dark' ? 'text-light' : 'text-muted'"></i>
+                </span>
+                <input
+                  type="text"
+                  v-model="searchQuery"
+                  @input="performSearch"
+                  class="form-control search-input border-start-0"
+                  :class="theme === 'dark' ? 'bg-dark border-secondary text-light' : ''"
+                  placeholder="Search orders..."
+                />
+                <button 
+                  v-if="searchQuery" 
+                  @click="clearSearch"
+                  class="input-group-text border-start-0"
+                  :class="theme === 'dark' ? 'bg-dark border-secondary text-light' : 'bg-white'"
+                  type="button"
+                >
+                  <i class="fas fa-times" :class="theme === 'dark' ? 'text-light' : 'text-muted'"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter Dropdown -->
             <div class="custom-filter-dropdown">
-              <button class="filter-dropdown-btn" @click="toggleFilterDropdown">
+              <button class="filter-dropdown-btn" @click="toggleFilterDropdown" :class="theme === 'dark' ? 'bg-dark border-secondary text-light' : 'bg-white'">
                 <i class="fas fa-filter me-2"></i>
                 {{ selectedFilter === 'all' ? 'All Status' : formatStatus(selectedFilter) }}
                 <i class="fas fa-chevron-down ms-2"></i>
               </button>
-              <div class="filter-dropdown-menu" v-if="showFilterDropdown">
-                <div class="filter-dropdown-header">Filter by Status</div>
-                <div class="filter-dropdown-item" @click="filterOrders('all')">
+              <div class="filter-dropdown-menu" v-if="showFilterDropdown" :class="theme === 'dark' ? 'bg-dark border-secondary' : ''">
+                <div class="filter-dropdown-header" :class="theme === 'dark' ? 'bg-dark text-light border-secondary' : ''">Filter by Status</div>
+                <div class="filter-dropdown-item" @click="filterOrders('all')" :class="theme === 'dark' ? 'text-light' : ''">
                   <span class="filter-badge-all">All Orders</span>
                   <span class="filter-count">{{ orders.length }}</span>
                 </div>
-                <div class="filter-dropdown-divider"></div>
-                <div class="filter-dropdown-item" @click="filterOrders('pending')">
+                <div class="filter-dropdown-divider" :class="theme === 'dark' ? 'bg-secondary' : ''"></div>
+                <div class="filter-dropdown-item" @click="filterOrders('pending')" :class="theme === 'dark' ? 'text-light' : ''">
                   <span class="filter-badge filter-badge-warning me-2"></span>
                   <span>Pending</span>
                   <span class="filter-count">{{ getStatusCount('pending') }}</span>
                 </div>
-                <div class="filter-dropdown-item" @click="filterOrders('processing')">
+                <div class="filter-dropdown-item" @click="filterOrders('processing')" :class="theme === 'dark' ? 'text-light' : ''">
                   <span class="filter-badge filter-badge-info me-2"></span>
                   <span>Processing</span>
                   <span class="filter-count">{{ getStatusCount('processing') }}</span>
                 </div>
-                <div class="filter-dropdown-item" @click="filterOrders('shipped')">
+                <div class="filter-dropdown-item" @click="filterOrders('shipped')" :class="theme === 'dark' ? 'text-light' : ''">
                   <span class="filter-badge filter-badge-primary me-2"></span>
                   <span>Shipped</span>
                   <span class="filter-count">{{ getStatusCount('shipped') }}</span>
                 </div>
-                <div class="filter-dropdown-item" @click="filterOrders('delivered')">
+                <div class="filter-dropdown-item" @click="filterOrders('delivered')" :class="theme === 'dark' ? 'text-light' : ''">
                   <span class="filter-badge filter-badge-success me-2"></span>
                   <span>Delivered</span>
                   <span class="filter-count">{{ getStatusCount('delivered') }}</span>
                 </div>
-                <div class="filter-dropdown-item" @click="filterOrders('cancelled')">
+                <div class="filter-dropdown-item" @click="filterOrders('cancelled')" :class="theme === 'dark' ? 'text-light' : ''">
                   <span class="filter-badge filter-badge-danger me-2"></span>
                   <span>Cancelled</span>
                   <span class="filter-count">{{ getStatusCount('cancelled') }}</span>
@@ -158,30 +186,63 @@
         </div>
       </div>
 
+      <!-- Search Results Info -->
+      <div v-if="searchQuery" class="row mb-3">
+        <div class="col-12">
+          <div class="alert alert-info alert-dismissible fade show shadow-sm border-0 py-2" role="alert">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-search me-2 text-info"></i>
+                <div class="small">
+                  <span class="fw-medium">Search results for:</span>
+                  <span class="ms-1 fw-bold">"{{ searchQuery }}"</span>
+                  <span class="ms-2" :class="theme === 'dark' ? 'text-light' : 'text-muted'">({{ filteredOrders.length }} orders found)</span>
+                </div>
+              </div>
+              <button @click="clearSearch" class="btn btn-sm btn-outline-info">
+                <i class="fas fa-times me-1"></i>Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Orders Grid - 1 order per row -->
       <div class="row">
         <div class="col-12">
           <div v-if="filteredOrders.length === 0" class="text-center py-5">
             <div class="empty-state">
-              <i class="fas fa-store-slash fa-2x text-muted mb-3"></i>
-              <h6 class="fw-bold mb-2">No orders found</h6>
-              <p class="text-muted mb-3 small">
-                {{ selectedFilter !== 'all' ? `No ${formatStatus(selectedFilter).toLowerCase()} orders found` : "No orders yet" }}
+              <i class="fas fa-store-slash fa-2x mb-3" :class="theme === 'dark' ? 'text-light' : 'text-muted'"></i>
+              <h6 class="fw-bold mb-2">
+                {{ searchQuery ? 'No orders found' : 'No orders found' }}
+              </h6>
+              <p class="mb-3 small" :class="theme === 'dark' ? 'text-light' : 'text-muted'">
+                <template v-if="searchQuery">
+                  No orders match your search "{{ searchQuery }}"
+                </template>
+                <template v-else>
+                  {{ selectedFilter !== 'all' ? `No ${formatStatus(selectedFilter).toLowerCase()} orders found` : "No orders yet" }}
+                </template>
               </p>
-              <button @click="filterOrders('all')" class="btn btn-primary btn-sm">
-                <i class="fas fa-redo me-1"></i>Show All
-              </button>
+              <div class="d-flex gap-2 justify-content-center">
+                <button v-if="searchQuery" @click="clearSearch" class="btn btn-primary btn-sm">
+                  <i class="fas fa-redo me-1"></i>Clear Search
+                </button>
+                <button @click="filterOrders('all')" class="btn btn-outline-secondary btn-sm">
+                  <i class="fas fa-list me-1"></i>Show All
+                </button>
+              </div>
             </div>
           </div>
 
           <div v-else class="row g-3">
             <div v-for="order in sortedOrders" :key="order.id" class="col-12">
-              <div class="order-card" :class="{'active': selectedOrder?.id === order.id}">
+              <div class="order-card" :class="{'active': selectedOrder?.id === order.id}" :style="theme === 'dark' ? 'background: #1e1e1e; border-color: #444;' : ''">
                 <div class="row g-0 align-items-center">
                   <div class="col-md-2 col-12 p-3">
                     <div class="d-flex flex-column">
                       <strong class="text-primary mb-1">#{{ order.order_number || order.id }}</strong>
-                      <small class="text-muted">{{ formatDate(order.created_at) }}</small>
+                      <small :class="theme === 'dark' ? 'text-light' : 'text-muted'">{{ formatDate(order.created_at) }}</small>
                     </div>
                   </div>
 
@@ -192,7 +253,7 @@
                       </div>
                       <div>
                         <div class="fw-medium">{{ order.customer_name || 'Customer' }}</div>
-                        <small class="text-muted">{{ order.customer_email || '' }}</small>
+                        <small :class="theme === 'dark' ? 'text-light' : 'text-muted'">{{ order.customer_email || '' }}</small>
                       </div>
                     </div>
                   </div>
@@ -206,7 +267,7 @@
                       </div>
                       <div>
                         <div class="fw-medium">{{ order.product_name || 'Product' }}</div>
-                        <small class="text-muted">{{ order.quantity || 1 }} pcs</small>
+                        <small :class="theme === 'dark' ? 'text-light' : 'text-muted'">{{ order.quantity || 1 }} pcs</small>
                         <!-- Discount badge -->
                         <div v-if="order.is_discounted" class="discount-badge-container mt-1">
                           <span class="badge bg-success me-1">
@@ -227,7 +288,7 @@
                     <div class="fw-bold text-primary">{{ formatPrice(order.amount) }} Birr</div>
                     <!-- Original price for discount products -->
                     <div v-if="order.is_discounted && order.original_price" 
-                         class="text-muted small">
+                         class="small" :class="theme === 'dark' ? 'text-light' : 'text-muted'">
                       <s>{{ formatPrice(order.original_price) }} Birr</s>
                       <span class="text-success ms-1">
                         (Save {{ formatPrice(order.original_price - order.amount) }} Birr)
@@ -249,10 +310,13 @@
 
       <div v-if="filteredOrders.length > 0" class="row mt-3">
         <div class="col-12">
-          <div class="text-center text-muted small">
+          <div class="text-center small" :class="theme === 'dark' ? 'text-light' : 'text-muted'">
             Showing {{ filteredOrders.length }} of {{ orders.length }} orders
             <span v-if="selectedFilter !== 'all'">
               ({{ formatStatus(selectedFilter) }})
+            </span>
+            <span v-if="searchQuery">
+              • Search: "{{ searchQuery }}"
             </span>
           </div>
         </div>
@@ -260,17 +324,17 @@
     </div>
 
     <!-- Order Details Sidebar -->
-    <div v-if="selectedOrder" class="offcanvas offcanvas-end show" tabindex="-1" style="visibility: visible; width: 450px;">
-      <div class="offcanvas-header border-bottom py-3">
+    <div v-if="selectedOrder" class="offcanvas offcanvas-end show" tabindex="-1" style="visibility: visible; width: 450px;" :class="theme === 'dark' ? 'bg-dark text-light' : ''">
+      <div class="offcanvas-header border-bottom py-3" :class="theme === 'dark' ? 'border-secondary' : ''">
         <div>
           <h5 class="offcanvas-title fw-bold">Order #{{ selectedOrder.order_number || selectedOrder.id }}</h5>
-          <p class="text-muted mb-0 small">{{ formatDate(selectedOrder.created_at) }}</p>
+          <p :class="theme === 'dark' ? 'text-light' : 'text-muted'" class="mb-0 small">{{ formatDate(selectedOrder.created_at) }}</p>
         </div>
-        <button type="button" class="btn-close" @click="selectedOrder = null"></button>
+        <button type="button" class="btn-close" @click="selectedOrder = null" :class="theme === 'dark' ? 'btn-close-white' : ''"></button>
       </div>
       <div class="offcanvas-body p-0">
         <div class="order-details">
-          <div class="p-3 border-bottom">
+          <div class="p-3 border-bottom" :class="theme === 'dark' ? 'border-secondary' : ''">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h6 class="fw-bold mb-0">Status</h6>
               <span :class="statusBadgeClass(selectedOrder.status)" class="badge">
@@ -299,14 +363,15 @@
                         @click="confirmStatusChange(status.value)"
                         :class="{'active': status.value === selectedOrder.status}"
                         class="btn btn-sm d-flex align-items-center"
-                        :disabled="status.value === selectedOrder.status">
+                        :disabled="status.value === selectedOrder.status"
+                        :style="theme === 'dark' ? 'background: #2d2d2d; border-color: #444; color: #f8f9fa;' : ''">
                   {{ status.label }}
                 </button>
               </div>
             </div>
           </div>
 
-          <div class="p-3 border-bottom">
+          <div class="p-3 border-bottom" :class="theme === 'dark' ? 'border-secondary' : ''">
             <h6 class="fw-bold mb-3">Product Details</h6>
             <div class="d-flex gap-2">
               <div class="product-img-lg">
@@ -319,7 +384,7 @@
                 
                 <!-- Discount information -->
                 <div v-if="selectedOrder.is_discounted" class="mb-3">
-                  <div class="bg-success bg-opacity-10 p-2 rounded">
+                  <div class="p-2 rounded" :class="theme === 'dark' ? 'bg-success-dark' : 'bg-success bg-opacity-10'">
                     <div class="d-flex justify-content-between align-items-center">
                       <div>
                         <div class="text-success small fw-bold">
@@ -330,7 +395,7 @@
                         </div>
                       </div>
                       <div class="text-end">
-                        <div class="text-muted small">Customer saved</div>
+                        <div class="small" :class="theme === 'dark' ? 'text-light' : 'text-muted'">Customer saved</div>
                         <div class="text-success fw-bold">
                           {{ formatPrice(selectedOrder.original_price - selectedOrder.amount) }} Birr
                         </div>
@@ -341,14 +406,14 @@
                 
                 <div class="row g-2">
                   <div class="col-6">
-                    <div class="bg-light p-2 rounded">
-                      <div class="text-muted small">Quantity</div>
+                    <div class="p-2 rounded" :class="theme === 'dark' ? 'bg-secondary' : 'bg-light'">
+                      <div class="small" :class="theme === 'dark' ? 'text-light' : 'text-muted'">Quantity</div>
                       <div class="fw-bold">{{ selectedOrder.quantity || 1 }}</div>
                     </div>
                   </div>
                   <div class="col-6">
-                    <div class="bg-light p-2 rounded">
-                      <div class="text-muted small">Unit Price</div>
+                    <div class="p-2 rounded" :class="theme === 'dark' ? 'bg-secondary' : 'bg-light'">
+                      <div class="small" :class="theme === 'dark' ? 'text-light' : 'text-muted'">Unit Price</div>
                       <div class="fw-bold">{{ formatPrice(selectedOrder.amount / (selectedOrder.quantity || 1)) }} Birr</div>
                     </div>
                   </div>
@@ -356,10 +421,10 @@
                   <!-- Original price for discount -->
                   <div v-if="selectedOrder.is_discounted && selectedOrder.original_price" 
                        class="col-12 mt-2">
-                    <div class="bg-light p-2 rounded">
+                    <div class="p-2 rounded" :class="theme === 'dark' ? 'bg-secondary' : 'bg-light'">
                       <div class="d-flex justify-content-between">
-                        <div class="text-muted small">Original Price</div>
-                        <div class="fw-bold text-muted">
+                        <div class="small" :class="theme === 'dark' ? 'text-light' : 'text-muted'">Original Price</div>
+                        <div class="fw-bold" :class="theme === 'dark' ? 'text-light' : 'text-muted'">
                           <s>{{ formatPrice(selectedOrder.original_price) }} Birr</s>
                         </div>
                       </div>
@@ -367,8 +432,8 @@
                   </div>
                   
                   <div class="col-12 mt-2">
-                    <div class="bg-primary bg-opacity-10 p-2 rounded">
-                      <div class="text-muted small">Total Amount Received</div>
+                    <div class="p-2 rounded" :class="theme === 'dark' ? 'bg-primary-dark' : 'bg-primary bg-opacity-10'">
+                      <div class="small" :class="theme === 'dark' ? 'text-light' : 'text-muted'">Total Amount Received</div>
                       <div class="fw-bold text-primary">{{ formatPrice(selectedOrder.amount) }} Birr</div>
                     </div>
                   </div>
@@ -377,7 +442,7 @@
             </div>
           </div>
 
-          <div class="p-3 border-bottom">
+          <div class="p-3 border-bottom" :class="theme === 'dark' ? 'border-secondary' : ''">
             <h6 class="fw-bold mb-3">Payment Information</h6>
             <div class="mb-3">
               <span :class="paymentStatusBadgeClass(selectedOrder)" class="badge">
@@ -388,14 +453,14 @@
             
             <div class="row g-2 mb-3">
               <div class="col-6">
-                <div class="bg-light p-2 rounded">
-                  <div class="text-muted small">Payment Method</div>
+                <div class="p-2 rounded" :class="theme === 'dark' ? 'bg-secondary' : 'bg-light'">
+                  <div class="small" :class="theme === 'dark' ? 'text-light' : 'text-muted'">Payment Method</div>
                   <div class="fw-medium">{{ selectedOrder.payment_method || 'Bank Transfer' }}</div>
                 </div>
               </div>
               <div class="col-6">
-                <div class="bg-light p-2 rounded">
-                  <div class="text-muted small">Reference</div>
+                <div class="p-2 rounded" :class="theme === 'dark' ? 'bg-secondary' : 'bg-light'">
+                  <div class="small" :class="theme === 'dark' ? 'text-light' : 'text-muted'">Reference</div>
                   <div class="fw-medium">{{ selectedOrder.payment_reference || selectedOrder.order_reference || 'N/A' }}</div>
                 </div>
               </div>
@@ -404,7 +469,7 @@
             <div v-if="selectedOrder.payment_image" class="mt-3">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 class="fw-bold mb-0">Payment Proof</h6>
-                <button @click="downloadPaymentProof(selectedOrder)" class="btn btn-sm btn-outline-primary">
+                <button @click="downloadPaymentProof(selectedOrder)" class="btn btn-sm btn-outline-primary" :class="theme === 'dark' ? 'border-primary text-primary' : ''">
                   <i class="fas fa-download me-1"></i>Download
                 </button>
               </div>
@@ -424,7 +489,7 @@
               </div>
               <div>
                 <h6 class="fw-bold mb-1">{{ selectedOrder.customer_name || 'Customer' }}</h6>
-                <div v-if="selectedOrder.customer_email" class="text-muted small">
+                <div v-if="selectedOrder.customer_email" class="small" :class="theme === 'dark' ? 'text-light' : 'text-muted'">
                   {{ selectedOrder.customer_email }}
                 </div>
               </div>
@@ -432,22 +497,22 @@
 
             <div class="mt-3">
               <div class="mb-2">
-                <i class="fas fa-map-marker-alt text-muted me-2 small"></i>
+                <i class="fas fa-map-marker-alt small me-2" :class="theme === 'dark' ? 'text-light' : 'text-muted'"></i>
                 <span class="fw-medium small">Shipping Address</span>
               </div>
-              <div class="bg-light p-2 rounded small">
+              <div class="p-2 rounded small" :class="theme === 'dark' ? 'bg-secondary' : 'bg-light'">
                 {{ selectedOrder.shipment_address || 'No address provided' }}
               </div>
             </div>
 
             <div v-if="selectedOrder.tracking_number" class="mt-3">
               <div class="mb-2">
-                <i class="fas fa-shipping-fast text-muted me-2 small"></i>
+                <i class="fas fa-shipping-fast small me-2" :class="theme === 'dark' ? 'text-light' : 'text-muted'"></i>
                 <span class="fw-medium small">Tracking Number</span>
               </div>
               <div class="input-group input-group-sm">
-                <input type="text" class="form-control form-control-sm" :value="selectedOrder.tracking_number" readonly>
-                <button @click="copyTrackingNumber" class="btn btn-outline-secondary" type="button">
+                <input type="text" class="form-control form-control-sm" :value="selectedOrder.tracking_number" readonly :class="theme === 'dark' ? 'bg-secondary border-secondary text-light' : ''">
+                <button @click="copyTrackingNumber" class="btn btn-outline-secondary" type="button" :class="theme === 'dark' ? 'border-secondary text-light' : ''">
                   <i class="fas fa-copy"></i>
                 </button>
               </div>
@@ -455,11 +520,11 @@
           </div>
         </div>
       </div>
-      <div class="offcanvas-footer border-top p-3">
+      <div class="offcanvas-footer border-top p-3" :class="theme === 'dark' ? 'border-secondary' : ''">
         <div class="d-flex gap-2">
           <button v-if="selectedOrder.status !== 'cancelled'" 
                   @click="openCancelModal"
-                  class="btn btn-outline-danger btn-sm flex-grow-1">
+                  class="btn btn-outline-danger btn-sm flex-grow-1" :class="theme === 'dark' ? 'border-danger text-danger' : ''">
             <i class="fas fa-times me-1"></i>Cancel
           </button>
           <!-- Changed from "Contact" to "Message Customer" -->
@@ -474,7 +539,7 @@
     <!-- Status Change Modal -->
     <div v-if="showStatusConfirm" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
+        <div class="modal-content border-0 shadow" :class="theme === 'dark' ? 'bg-dark text-light' : ''">
           <div class="modal-header border-0 pb-0">
             <h5 class="modal-title fw-bold">Confirm Status Change</h5>
           </div>
@@ -484,7 +549,7 @@
                 <span :class="statusBadgeClass(currentStatusChange.from)" class="badge">
                   {{ formatStatus(currentStatusChange.from) }}
                 </span>
-                <i class="fas fa-arrow-right text-muted"></i>
+                <i class="fas fa-arrow-right" :class="theme === 'dark' ? 'text-light' : 'text-muted'"></i>
                 <span :class="statusBadgeClass(currentStatusChange.to)" class="badge">
                   {{ formatStatus(currentStatusChange.to) }}
                 </span>
@@ -522,7 +587,7 @@
     <!-- Cancel Order Modal -->
     <div v-if="showCancelModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
+        <div class="modal-content border-0 shadow" :class="theme === 'dark' ? 'bg-dark text-light' : ''">
           <div class="modal-header border-0 pb-0">
             <h5 class="modal-title fw-bold">Cancel Order</h5>
           </div>
@@ -538,7 +603,7 @@
                         class="form-control form-control-sm"
                         rows="3"
                         placeholder="Reason for cancellation..."
-                        required></textarea>
+                        required :class="theme === 'dark' ? 'bg-secondary border-secondary text-light' : ''"></textarea>
             </div>
           </div>
           <div class="modal-footer border-0">
@@ -556,7 +621,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 
@@ -581,6 +646,35 @@ const showStatusConfirm = ref(false)
 const currentStatusChange = ref({ from: '', to: '' })
 const showCancelModal = ref(false)
 const cancellationReason = ref('')
+const searchQuery = ref('')
+const debounceTimeout = ref(null)
+const theme = ref('light')
+
+// Theme handling
+const initTheme = () => {
+  const savedTheme = localStorage.getItem('theme') || 'light'
+  theme.value = savedTheme
+  applyTheme(savedTheme)
+  
+  window.addEventListener('theme-changed', (event) => {
+    const newTheme = event.detail.theme
+    theme.value = newTheme
+    applyTheme(newTheme)
+  })
+}
+
+const applyTheme = (themeMode) => {
+  const html = document.documentElement
+  html.setAttribute('data-theme', themeMode)
+}
+
+const themeClass = computed(() => {
+  return theme.value === 'dark' ? 'dark-theme' : 'light-theme'
+})
+
+onMounted(() => {
+  initTheme()
+})
 
 // Status options
 const statusOptions = [
@@ -610,6 +704,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('click', closeDropdown)
+  if (debounceTimeout.value) {
+    clearTimeout(debounceTimeout.value)
+  }
 })
 
 const toggleFilterDropdown = (event) => {
@@ -617,16 +714,65 @@ const toggleFilterDropdown = (event) => {
   showFilterDropdown.value = !showFilterDropdown.value
 }
 
-// Filter and sort
-const filterOrders = (filter) => {
-  selectedFilter.value = filter
-  filterStatus.value = filter === 'all' ? '' : filter
-  showFilterDropdown.value = false
+// Search functionality
+const performSearch = () => {
+  // Clear any existing timeout
+  if (debounceTimeout.value) {
+    clearTimeout(debounceTimeout.value)
+  }
+  
+  // Debounce search to avoid too many re-renders
+  debounceTimeout.value = setTimeout(() => {
+    // Search logic is handled in computed property
+  }, 300)
 }
 
+const clearSearch = () => {
+  searchQuery.value = ''
+  if (debounceTimeout.value) {
+    clearTimeout(debounceTimeout.value)
+  }
+}
+
+// Filter and sort with search
 const filteredOrders = computed(() => {
-  if (!filterStatus.value) return props.orders
-  return props.orders.filter(order => order.status === filterStatus.value)
+  let filtered = props.orders
+  
+  // Apply status filter
+  if (filterStatus.value) {
+    filtered = filtered.filter(order => order.status === filterStatus.value)
+  }
+  
+  // Apply search filter if search query exists
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.trim().toLowerCase()
+    filtered = filtered.filter(order => {
+      // Search in multiple fields
+      return (
+        // Order number
+        (order.order_number && order.order_number.toLowerCase().includes(query)) ||
+        (order.id && order.id.toString().includes(query)) ||
+        
+        // Customer information
+        (order.customer_name && order.customer_name.toLowerCase().includes(query)) ||
+        (order.customer_email && order.customer_email.toLowerCase().includes(query)) ||
+        
+        // Product information
+        (order.product_name && order.product_name.toLowerCase().includes(query)) ||
+        
+        // Tracking number
+        (order.tracking_number && order.tracking_number.toLowerCase().includes(query)) ||
+        
+        // Order reference
+        (order.order_reference && order.order_reference.toLowerCase().includes(query)) ||
+        
+        // Payment reference
+        (order.payment_reference && order.payment_reference.toLowerCase().includes(query))
+      )
+    })
+  }
+  
+  return filtered
 })
 
 const sortedOrders = computed(() => {
@@ -634,6 +780,18 @@ const sortedOrders = computed(() => {
     new Date(b.created_at) - new Date(a.created_at)
   )
 })
+
+// Filter orders by status
+const filterOrders = (filter) => {
+  selectedFilter.value = filter
+  filterStatus.value = filter === 'all' ? '' : filter
+  showFilterDropdown.value = false
+  
+  // Clear search when changing filter
+  if (searchQuery.value) {
+    searchQuery.value = ''
+  }
+}
 
 // Helper methods
 const getStatusCount = (status) => {
@@ -859,8 +1017,109 @@ const copyTrackingNumber = () => {
 </script>
 
 <style scoped>
-/* Same CSS styles as before for Vendor Orders */
-.container-fluid { background: #f8f9fa; }
+/* Theme variables */
+.light-theme {
+  background-color: #f8f9fa !important;
+  color: #212529 !important;
+}
+
+.dark-theme {
+  background-color: #121212 !important;
+  color: #f8f9fa !important;
+}
+
+/* Dark theme specific styles */
+.dark-theme .bg-primary-dark { background-color: rgba(108, 92, 231, 0.2) !important; }
+.dark-theme .bg-warning-dark { background-color: rgba(255, 193, 7, 0.2) !important; }
+.dark-theme .bg-info-dark { background-color: rgba(13, 202, 240, 0.2) !important; }
+.dark-theme .bg-success-dark { background-color: rgba(25, 135, 84, 0.2) !important; }
+.dark-theme .bg-danger-dark { background-color: rgba(220, 53, 69, 0.2) !important; }
+
+.dark-theme .bg-success.bg-opacity-10 {
+  background-color: rgba(25, 135, 84, 0.2) !important;
+}
+
+.dark-theme .bg-primary.bg-opacity-10 {
+  background-color: rgba(108, 92, 231, 0.2) !important;
+}
+
+.dark-theme .bg-light {
+  background-color: #2d2d2d !important;
+}
+
+.dark-theme .text-light {
+  color: #f8f9fa !important;
+}
+
+.dark-theme .border-secondary {
+  border-color: #444 !important;
+}
+
+.dark-theme .table {
+  color: #f8f9fa;
+}
+
+.dark-theme .table thead th {
+  background-color: #2d2d2d;
+  border-color: #444;
+  color: #f8f9fa;
+}
+
+.dark-theme .table tbody tr {
+  background-color: #1e1e1e;
+  border-color: #444;
+}
+
+.dark-theme .order-row:hover {
+  background-color: #2d2d2d;
+}
+
+.dark-theme .modal-content {
+  background: #1e1e1e;
+  color: #f8f9fa;
+}
+
+.dark-theme .offcanvas {
+  background: #1e1e1e;
+  color: #f8f9fa;
+}
+
+/* Base styles */
+.search-container {
+  min-width: 250px;
+  flex-grow: 1;
+  max-width: 400px;
+  margin-left: 600px;
+}
+
+.search-group {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.search-group:focus-within {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
+}
+
+.search-input {
+  border: none;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #495057;
+}
+
+.search-input:focus {
+  box-shadow: none;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: #adb5bd;
+}
 
 /* Custom Filter Dropdown */
 .custom-filter-dropdown {
@@ -995,10 +1254,20 @@ const copyTrackingNumber = () => {
   gap: 1rem;
 }
 
+.dark-theme .stat-card-medium {
+  background: #1e1e1e;
+  border-color: #444;
+}
+
 .stat-card-medium:hover {
   border-color: #6c5ce7;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
+}
+
+.dark-theme .stat-card-medium:hover {
+  border-color: #6c5ce7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .stat-icon-medium {
@@ -1031,10 +1300,18 @@ const copyTrackingNumber = () => {
   margin-bottom: 4px;
 }
 
+.dark-theme .stat-number-medium {
+  color: #f8f9fa;
+}
+
 .stat-label-medium {
   font-size: 0.8rem;
   color: #6c757d;
   font-weight: 500;
+}
+
+.dark-theme .stat-label-medium {
+  color: #adb5bd;
 }
 
 /* Order Cards */
@@ -1051,9 +1328,19 @@ const copyTrackingNumber = () => {
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
+.dark-theme .order-card:hover {
+  border-color: #444;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
 .order-card.active {
   border-color: #0d6efd;
   background-color: #f8faff;
+}
+
+.dark-theme .order-card.active {
+  border-color: #0d6efd;
+  background-color: #2d2d2d;
 }
 
 .customer-avatar {
@@ -1126,6 +1413,10 @@ const copyTrackingNumber = () => {
   background-color: #dee2e6;
 }
 
+.dark-theme .timeline::before {
+  background-color: #444;
+}
+
 .timeline-step {
   position: relative;
   margin-bottom: 0.5rem;
@@ -1147,6 +1438,11 @@ const copyTrackingNumber = () => {
   font-size: 0.3rem;
 }
 
+.dark-theme .timeline-dot {
+  background-color: #1e1e1e;
+  border-color: #444;
+}
+
 .timeline-step.completed .timeline-dot {
   background-color: #198754;
   border-color: #198754;
@@ -1162,6 +1458,10 @@ const copyTrackingNumber = () => {
 .step-title {
   font-size: 0.7rem;
   font-weight: 500;
+}
+
+.dark-theme .step-title {
+  color: #f8f9fa;
 }
 
 /* Payment Proof */
@@ -1239,6 +1539,21 @@ const copyTrackingNumber = () => {
     margin-top: 0;
     max-height: 60vh;
     overflow-y: auto;
+  }
+  
+  .search-container {
+    order: -1;
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  .custom-filter-dropdown {
+    width: 100%;
+  }
+  
+  .filter-dropdown-btn {
+    width: 100%;
   }
 }
 

@@ -216,3 +216,63 @@ body {
   background-color: transparent !important;
 }
 
+
+
+/* In your app.css file, add these fixes: */
+
+/* Fix gradient backgrounds in dark mode */
+[data-bs-theme="dark"] .bg-gradient-primary,
+[data-bs-theme="dark"] .modal-header.bg-gradient-primary {
+  background: linear-gradient(135deg, var(--bs-primary), var(--bs-info)) !important;
+  color: white !important;
+}
+
+[data-bs-theme="dark"] .bg-gradient-warning,
+[data-bs-theme="dark"] .modal-header.bg-gradient-warning {
+  background: linear-gradient(135deg, var(--bs-warning), #fd7e14) !important;
+  color: white !important;
+}
+
+[data-bs-theme="dark"] .bg-gradient-success,
+[data-bs-theme="dark"] .modal-header.bg-gradient-success {
+  background: linear-gradient(135deg, var(--bs-success), #20c997) !important;
+  color: white !important;
+}
+
+/* Fix buttons with gradients */
+[data-bs-theme="dark"] .btn-gradient-primary,
+[data-bs-theme="dark"] .btn-gradient-warning,
+[data-bs-theme="dark"] .btn-gradient-success {
+  color: white !important;
+}
+
+/* Fix badges with gradients */
+[data-bs-theme="dark"] .user-type-badge,
+[data-bs-theme="dark"] .status-badge {
+  color: white !important;
+}
+
+/* Fix nav active state background */
+[data-bs-theme="dark"] .nav-item.active {
+  background: linear-gradient(90deg, rgba(var(--bs-primary-rgb), 0.3), transparent) !important;
+}
+
+/* Fix settings page specific elements */
+[data-bs-theme="dark"] .settings-page {
+  background: linear-gradient(135deg, 
+    rgba(var(--bs-primary-rgb, 13, 110, 253), 0.05), 
+    rgba(var(--bs-success-rgb, 25, 135, 84), 0.05)
+  ) !important;
+}
+
+/* Ensure modal headers stay visible */
+[data-bs-theme="dark"] .modal-header {
+  color: white !important;
+}
+
+/* Fix close buttons in modal headers */
+[data-bs-theme="dark"] .modal-header .btn-close-white {
+  filter: invert(1) grayscale(100%) brightness(200%) !important;
+}
+
+

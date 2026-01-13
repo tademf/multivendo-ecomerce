@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="verification-page">
+    <div class="verification-page" :class="themeClass">
       <div class="animated-bg">
         <div class="shape shape-1"></div>
         <div class="shape shape-2"></div>
@@ -13,8 +13,7 @@
           <div class="icon-container mb-4">
             <div class="icon-wrapper">
               <i class="fas fa-shield-alt fa-3x text-primary"></i>
-              <div class="icon-pulse">
-              </div>
+              <div class="icon-pulse"></div>
             </div>
           </div>
           <h1 class="display-5 fw-bold text-primary mb-3">
@@ -86,18 +85,6 @@
 
         <div class="row justify-content-center">
           <div class="col-lg-10 col-xl-8">
-            <div class="row g-4 mb-5">
-              <div class="col-md-6 col-lg-4" v-for="benefit in benefits" :key="benefit.title">
-                <div class="benefit-card h-100">
-                  <div class="benefit-icon mb-3">
-                    <i :class="benefit.icon"></i>
-                  </div>
-                  <h5 class="benefit-title mb-2">{{ benefit.title }}</h5>
-                  <p class="benefit-desc text-muted mb-0">{{ benefit.description }}</p>
-                </div>
-              </div>
-            </div>
-
             <div v-if="shouldShowVerifiedMessage" class="card border-success border-2">
               <div class="card-body text-center py-5">
                 <div class="verified-icon mb-4">
@@ -120,32 +107,6 @@
 
             <div v-else-if="shouldShowForm" class="card form-card border-0">
               <div class="card-body p-4 p-md-5">
-                <div class="process-steps mb-5">
-                  <div class="steps-container" :style="{'--progress': progressPercentage}">
-                    <div class="step active">
-                      <div class="step-icon">
-                        <i class="fas fa-user-check"></i>
-                        <div class="step-number">1</div>
-                      </div>
-                      <div class="step-label">Basic Info</div>
-                    </div>
-                    <div class="step" :class="{ 'active': currentStep >= 2 }">
-                      <div class="step-icon">
-                        <i class="fas fa-id-card"></i>
-                        <div class="step-number">2</div>
-                      </div>
-                      <div class="step-label">ID Upload</div>
-                    </div>
-                    <div class="step" :class="{ 'active': currentStep >= 3 }">
-                      <div class="step-icon">
-                        <i class="fas fa-clipboard-check"></i>
-                        <div class="step-number">3</div>
-                      </div>
-                      <div class="step-label">Review</div>
-                    </div>
-                  </div>
-                </div>
-
                 <div v-if="currentStep === 1" class="step-content">
                   <h4 class="mb-4 fw-bold step-title">
                     <i class="fas fa-user-circle me-2"></i>
@@ -251,7 +212,7 @@
                 <div v-if="currentStep === 2" class="step-content">
                   <h4 class="mb-4 fw-bold step-title">
                     <i class="fas fa-camera me-2"></i>
-                    Upload National ID
+                    Upload Work Licence
                   </h4>
 
                   <div class="upload-area mb-5">
@@ -268,13 +229,13 @@
                           <i class="fas fa-cloud-upload-alt fa-4x"></i>
                           <div class="upload-pulse"></div>
                         </div>
-                        <h4 class="mb-2">Drag & Drop your National ID</h4>
+                        <h4 class="mb-2">Drag & Drop your Work Licence</h4>
                         <p class="text-muted mb-4">or click to browse files</p>
                         <div class="upload-requirements">
-                          <span class="badge bg-light text-dark me-2">
+                          <span class="badge me-2">
                             <i class="fas fa-file-image me-1"></i>JPG, PNG
                           </span>
-                          <span class="badge bg-light text-dark ms-2">
+                          <span class="badge ms-2">
                             <i class="fas fa-weight me-1"></i>Max 5MB
                           </span>
                         </div>
@@ -283,7 +244,7 @@
                         <div class="preview-wrapper">
                           <img :src="idPreview" alt="ID Preview" class="preview-image" />
                           <div class="preview-overlay">
-                            <button type="button" class="btn btn-light btn-sm me-2" @click.stop="triggerFileInput">
+                            <button type="button" class="btn btn-sm me-2" @click.stop="triggerFileInput">
                               <i class="fas fa-sync me-1"></i> Change
                             </button>
                             <button type="button" class="btn btn-danger btn-sm" @click.stop="removeImage">
@@ -323,7 +284,7 @@
                   </div>
 
                   <div class="requirements-card mb-5">
-                    <div class="card border-0 bg-light">
+                    <div class="card border-0">
                       <div class="card-body">
                         <h5 class="card-title mb-3">
                           <i class="fas fa-clipboard-list me-2 text-primary"></i>
@@ -369,7 +330,7 @@
                   </h4>
 
                   <div class="review-summary mb-5">
-                    <div class="card border-0 shadow-sm">
+                    <div class="card border-0">
                       <div class="card-header bg-gradient-primary text-white">
                         <h5 class="mb-0">
                           <i class="fas fa-file-alt me-2"></i>
@@ -391,7 +352,7 @@
                             <div class="review-item">
                               <div class="review-label mb-2">
                                 <i class="fas fa-image me-2"></i>
-                                ID Image Preview
+                                Licence Image Preview
                               </div>
                               <div class="review-image">
                                 <img :src="idPreview" alt="ID Preview" class="img-thumbnail" />
@@ -404,7 +365,7 @@
                   </div>
 
                   <div class="terms-card mb-5">
-                    <div class="card border-0 bg-light">
+                    <div class="card border-0">
                       <div class="card-body">
                         <div class="form-check">
                           <input
@@ -421,7 +382,7 @@
                             </h6>
                             <ul class="mb-0">
                               <li>The information provided is accurate and complete</li>
-                              <li>The National ID belongs to me and is valid</li>
+                              <li>The Licence belongs to me and is valid</li>
                               <li>I authorize verification of my identity</li>
                               <li>I agree to the <a href="#" class="text-primary fw-bold">Terms of Service</a> and <a href="#" class="text-primary fw-bold">Privacy Policy</a></li>
                             </ul>
@@ -435,7 +396,7 @@
                     </div>
                   </div>
 
-                  <div class="alert alert-warning border-0 shadow-sm mb-5">
+                  <div class="alert alert-warning border-0 mb-5">
                     <div class="d-flex">
                       <div class="flex-shrink-0">
                         <i class="fas fa-clock fa-2x text-warning"></i>
@@ -458,7 +419,7 @@
                       @click="previousStep"
                     >
                       <i class="fas fa-arrow-left me-2"></i>
-                      Back to ID Upload
+                      Back to Licence Upload
                     </button>
                     <button
                       type="button"
@@ -563,6 +524,7 @@ export default {
       uploading: false,
       uploadProgress: 0,
       submitting: false,
+      theme: 'light',
       
       form: {
         national_id: '',
@@ -570,44 +532,11 @@ export default {
         agree_terms: false
       },
       
-      // benefits: [
-      //   {
-      //     title: 'Trust Badge',
-      //     description: 'Get verified badge on your profile to build credibility',
-      //     icon: 'fas fa-badge-check'
-      //   },
-      //   {
-      //     title: 'Higher Limits',
-      //     description: 'Increased transaction and posting limits',
-      //     icon: 'fas fa-chart-line'
-      //   },
-      //   {
-      //     title: 'Priority Support',
-      //     description: '24/7 priority customer support access',
-      //     icon: 'fas fa-headset'
-      //   },
-      //   {
-      //     title: 'Featured Listings',
-      //     description: 'Products shown more prominently to buyers',
-      //     icon: 'fas fa-star'
-      //   },
-      //   {
-      //     title: 'Secure Transactions',
-      //     description: 'Enhanced security and fraud protection',
-      //     icon: 'fas fa-shield-alt'
-      //   },
-      //   {
-      //     title: 'Early Access',
-      //     description: 'Get early access to new features',
-      //     icon: 'fas fa-rocket'
-      //   }
-      // ],
-      
       requirements: [
-        'Clear, readable photo of your National ID',
+        'Clear, readable photo of your Licence',
         'All details must be visible and legible',
-        'No glare or reflections on the ID',
-        'ID must be valid and not expired',
+        'No glare or reflections on the Licence',
+        'Licence must be valid and not expired',
         'File size must not exceed 5MB',
         'Accepted formats: JPG, PNG'
       ]
@@ -615,10 +544,6 @@ export default {
   },
   
   computed: {
-    progressPercentage() {
-      return ((this.currentStep - 1) / 2) * 100 + '%'
-    },
-    
     isVerifiedInVerificationPage() {
       if (this.verificationRequest && this.verificationRequest.status === 'approved') {
         return true
@@ -657,10 +582,16 @@ export default {
     
     shouldShowPendingMessage() {
       return this.verificationRequest && this.verificationRequest.status === 'pending'
+    },
+    
+    themeClass() {
+      return this.theme === 'dark' ? 'dark-theme' : 'light-theme'
     }
   },
   
   mounted() {
+    this.initTheme()
+    
     if (this.shouldShowVerifiedMessage) {
       this.currentStep = 0
     } else if (this.shouldShowPendingMessage) {
@@ -671,6 +602,25 @@ export default {
   },
   
   methods: {
+    initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light'
+      this.theme = savedTheme
+      this.applyTheme(savedTheme)
+      
+      window.addEventListener('theme-changed', (event) => {
+        const newTheme = event.detail.theme
+        this.theme = newTheme
+        this.applyTheme(newTheme)
+      })
+    },
+    
+    applyTheme(themeMode) {
+      const html = document.documentElement
+      html.setAttribute('data-theme', themeMode)
+      document.body.classList.remove('light-theme', 'dark-theme')
+      document.body.classList.add(`${themeMode}-theme`)
+    },
+    
     nextStep() {
       if (this.currentStep < 3) {
         this.currentStep++
@@ -863,6 +813,152 @@ export default {
 </script>
 
 <style scoped>
+.verification-page {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.verification-page.light-theme {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  color: #333;
+}
+
+.verification-page.dark-theme {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #f1f1f1;
+}
+
+.animated-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  animation: float 20s infinite linear;
+}
+
+.shape-1 {
+  width: 300px;
+  height: 300px;
+  top: -150px;
+  right: -100px;
+  animation-delay: 0s;
+}
+
+.shape-2 {
+  width: 200px;
+  height: 200px;
+  bottom: -100px;
+  left: -50px;
+  animation-delay: 5s;
+}
+
+.shape-3 {
+  width: 150px;
+  height: 150px;
+  top: 50%;
+  right: 10%;
+  animation-delay: 10s;
+}
+
+.shape-4 {
+  width: 100px;
+  height: 100px;
+  bottom: 30%;
+  left: 10%;
+  animation-delay: 15s;
+}
+
+.light-theme .shape {
+  background: linear-gradient(45deg, rgba(13, 110, 253, 0.1), rgba(108, 92, 231, 0.1));
+}
+
+.dark-theme .shape {
+  background: linear-gradient(45deg, rgba(13, 110, 253, 0.2), rgba(108, 92, 231, 0.2));
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+  }
+  100% {
+    transform: translateY(0) rotate(360deg);
+  }
+}
+
+.icon-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  box-shadow: 0 10px 30px rgba(13, 110, 253, 0.2);
+}
+
+.light-theme .icon-wrapper {
+  background: white;
+}
+
+.dark-theme .icon-wrapper {
+  background: #2d3748;
+}
+
+.icon-pulse {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.light-theme .icon-pulse {
+  border: 2px solid rgba(13, 110, 253, 0.3);
+}
+
+.dark-theme .icon-pulse {
+  border: 2px solid rgba(59, 130, 246, 0.5);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+.verified-badge {
+  background: linear-gradient(135deg, #198754, #20c997);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 50px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.1rem;
+  box-shadow: 0 5px 15px rgba(25, 135, 84, 0.3);
+}
+
 .pending-badge {
   background: linear-gradient(135deg, #ffc107, #fd7e14);
   color: white;
@@ -910,155 +1006,21 @@ export default {
   }
 }
 
-.verification-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  position: relative;
-  overflow-x: hidden;
-}
-
-.animated-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
-  z-index: 0;
-}
-
-.shape {
-  position: absolute;
-  border-radius: 50%;
-  background: linear-gradient(45deg, rgba(13, 110, 253, 0.1), rgba(108, 92, 231, 0.1));
-  animation: float 20s infinite linear;
-}
-
-.shape-1 {
-  width: 300px;
-  height: 300px;
-  top: -150px;
-  right: -100px;
-  animation-delay: 0s;
-}
-
-.shape-2 {
-  width: 200px;
-  height: 200px;
-  bottom: -100px;
-  left: -50px;
-  animation-delay: 5s;
-}
-
-.shape-3 {
-  width: 150px;
-  height: 150px;
-  top: 50%;
-  right: 10%;
-  animation-delay: 10s;
-}
-
-.shape-4 {
-  width: 100px;
-  height: 100px;
-  bottom: 30%;
-  left: 10%;
-  animation-delay: 15s;
-}
-
-@keyframes float {
-  0% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-20px) rotate(180deg);
-  }
-  100% {
-    transform: translateY(0) rotate(360deg);
-  }
-}
-
-.icon-wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 120px;
-  height: 120px;
-  background: white;
-  border-radius: 50%;
-  box-shadow: 0 10px 30px rgba(13, 110, 253, 0.2);
-}
-
-.icon-pulse {
-  position: absolute;
-  width: 140px;
-  height: 140px;
-  border: 2px solid rgba(13, 110, 253, 0.3);
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.8;
-  }
-  70% {
-    transform: scale(1.1);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-}
-
-.verified-badge {
-  background: linear-gradient(135deg, #198754, #20c997);
-  color: white;
-  padding: 12px 24px;
-  border-radius: 50px;
-  display: inline-flex;
-  align-items: center;
-  font-size: 1.1rem;
-  box-shadow: 0 5px 15px rgba(25, 135, 84, 0.3);
-}
-
-.benefit-card {
-  background: white;
-  border-radius: 15px;
-  padding: 30px 20px;
-  text-align: center;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  border: 1px solid rgba(13, 110, 253, 0.1);
-}
-
-.benefit-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 15px 30px rgba(13, 110, 253, 0.15);
-  border-color: rgba(13, 110, 253, 0.3);
-}
-
-.benefit-icon {
-  font-size: 2.5rem;
-  color: #0d6efd;
-  margin-bottom: 20px;
-}
-
-.benefit-title {
-  color: #212529;
-  font-weight: 600;
-}
-
 .form-card {
-  background: white;
   border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 1;
   overflow: hidden;
+}
+
+.light-theme .form-card {
+  background: white;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .form-card {
+  background: #2d3748;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .form-card::before {
@@ -1071,112 +1033,34 @@ export default {
   background: linear-gradient(90deg, #0d6efd, #6f42c1, #d63384);
 }
 
-.process-steps {
-  position: relative;
-  padding: 0 20px;
-}
-
-.steps-container {
-  display: flex;
-  justify-content: space-between;
-  position: relative;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.steps-container::before {
-  content: '';
-  position: absolute;
-  top: 30px;
-  left: 30px;
-  right: 30px;
-  height: 4px;
-  background: linear-gradient(90deg, #0d6efd 0%, #dee2e6 0%);
-  z-index: 1;
-  transition: all 0.5s ease;
-}
-
-.steps-container::after {
-  content: '';
-  position: absolute;
-  top: 30px;
-  left: 30px;
-  width: calc((100% - 60px) * var(--progress, 0));
-  height: 4px;
-  background: linear-gradient(90deg, #0d6efd, #6f42c1);
-  z-index: 2;
-  transition: width 0.5s ease;
-}
-
-.step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  z-index: 3;
-  flex: 1;
-}
-
-.step-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #dee2e6;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  margin-bottom: 10px;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.step.active .step-icon {
-  background: linear-gradient(135deg, #0d6efd, #6f42c1);
-  transform: scale(1.1);
-  box-shadow: 0 5px 15px rgba(13, 110, 253, 0.4);
-}
-
-.step-number {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: #198754;
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.step-label {
-  font-size: 0.9rem;
-  color: #6c757d;
-  font-weight: 600;
-  text-align: center;
-  margin-top: 5px;
-}
-
-.step.active .step-label {
-  color: #0d6efd;
-}
-
 .step-title {
-  color: #2c3e50;
   padding-bottom: 15px;
-  border-bottom: 2px solid #f8f9fa;
+  border-bottom: 2px solid;
   margin-bottom: 30px;
 }
 
+.light-theme .step-title {
+  color: #2c3e50;
+  border-color: #f8f9fa;
+}
+
+.dark-theme .step-title {
+  color: #f1f1f1;
+  border-color: #4a5568;
+}
+
 .user-info-display {
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
   border-radius: 15px;
   padding: 25px;
   border-left: 5px solid #0d6efd;
+}
+
+.light-theme .user-info-display {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
+.dark-theme .user-info-display {
+  background: linear-gradient(135deg, #2d3748, #4a5568);
 }
 
 .info-item {
@@ -1184,16 +1068,30 @@ export default {
 }
 
 .info-label {
-  color: #6c757d;
   font-size: 0.9rem;
   margin-bottom: 5px;
   font-weight: 500;
 }
 
+.light-theme .info-label {
+  color: #6c757d;
+}
+
+.dark-theme .info-label {
+  color: #cbd5e0;
+}
+
 .info-value {
   font-size: 1.1rem;
   font-weight: 600;
+}
+
+.light-theme .info-value {
   color: #212529;
+}
+
+.dark-theme .info-value {
+  color: #f1f1f1;
 }
 
 .user-type-badge {
@@ -1235,13 +1133,12 @@ export default {
 }
 
 .drop-zone {
-  border: 3px dashed #dee2e6;
+  border: 3px dashed;
   border-radius: 20px;
   padding: 50px 20px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: white;
   min-height: 300px;
   display: flex;
   align-items: center;
@@ -1250,16 +1147,40 @@ export default {
   overflow: hidden;
 }
 
+.light-theme .drop-zone {
+  border-color: #dee2e6;
+  background: white;
+}
+
+.dark-theme .drop-zone {
+  border-color: #4a5568;
+  background: #2d3748;
+}
+
 .drop-zone:hover {
   border-color: #0d6efd;
-  background: rgba(13, 110, 253, 0.02);
   transform: scale(1.01);
+}
+
+.light-theme .drop-zone:hover {
+  background: rgba(13, 110, 253, 0.02);
+}
+
+.dark-theme .drop-zone:hover {
+  background: rgba(13, 110, 253, 0.1);
 }
 
 .drop-zone.dragover {
   border-color: #0d6efd;
-  background: rgba(13, 110, 253, 0.1);
   transform: scale(1.02);
+}
+
+.light-theme .drop-zone.dragover {
+  background: rgba(13, 110, 253, 0.1);
+}
+
+.dark-theme .drop-zone.dragover {
+  background: rgba(13, 110, 253, 0.2);
 }
 
 .drop-zone.has-image {
@@ -1280,9 +1201,16 @@ export default {
   transform: translate(-50%, -50%);
   width: 80px;
   height: 80px;
-  border: 2px solid rgba(13, 110, 253, 0.2);
   border-radius: 50%;
   animation: uploadPulse 2s infinite;
+}
+
+.light-theme .upload-pulse {
+  border: 2px solid rgba(13, 110, 253, 0.2);
+}
+
+.dark-theme .upload-pulse {
+  border: 2px solid rgba(59, 130, 246, 0.4);
 }
 
 @keyframes uploadPulse {
@@ -1300,6 +1228,16 @@ export default {
 
 .upload-requirements {
   margin-top: 20px;
+}
+
+.light-theme .badge {
+  background: #f1f3f4;
+  color: #333;
+}
+
+.dark-theme .badge {
+  background: #4a5568;
+  color: #f1f1f1;
 }
 
 .preview-wrapper {
@@ -1332,26 +1270,30 @@ export default {
   opacity: 1;
 }
 
+.light-theme .preview-overlay .btn {
+  background: white;
+}
+
+.dark-theme .preview-overlay .btn {
+  background: #4a5568;
+  color: #f1f1f1;
+}
+
 .upload-progress {
   max-width: 500px;
   margin: 0 auto;
 }
 
-.requirements-card {
-  position: relative;
+.requirements-card .card {
+  border: 2px solid rgba(13, 110, 253, 0.1);
 }
 
-.requirements-card::before {
-  content: '';
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  right: -10px;
-  bottom: -10px;
-  background: linear-gradient(135deg, #0d6efd, #6f42c1);
-  border-radius: 20px;
-  z-index: -1;
-  opacity: 0.1;
+.light-theme .requirements-card .card {
+  background: #f8f9fa;
+}
+
+.dark-theme .requirements-card .card {
+  background: #2d3748;
 }
 
 .requirement-item {
@@ -1366,30 +1308,62 @@ export default {
 
 .review-item {
   padding: 15px;
-  background: white;
   border-radius: 10px;
-  border: 1px solid #f1f3f4;
+  border: 1px solid;
+}
+
+.light-theme .review-item {
+  background: white;
+  border-color: #f1f3f4;
+}
+
+.dark-theme .review-item {
+  background: #2d3748;
+  border-color: #4a5568;
 }
 
 .review-label {
-  color: #6c757d;
   font-size: 0.9rem;
   margin-bottom: 5px;
   font-weight: 500;
 }
 
+.light-theme .review-label {
+  color: #6c757d;
+}
+
+.dark-theme .review-label {
+  color: #cbd5e0;
+}
+
 .review-value {
   font-size: 1.1rem;
   font-weight: 600;
+}
+
+.light-theme .review-value {
   color: #212529;
 }
 
+.dark-theme .review-value {
+  color: #f1f1f1;
+}
+
 .review-image {
-  background: white;
   padding: 15px;
   border-radius: 10px;
-  border: 2px dashed #dee2e6;
+  border: 2px dashed;
   text-align: center;
+}
+
+.light-theme .review-image {
+  background: white;
+  border-color: #dee2e6;
+}
+
+.dark-theme .review-image {
+  background: #2d3748;
+  border-color: #4a5568;
 }
 
 .review-image img {
@@ -1399,6 +1373,14 @@ export default {
 
 .terms-card .card {
   border: 2px solid rgba(13, 110, 253, 0.1);
+}
+
+.light-theme .terms-card .card {
+  background: #f8f9fa;
+}
+
+.dark-theme .terms-card .card {
+  background: #2d3748;
 }
 
 .terms-card ul {
@@ -1421,21 +1403,27 @@ export default {
   font-size: 1.2rem;
 }
 
-.pending-request-card {
-  position: relative;
+.alert {
+  border-radius: 10px;
 }
 
-.pending-request-card::before {
-  content: '';
-  position: absolute;
-  top: -5px;
-  left: -5px;
-  right: -5px;
-  bottom: -5px;
-  background: linear-gradient(135deg, #ffc107, #fd7e14);
-  border-radius: 20px;
-  z-index: -1;
-  opacity: 0.2;
+.light-theme .alert-warning {
+  background: #fff3cd;
+  border-color: #ffecb5;
+}
+
+.dark-theme .alert-warning {
+  background: #664d03;
+  border-color: #664d03;
+  color: #ffecb5;
+}
+
+.light-theme .text-muted {
+  color: #6c757d !important;
+}
+
+.dark-theme .text-muted {
+  color: #a0aec0 !important;
 }
 
 .pending-icon {
@@ -1535,23 +1523,6 @@ export default {
     font-size: 2.5rem;
   }
   
-  .steps-container {
-    padding: 0 10px;
-  }
-  
-  .step-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 1.2rem;
-  }
-  
-  .steps-container::before,
-  .steps-container::after {
-    top: 25px;
-    left: 25px;
-    right: 25px;
-  }
-  
   .drop-zone {
     padding: 30px 15px;
     min-height: 250px;
@@ -1572,32 +1543,6 @@ export default {
   .verification-page .container {
     padding-left: 15px;
     padding-right: 15px;
-  }
-  
-  .steps-container {
-    flex-direction: column;
-    align-items: center;
-    gap: 30px;
-  }
-  
-  .steps-container::before,
-  .steps-container::after {
-    display: none;
-  }
-  
-  .step {
-    flex-direction: row;
-    gap: 15px;
-    width: 100%;
-  }
-  
-  .step-label {
-    text-align: left;
-    margin-top: 0;
-  }
-  
-  .benefit-card {
-    padding: 20px 15px;
   }
 }
 </style>
