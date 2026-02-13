@@ -35,10 +35,13 @@
                    <i class="fas fa-border-all me-3"></i> All Categories
                 </a>
                 <div class="dropdown-divider"></div>
-                <a v-for="category in $page.props.categories" :key="category.id" 
-                   href="#" @click.prevent="selectCategory(category.name)" class="dropdown-item slim-item">
-                   <i :class="getCategoryIcon(category.name)" class="me-3"></i> {{ category.name }}
-                </a>
+                <!-- ✅ FIXED: Added safe check for categories -->
+                <template v-if="$page.props.categories && $page.props.categories.length > 0">
+                  <a v-for="category in $page.props.categories" :key="category.id"
+                     href="#" @click.prevent="selectCategory(category.name)" class="dropdown-item slim-item">
+                     <i :class="getCategoryIcon(category.name)" class="me-3"></i> {{ category.name }}
+                  </a>
+                </template>
               </div>
             </div>
           </li>
@@ -47,7 +50,7 @@
           <li class="nav-item slim-search-container">
             <div class="premium-search-box slim-search">
               <i class="fas fa-search search-icon"></i>
-              <input type="text" v-model="searchQuery" @keyup.enter="performSearch" 
+              <input type="text" v-model="searchQuery" @keyup.enter="performSearch"
                      @focus="showSearchSuggestions = true" placeholder="Search...">
               <button @click="performSearch" class="search-btn-gold slim-search-btn">
                 <i class="fas fa-arrow-right"></i>
@@ -58,23 +61,42 @@
 
         <!-- Right Actions -->
         <div class="dashboard-wrapper ms-auto slim-dashboard">
-<!-- Quick Actions -->
-<div v-if="isLoggedIn" class="action-dock slim-dock">
-  <a href="/wishlist" class="dock-icon slim-icon" title="Wishlist">
-    <i class="far fa-heart fa-sm"></i> <!-- Added fa-sm class -->
-    <span v-if="wishlistCount > 0" class="notification-badge slim-badge">{{ wishlistCount }}</span>
-  </a>
+          <!-- Quick Actions -->
+          <div v-if="isLoggedIn" class="action-dock slim-dock">
 
-  <a :href="route('messages.conversations')" class="dock-icon slim-icon" title="Messages">
-    <i class="far fa-envelope fa-sm"></i> <!-- Added fa-sm class -->
-    <span v-if="unreadCount > 0" class="notification-badge slim-badge">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
-  </a>
+            <!-- NEWS BUTTON -->
+            <Link href="/news" class="dock-icon slim-icon" title="Latest News" @click="goToNews">
+              <i class="fas fa-newspaper fa-sm"></i>
+              <!-- ✅ FIXED: Added safe check for newsCount -->
+              <span v-if="newsCount && newsCount > 0" class="notification-badge slim-badge">{{ newsCount > 9 ? '9+' : newsCount }}</span>
+            </Link>
 
-  <a href="/cart" class="dock-icon slim-icon" title="Cart">
-    <i class="fas fa-shopping-cart fa-sm"></i> <!-- Added fa-sm class -->
-    <span v-if="cartCount > 0" class="notification-badge slim-badge">{{ cartCount }}</span>
-  </a>
-</div>
+            <!-- PROMOTIONS BUTTON -->
+            <Link href="/promotions" class="dock-icon slim-icon" title="Hot Promotions" @click="goToPromotions">
+              <i class="fas fa-fire fa-sm"></i>
+              <!-- ✅ FIXED: Added safe check for promotionsCount -->
+              <span v-if="promotionsCount && promotionsCount > 0" class="notification-badge slim-badge">{{ promotionsCount > 9 ? '9+' : promotionsCount }}</span>
+            </Link>
+
+            <a href="/wishlist" class="dock-icon slim-icon" title="Wishlist">
+              <i class="far fa-heart fa-sm"></i>
+              <!-- ✅ FIXED: Added safe check for wishlistCount -->
+              <span v-if="wishlistCount && wishlistCount > 0" class="notification-badge slim-badge">{{ wishlistCount }}</span>
+            </a>
+
+            <a href="/messages/conversations" class="dock-icon slim-icon" title="Messages">
+              <i class="far fa-envelope fa-sm"></i>
+              <!-- ✅ FIXED: Added safe check for unreadCount -->
+              <span v-if="unreadCount && unreadCount > 0" class="notification-badge slim-badge">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+            </a>
+
+            <a href="/cart" class="dock-icon slim-icon" title="Cart">
+              <i class="fas fa-shopping-cart fa-sm"></i>
+              <!-- ✅ FIXED: Added safe check for cartCount -->
+              <span v-if="cartCount && cartCount > 0" class="notification-badge slim-badge">{{ cartCount }}</span>
+            </a>
+          </div>
+         
           <!-- User Profile -->
           <div class="profile-section slim-profile">
             <div v-if="!isLoggedIn" class="auth-buttons slim-auth">
@@ -91,66 +113,63 @@
                 <div class="profile-trigger slim-profile-trigger" @click.prevent="toggleProfileDropdown">
                   <div class="user-avatar slim-avatar">
                     <img v-if="userProfilePicture" :src="userProfilePicture" :alt="userName">
-                    <div v-else class="avatar-initials slim-initials">{{ userName.charAt(0).toUpperCase() }}</div>
+                    <div v-else class="avatar-initials slim-initials">{{ userName?.charAt(0)?.toUpperCase() || 'U' }}</div>
                   </div>
                   <div class="user-info slim-user-info">
-                    <span class="user-name slim-username">{{ userName.split(' ')[0] }}</span>
+                    <span class="user-name slim-username">{{ userName?.split(' ')[0] || 'User' }}</span>
                   </div>
-                  <i class="fas fa-chevron-down dropdown-arrow slim-arrow" 
+                  <i class="fas fa-chevron-down dropdown-arrow slim-arrow"
                      :class="{ 'rotate-180': showProfileDropdown }"></i>
                 </div>
 
                 <!-- Dropdown Menu -->
                 <div v-if="showProfileDropdown" class="dropdown-content user-menu slim-menu" @click.stop>
                   <!-- User Info Header -->
-                  <!-- <div class="user-profile-header slim-header"> -->
-                    <!-- <div class="user-avatar-large slim-avatar-large"> -->
-                      <!-- <img v-if="userProfilePicture" :src="userProfilePicture" :alt="userName">
-                      <div v-else class="avatar-initials-large slim-initials-large">{{ userName.charAt(0).toUpperCase() }}</div> -->
-                    <!-- </div> -->
-                    <div class="user-details slim-details">
-                      <!-- <h6>{{ userName }}</h6>
-                      <span class="email-text slim-email">{{ user.email }}</span> -->
-                      <div class="verification-badge" :class="{ verified: isVerified }">
-                        <i :class="isVerified ? 'fas fa-check-circle' : 'fas square'"></i>
-                        {{ isVerified ? 'vendor' : 'customer' }}
-                      </div>
+                  <div class="user-details slim-details">
+                    <div class="verification-badge" :class="{ verified: isVerified }">
+                      <i :class="isVerified ? 'fas fa-check-circle' : 'fas fa-square'"></i>
+                      {{ isVerified ? 'Vendor' : 'Customer' }}
                     </div>
-                  <!-- </div> -->
+                  </div>
 
-                  <!-- Menu Items -->
+                  <!-- Menu Items - Shopping -->
                   <div class="menu-section slim-menu-section">
                     <div class="section-title slim-section-title">Shopping</div>
-                    <a :href="route('orders.customer')" class="dropdown-item slim-menu-item" @click="closeDropdowns">
+                    <Link href="/orders/my-orders" class="dropdown-item slim-menu-item" @click="closeDropdowns">
                       <i class="fas fa-shopping-bag me-3"></i>
                       <div class="menu-item-content slim-menu-content">
                         <span class="item-title slim-menu-title">My Orders</span>
                       </div>
-                    </a>
+                    </Link>
                   </div>
 
+                  <!-- Menu Items - Seller (Verified Only) -->
                   <div class="menu-section slim-menu-section" v-if="isVerified">
                     <div class="section-title slim-section-title">Seller</div>
-                    <a :href="route('orders.vendor')" class="dropdown-item slim-menu-item" @click="closeDropdowns">
+                   
+                    <Link href="/orders/manage-orders" class="dropdown-item slim-menu-item" @click="closeDropdowns">
                       <i class="fas fa-clipboard-list me-3"></i>
                       <div class="menu-item-content slim-menu-content">
                         <span class="item-title slim-menu-title">Manage Orders</span>
                       </div>
-                    </a>
-                    <a :href="route('products.index')" class="dropdown-item slim-menu-item" @click="closeDropdowns">
+                    </Link>
+                   
+                    <Link href="/products" class="dropdown-item slim-menu-item" @click="closeDropdowns">
                       <i class="fas fa-box me-3"></i>
                       <div class="menu-item-content slim-menu-content">
                         <span class="item-title slim-menu-title">My Products</span>
                       </div>
-                    </a>
-                    <a :href="route('discounts.index')" class="dropdown-item slim-menu-item" @click="closeDropdowns">
-    <i class="fas fa-tag me-3"></i> 
-    <div class="menu-item-content slim-menu-content">
-        <span class="item-title slim-menu-title">Discounts</span> 
-    </div>
-</a>
+                    </Link>
+                   
+                    <Link href="/discounts" class="dropdown-item slim-menu-item" @click="closeDropdowns">
+                      <i class="fas fa-tag me-3"></i>
+                      <div class="menu-item-content slim-menu-content">
+                        <span class="item-title slim-menu-title">Discounts</span>
+                      </div>
+                    </Link>
                   </div>
 
+                  <!-- Menu Items - Account -->
                   <div class="menu-section slim-menu-section">
                     <div class="section-title slim-section-title">Account</div>
                     <button @click="toggleGlobalTheme" class="dropdown-item slim-menu-item">
@@ -159,21 +178,22 @@
                         <span class="item-title slim-menu-title">{{ theme === 'light' ? 'Dark Mode' : 'Light Mode' }}</span>
                       </div>
                     </button>
-                    <a :href="route('settings.page')" class="dropdown-item slim-menu-item" @click="closeDropdowns">
+                    <Link href="/settings" class="dropdown-item slim-menu-item" @click="closeDropdowns">
                       <i class="fas fa-cog me-3"></i>
                       <div class="menu-item-content slim-menu-content">
                         <span class="item-title slim-menu-title">Settings</span>
                       </div>
-                    </a>
+                    </Link>
                   </div>
 
+                  <!-- Get Verified (Unverified Only) -->
                   <div class="menu-section slim-menu-section" v-if="!isVerified">
-                    <a :href="route('verification.request')" class="dropdown-item highlight-item slim-menu-item" @click="closeDropdowns">
+                    <Link href="/verification/request" class="dropdown-item highlight-item slim-menu-item" @click="closeDropdowns">
                       <i class="fas fa-user-check me-3"></i>
                       <div class="menu-item-content slim-menu-content">
                         <span class="item-title slim-menu-title">Get Verified</span>
                       </div>
-                    </a>
+                    </Link>
                   </div>
 
                   <!-- Logout -->
@@ -194,18 +214,22 @@
     </div>
 
     <!-- Search Suggestions -->
-    <div v-if="searchQuery && searchSuggestions.length > 0 && showSearchSuggestions" 
+    <!-- ✅ FIXED: Added safe check for searchSuggestions -->
+    <div v-if="searchQuery && searchSuggestions && searchSuggestions.length > 0 && showSearchSuggestions"
          class="search-suggestions slim-suggestions" @click.stop>
       <div class="container slim-container">
         <div class="suggestions-box slim-suggestions-box">
-          <div v-for="suggestion in searchSuggestions" :key="suggestion.id" 
-               class="suggestion-item slim-suggestion" @click="selectSuggestion(suggestion)">
-            <i :class="suggestion.icon" class="me-3"></i>
-            <div class="suggestion-content">
-              <div class="suggestion-title slim-suggestion-title">{{ suggestion.name }}</div>
-              <div class="suggestion-category slim-suggestion-category">{{ suggestion.category }}</div>
+          <!-- ✅ FIXED: Added safe check for searchSuggestions -->
+          <template v-if="searchSuggestions && searchSuggestions.length > 0">
+            <div v-for="suggestion in searchSuggestions" :key="suggestion.id"
+                 class="suggestion-item slim-suggestion" @click="selectSuggestion(suggestion)">
+              <i :class="suggestion.icon" class="me-3"></i>
+              <div class="suggestion-content">
+                <div class="suggestion-title slim-suggestion-title">{{ suggestion.name }}</div>
+                <div class="suggestion-category slim-suggestion-category">{{ suggestion.category }}</div>
+              </div>
             </div>
-          </div>
+          </template>
         </div>
       </div>
     </div>
@@ -214,7 +238,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { usePage, router } from '@inertiajs/vue3'
+import { usePage, router, Link } from '@inertiajs/vue3'
 import axios from 'axios'
 
 const page = usePage()
@@ -226,6 +250,13 @@ const csrfToken = ref(document.querySelector('meta[name="csrf-token"]')?.content
 const unreadCount = ref(page.props.auth?.unread_messages || 0)
 const wishlistCount = ref(0)
 const cartCount = ref(0)
+const pendingPromotionsCount = ref(0)
+
+// ========== NEWS & PROMOTIONS ==========
+const newsCount = ref(0)
+const promotionsCount = ref(0)
+const viewedNews = ref(JSON.parse(localStorage.getItem('viewed_news') || '[]'))
+const viewedPromotions = ref(JSON.parse(localStorage.getItem('viewed_promotions') || '[]'))
 
 // Dropdown states
 const showCategoryDropdown = ref(false)
@@ -247,15 +278,12 @@ const initTheme = () => {
 
 // Apply theme to entire page
 const applyTheme = (themeMode) => {
-  // Apply to html element
   const html = document.documentElement
   html.setAttribute('data-theme', themeMode)
   
-  // Apply to body
   document.body.classList.remove('light-theme', 'dark-theme')
   document.body.classList.add(`${themeMode}-theme`)
   
-  // Set CSS variables for entire page
   if (themeMode === 'dark') {
     document.documentElement.style.setProperty('--page-bg-color', '#0f172a')
     document.documentElement.style.setProperty('--page-text-color', '#f1f5f9')
@@ -278,7 +306,6 @@ const toggleGlobalTheme = () => {
   localStorage.setItem('theme', newTheme)
   applyTheme(newTheme)
   
-  // Dispatch event for other components to listen
   window.dispatchEvent(new CustomEvent('theme-changed', {
     detail: { theme: newTheme }
   }))
@@ -286,7 +313,7 @@ const toggleGlobalTheme = () => {
 
 // Session management
 const sessionKey = 'user_session'
-const sessionTimeout = 24 * 60 * 60 * 1000 // 24 hours
+const sessionTimeout = 24 * 60 * 60 * 1000
 
 const user = computed(() => page.props.auth?.user || null)
 const categories = computed(() => page.props.categories || [])
@@ -367,19 +394,19 @@ function clearSession() {
 }
 
 // Toggle dropdowns
-function toggleCategoryDropdown() {
+const toggleCategoryDropdown = () => {
   showCategoryDropdown.value = !showCategoryDropdown.value
   showProfileDropdown.value = false
   showSearchSuggestions.value = false
 }
 
-function toggleProfileDropdown() {
+const toggleProfileDropdown = () => {
   showProfileDropdown.value = !showProfileDropdown.value
   showCategoryDropdown.value = false
   showSearchSuggestions.value = false
 }
 
-function closeDropdowns() {
+const closeDropdowns = () => {
   showCategoryDropdown.value = false
   showProfileDropdown.value = false
   showSearchSuggestions.value = false
@@ -394,7 +421,7 @@ const userName = computed(() => {
 
 const isVerified = computed(() => {
   if (!user.value) return false
-  return user.value.email_verified_at !== null || 
+  return user.value.email_verified_at !== null ||
          user.value.is_verified === true ||
          user.value.verified_at !== null
 })
@@ -414,6 +441,8 @@ function formatProfilePictureUrl(path) {
 }
 
 function getCategoryIcon(categoryName) {
+  if (!categoryName) return 'fas fa-box'
+  
   const iconMap = {
     'Electronics': 'fas fa-laptop',
     'Clothing': 'fas fa-tshirt',
@@ -452,7 +481,7 @@ function readCategoryFromURL() {
 watch(searchQuery, (newValue) => {
   if (searchTimeout) clearTimeout(searchTimeout)
   
-  if (newValue.trim().length >= 2) {
+  if (newValue?.trim()?.length >= 2) {
     searchTimeout = setTimeout(async () => {
       await fetchSearchSuggestions(newValue)
     }, 300)
@@ -472,10 +501,12 @@ async function fetchSearchSuggestions(query) {
 }
 
 function selectSuggestion(suggestion) {
-  searchQuery.value = suggestion.name
-  searchSuggestions.value = []
-  showSearchSuggestions.value = false
-  performSearch()
+  if (suggestion) {
+    searchQuery.value = suggestion.name
+    searchSuggestions.value = []
+    showSearchSuggestions.value = false
+    performSearch()
+  }
 }
 
 function selectCategory(categoryName) {
@@ -490,7 +521,7 @@ function selectCategory(categoryName) {
   if (categoryName) urlParams.set('category', encodeURIComponent(categoryName))
   else urlParams.delete('category')
   
-  if (searchQuery.value.trim()) urlParams.set('search', encodeURIComponent(searchQuery.value.trim()))
+  if (searchQuery.value?.trim()) urlParams.set('search', encodeURIComponent(searchQuery.value.trim()))
   
   const queryString = urlParams.toString()
   const url = queryString ? `/?${queryString}` : '/'
@@ -500,7 +531,7 @@ function selectCategory(categoryName) {
 }
 
 function performSearch() {
-  if (searchQuery.value.trim()) {
+  if (searchQuery.value?.trim()) {
     searchSuggestions.value = []
     showSearchSuggestions.value = false
     
@@ -518,6 +549,80 @@ function performSearch() {
     else window.location.href = url
   }
 }
+
+// ========== NEWS & PROMOTIONS FUNCTIONS ==========
+
+// Load news count
+const loadNewsCount = async () => {
+  if (!isLoggedIn.value) {
+    newsCount.value = 0
+    return
+  }
+  
+  try {
+    const response = await axios.get('/api/news', {
+      params: { per_page: 1, active_only: true }
+    })
+    const total = response.data.total || 0
+    // ✅ FIXED: Added safe check for viewedNews.value
+    const viewed = viewedNews.value?.length || 0
+    newsCount.value = Math.max(0, total - viewed)
+  } catch (error) {
+    console.error('Error loading news count:', error)
+    newsCount.value = 0
+  }
+}
+
+// Load promotions count
+const loadPromotionsCount = async () => {
+  if (!isLoggedIn.value) {
+    promotionsCount.value = 0
+    return
+  }
+  
+  try {
+    const response = await axios.get('/api/promotions', {
+      params: { per_page: 1, status: 'approved' }
+    })
+    const total = response.data.total || 0
+    // ✅ FIXED: Added safe check for viewedPromotions.value
+    const viewed = viewedPromotions.value?.length || 0
+    promotionsCount.value = Math.max(0, total - viewed)
+  } catch (error) {
+    console.error('Error loading promotions count:', error)
+    promotionsCount.value = 0
+  }
+}
+
+// Mark news as viewed when clicked
+const markNewsViewed = (newsId) => {
+  if (!viewedNews.value?.includes(newsId)) {
+    viewedNews.value.push(newsId)
+    localStorage.setItem('viewed_news', JSON.stringify(viewedNews.value))
+    loadNewsCount()
+  }
+}
+
+// Mark promotion as viewed when clicked
+const markPromotionViewed = (promotionId) => {
+  if (!viewedPromotions.value?.includes(promotionId)) {
+    viewedPromotions.value.push(promotionId)
+    localStorage.setItem('viewed_promotions', JSON.stringify(viewedPromotions.value))
+    loadPromotionsCount()
+  }
+}
+
+// Clear viewed data when logging out
+const clearViewedData = () => {
+  viewedNews.value = []
+  viewedPromotions.value = []
+  localStorage.removeItem('viewed_news')
+  localStorage.removeItem('viewed_promotions')
+  newsCount.value = 0
+  promotionsCount.value = 0
+}
+
+// ========== LOAD COUNTS ==========
 
 // Load wishlist and cart counts
 const loadWishlistCount = async () => {
@@ -550,12 +655,28 @@ const loadCartCount = async () => {
   }
 }
 
+// Fetch pending promotions count
+const fetchPendingPromotionsCount = async () => {
+  if (!isLoggedIn.value || !isVerified.value) {
+    pendingPromotionsCount.value = 0
+    return
+  }
+  
+  try {
+    const response = await axios.get('/api/user/promotions/pending-count')
+    pendingPromotionsCount.value = response.data.count || 0
+  } catch (error) {
+    console.error('Error fetching pending promotions count:', error)
+    pendingPromotionsCount.value = 0
+  }
+}
+
 // Fetch unread message count
-async function fetchUnreadCount() {
+const fetchUnreadCount = async () => {
   if (!isLoggedIn.value) return
   
   try {
-    const response = await axios.get(route('messages.unread-count'))
+    const response = await axios.get('/api/messages/unread-count')
     if (response.data && typeof response.data.count === 'number') {
       unreadCount.value = response.data.count
     }
@@ -564,13 +685,14 @@ async function fetchUnreadCount() {
   }
 }
 
-function logout() {
+const logout = () => {
   if (pollInterval) {
     clearInterval(pollInterval)
     pollInterval = null
   }
   
   clearSession()
+  clearViewedData() // Clear news & promotions viewed data
   
   const form = document.createElement('form')
   form.method = 'POST'
@@ -595,58 +717,104 @@ function logout() {
   form.submit()
 }
 
+// Watch for verification status changes
+watch(isVerified, (newValue) => {
+  if (newValue) {
+    fetchPendingPromotionsCount()
+  }
+})
+
+// Watch for login status changes
+watch(isLoggedIn, (newValue) => {
+  if (newValue) {
+    loadNewsCount()
+    loadPromotionsCount()
+    loadWishlistCount()
+    loadCartCount()
+    fetchUnreadCount()
+  } else {
+    newsCount.value = 0
+    promotionsCount.value = 0
+    wishlistCount.value = 0
+    cartCount.value = 0
+    unreadCount.value = 0
+    pendingPromotionsCount.value = 0
+  }
+})
+
+// Navigation functions with view tracking
+const goToNews = () => {
+  markNewsViewed('all')
+  router.visit('/news')
+}
+
+const goToPromotions = () => {
+  markPromotionViewed('all')
+  router.visit('/promotions')
+}
+
+const goToNewsDetail = (newsId) => {
+  markNewsViewed(newsId)
+  router.visit(`/news/${newsId}`)
+}
+
+const goToPromotionDetail = (promotionId) => {
+  markPromotionViewed(promotionId)
+  router.visit(`/promotions/${promotionId}`)
+}
+
 onMounted(() => {
-  // Initialize theme
   initTheme()
   
   readCategoryFromURL()
   
-  // Initialize session
   if (user.value && user.value.id) {
     initSession()
   }
   
-  // Load counts
   loadWishlistCount()
   loadCartCount()
+  loadNewsCount()
+  loadPromotionsCount()
   
-  // Start polling for unread messages
+  // Fetch pending promotions count if verified
+  if (isVerified.value) {
+    fetchPendingPromotionsCount()
+  }
+  
   if (isLoggedIn.value) {
     fetchUnreadCount()
     pollInterval = setInterval(fetchUnreadCount, 30000)
   }
   
-  // Listen for theme changes from other components
   window.addEventListener('theme-changed', (event) => {
     const newTheme = event.detail.theme
     theme.value = newTheme
     applyTheme(newTheme)
   })
   
-  // Close dropdowns when clicking outside
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.dropdown-trigger') && 
+    if (!e.target.closest('.dropdown-trigger') &&
         !e.target.closest('.search-suggestions') &&
         !e.target.closest('.premium-search-box')) {
       closeDropdowns()
     }
   })
   
-  // Close search suggestions when clicking outside
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.premium-search-box') && !e.target.closest('.search-suggestions')) {
       showSearchSuggestions.value = false
     }
   })
-  
-  // Cleanup
-  onUnmounted(() => {
-    if (pollInterval) clearInterval(pollInterval)
-    window.removeEventListener('theme-changed', () => {})
-    document.removeEventListener('click', closeDropdowns)
-  })
+})
+
+onUnmounted(() => {
+  if (pollInterval) clearInterval(pollInterval)
+  window.removeEventListener('theme-changed', () => {})
+  document.removeEventListener('click', closeDropdowns)
 })
 </script>
+
 <style scoped>
 /* ===== GLOBAL THEME VARIABLES ===== */
 :root {
@@ -1214,14 +1382,6 @@ body.dark-theme {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* border-radius: 8px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid #050505; */
-   /* background: transparent !important;
-  border: none !important;
-  width: auto !important;
-  height: auto !important;
-  padding: 0.25rem !important; */
 }
 
 [data-theme="dark"] .dock-icon {
@@ -1333,10 +1493,8 @@ body.dark-theme {
   display: flex;
   align-items: center;
   cursor: pointer;
-  /* border-radius: 0px; */
   transition: all 0.3s ease;
   background: white;
-  /* border: 1px solid #e2e8f0; */
 }
 
 [data-theme="dark"] .profile-trigger {
